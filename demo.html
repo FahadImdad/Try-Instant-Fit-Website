@@ -287,23 +287,74 @@
 
     <script src="js/script.js"></script>
     <script>
-        function handleSubmit(event) {
+        const API = 'https://backend-tryinstantfit.vercel.app';
+
+        async function handleSubmit(event) {
             event.preventDefault();
 
-            // Get form data
-            const formData = new FormData(event.target);
-            const data = Object.fromEntries(formData);
+            const form = event.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            const formData = new FormData(form);
 
-            // In a real implementation, you would send this to your backend
-            console.log('Form submitted:', data);
+            const payload = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                brand_name: formData.get('company'),
+                website_url: formData.get('website') || undefined,
+                product_interest: formData.get('product') || undefined,
+                message: formData.get('message') || undefined,
+            };
 
-            // Show success message
-            alert('Thank you! We\'ve received your demo request and will contact you within 24 hours via email.');
+            // Disable form during submit
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Sending…';
 
-            // Reset form
-            event.target.reset();
+            try {
+                const res = await fetch(`${API}/api/contact`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
 
-            return false;
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Something went wrong.');
+                }
+
+                // Replace form with a success state
+                form.outerHTML = `
+                    <div style="text-align: center; padding: 1rem 0;">
+                        <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #14b8a6); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; box-shadow: 0 12px 28px rgba(16,185,129,.35);">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <h3 style="margin: 0 0 .5rem;">Message received</h3>
+                        <p style="color: var(--text-light); margin: 0 0 1.5rem;">Thank you, <strong>${escapeHtml(payload.name)}</strong>. We'll respond within 24 hours at <strong>${escapeHtml(payload.email)}</strong> with next steps.</p>
+                        <p style="font-size: .9rem; color: var(--text-light); margin: 0 0 1.5rem;">In the meantime, feel free to reach out on WhatsApp if you have urgent questions.</p>
+                        <a href="https://wa.me/923001234567?text=Hi%20Try%20Instant%20Fit%2C%20I%20just%20submitted%20the%20contact%20form%20for%20${encodeURIComponent(payload.brand_name)}." target="_blank" rel="noopener" class="btn btn-primary" style="display: inline-block;">Message on WhatsApp</a>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('[contact] submit error:', err);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                showFormError(form, err.message || 'Something went wrong. Please try again or message us on WhatsApp.');
+            }
+        }
+
+        function showFormError(form, msg) {
+            let banner = form.querySelector('.form-error');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.className = 'form-error';
+                banner.style.cssText = 'background: #fee2e2; color: #991b1b; padding: .75rem 1rem; border-radius: .5rem; margin-bottom: 1rem; font-size: .9rem; border: 1px solid #fca5a5;';
+                form.insertBefore(banner, form.firstChild);
+            }
+            banner.textContent = msg;
+        }
+
+        function escapeHtml(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         }
     </script>
 </body>
