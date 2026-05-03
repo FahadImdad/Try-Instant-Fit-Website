@@ -124,14 +124,28 @@
 
       <div class="field">
         <label for="regName">Brand Name <span class="req">*</span></label>
-        <input type="text" id="regName" required placeholder="e.g. Khaadi, Sana Safinaz">
+        <input type="text" id="regName" required minlength="2" maxlength="80" placeholder="e.g. Khaadi, Sana Safinaz">
+        <div class="field-hint">Public-facing brand name shown on QR scan pages.</div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="regContactName">Your Name <span class="req">*</span></label>
+          <input type="text" id="regContactName" required minlength="2" maxlength="60" placeholder="e.g. Fahad Imdad">
+          <div class="field-hint">Person we'll contact about this account.</div>
+        </div>
+        <div class="field">
+          <label for="regContactPosition">Your Position</label>
+          <input type="text" id="regContactPosition" maxlength="60" placeholder="e.g. Founder, Marketing Manager">
+          <div class="field-hint">Your role at the brand.</div>
+        </div>
       </div>
 
       <div class="field-row">
         <div class="field">
           <label for="regPhone">WhatsApp Number</label>
-          <input type="tel" id="regPhone" placeholder="+92 300 1234567">
-          <div class="field-hint">For payment confirmations.</div>
+          <input type="tel" id="regPhone" pattern="^\+?[\d\s\-()]{7,25}$" placeholder="+92 300 1234567">
+          <div class="field-hint">7–15 digits. Used for payment confirmations.</div>
         </div>
         <div class="field">
           <label for="regCountry">Country</label>
@@ -147,8 +161,8 @@
 
       <div class="field">
         <label for="regWebsite">Website URL</label>
-        <input type="url" id="regWebsite" placeholder="https://yourbrand.com">
-        <div class="field-hint">Optional, but useful if you'll use the website widget too.</div>
+        <input type="url" id="regWebsite" pattern="https?://.+" placeholder="https://yourbrand.com">
+        <div class="field-hint">Must start with http:// or https://. Optional, but useful if you'll use the website widget too.</div>
       </div>
 
       <div class="field-row">
@@ -308,12 +322,36 @@ async function submitRegister(e) {
     return false;
   }
 
+  // Client-side validation (browsers also enforce HTML5 patterns, but double-check)
+  const phoneVal = document.getElementById('regPhone').value.trim();
+  if (phoneVal) {
+    const digits = phoneVal.replace(/\D/g, '');
+    if (digits.length < 7 || digits.length > 15 || !/^\+?[\d\s\-()]+$/.test(phoneVal)) {
+      errEl.textContent = 'Phone number must be 7–15 digits. Use international format (e.g. +92 300 1234567).';
+      errEl.className = 'alert error';
+      return false;
+    }
+  }
+  const websiteVal = document.getElementById('regWebsite').value.trim();
+  if (websiteVal) {
+    try {
+      const u = new URL(websiteVal);
+      if (!['http:', 'https:'].includes(u.protocol)) throw new Error();
+    } catch {
+      errEl.textContent = 'Website URL must start with http:// or https:// (e.g. https://yourbrand.com).';
+      errEl.className = 'alert error';
+      return false;
+    }
+  }
+
   const fd = new FormData();
   fd.append('google_id_token', googleIdToken);
   fd.append('name', document.getElementById('regName').value.trim());
-  if (document.getElementById('regPhone').value.trim()) fd.append('contact_phone', document.getElementById('regPhone').value.trim());
+  fd.append('contact_name', document.getElementById('regContactName').value.trim());
+  if (document.getElementById('regContactPosition').value.trim()) fd.append('contact_position', document.getElementById('regContactPosition').value.trim());
+  if (phoneVal) fd.append('contact_phone', phoneVal);
   fd.append('country', document.getElementById('regCountry').value);
-  if (document.getElementById('regWebsite').value.trim()) fd.append('website_url', document.getElementById('regWebsite').value.trim());
+  if (websiteVal) fd.append('website_url', websiteVal);
   fd.append('primary_color', document.getElementById('regColor').value);
   if (logoFileSelected) fd.append('logo', logoFileSelected);
 
