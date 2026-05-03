@@ -636,7 +636,7 @@ async function submitCreateBrand(e) {
     await refreshAll();
 
     // Show WhatsApp share prompt with dashboard URL
-    const dashUrl = `https://tryinstantfit.vercel.app/dashboard.html?id=${data.brand.id}`;
+    const dashUrl = `https://tryinstantfit.com/dashboard?id=${data.brand.id}`;
     const wa = pendingConvert
       ? `https://wa.me/?text=${encodeURIComponent(`Hi ${pendingConvert.name}!\n\nWelcome to Try Instant Fit. Your brand "${data.brand.name}" is ready.\n\nYour dashboard: ${dashUrl}\n\nYou have ${payload.initial_credits} try-on credits to start with. Let me know once you've had a look!\n\n— Fahad`)}`
       : `https://wa.me/?text=${encodeURIComponent(`Welcome to Try Instant Fit. Your brand "${data.brand.name}" is ready.\n\nDashboard: ${dashUrl}\n\nStarting credits: ${payload.initial_credits}`)}`;
