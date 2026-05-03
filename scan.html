@@ -145,6 +145,34 @@
     }
     .passcode-input:focus { border-color: var(--cyan); }
 
+    /* Source picker — camera vs upload buttons */
+    .source-picker {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .6rem;
+      margin-bottom: .85rem;
+    }
+    .source-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .25rem;
+      padding: .9rem .5rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-md);
+      background: white;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
+      color: var(--text);
+      box-sizing: border-box;
+    }
+    .source-btn:hover, .source-btn:focus { border-color: var(--cyan); background: rgba(0,200,232,.05); outline: none; }
+    .source-btn .src-icon { font-size: 1.6rem; line-height: 1; }
+    .source-btn .src-label { font-size: .85rem; font-weight: 700; }
+    .source-btn .src-sub { font-size: .7rem; color: var(--muted); }
+
     /* Photo upload */
     .upload-zone {
       display: block;                /* labels are inline by default — override */
@@ -286,18 +314,37 @@
         <span class="brand-pill" id="remainingPill" style="display:none; margin-top: .35rem;"></span>
       </div>
     </div>
-    <h3 class="step-title"><span class="step-num" id="uploadStepNum">1</span> Upload Your Photo</h3>
+    <h3 class="step-title"><span class="step-num" id="uploadStepNum">1</span> Add Your Photo</h3>
     <p style="color:var(--muted); font-size:.88rem; margin: 0 0 1rem;">Stand against a plain background, full body, facing forward — best results.</p>
     <div class="alert" id="uploadError"></div>
-    <label class="upload-zone" id="uploadZone">
-      <input type="file" id="photoInput" accept="image/*" capture="user" style="display:none;">
-      <div id="uploadHint">
-        <div class="icon">📸</div>
-        <p><strong>Tap to take a photo</strong></p>
-        <p style="font-size:.75rem; margin-top:.25rem;">or upload from gallery</p>
-      </div>
-      <img id="uploadPreview" class="upload-preview" style="display:none;" alt="Your photo">
-    </label>
+
+    <!-- Source picker: camera vs gallery -->
+    <div class="source-picker" id="sourcePicker">
+      <button type="button" class="source-btn" id="cameraBtn" onclick="document.getElementById('cameraInput').click()">
+        <span class="src-icon">📷</span>
+        <span class="src-label">Take Photo</span>
+        <span class="src-sub">Use camera</span>
+      </button>
+      <button type="button" class="source-btn" id="galleryBtn" onclick="document.getElementById('galleryInput').click()">
+        <span class="src-icon">🖼️</span>
+        <span class="src-label">Upload</span>
+        <span class="src-sub">From gallery</span>
+      </button>
+    </div>
+
+    <!-- Hidden inputs: camera triggers capture, gallery doesn't -->
+    <input type="file" id="cameraInput" accept="image/*" capture="user" style="display:none;">
+    <input type="file" id="galleryInput" accept="image/*" style="display:none;">
+
+    <!-- Preview area shown after a photo is picked -->
+    <div id="previewWrap" style="display:none; margin-top:.5rem;">
+      <img id="uploadPreview" class="upload-preview" alt="Your photo">
+      <button type="button" class="source-btn" style="width:100%; flex-direction:row; gap:.5rem; margin-top:.6rem; padding:.65rem;" onclick="resetPhoto()">
+        <span class="src-icon" style="font-size:1.1rem;">↺</span>
+        <span class="src-label" style="font-size:.85rem;">Choose a different photo</span>
+      </button>
+    </div>
+
     <button class="btn-block primary" id="tryOnBtn" style="margin-top: 1rem;" onclick="runTryOn()" disabled>Try It On →</button>
   </div>
 
@@ -447,27 +494,42 @@
     }
   }
 
-  // ── Photo upload ──
-  const photoInput = document.getElementById('photoInput');
-  const uploadZone = document.getElementById('uploadZone');
-  const uploadHint = document.getElementById('uploadHint');
+  // ── Photo upload (camera + gallery, two separate inputs) ──
+  const cameraInput  = document.getElementById('cameraInput');
+  const galleryInput = document.getElementById('galleryInput');
+  const sourcePicker = document.getElementById('sourcePicker');
+  const previewWrap  = document.getElementById('previewWrap');
   const uploadPreview = document.getElementById('uploadPreview');
 
-  photoInput.addEventListener('change', e => {
-    const file = e.target.files?.[0];
+  function handlePhotoFile(file) {
     if (!file) return;
     if (!file.type.startsWith('image/')) { showUploadError('Please pick an image file.'); return; }
     if (file.size > 10 * 1024 * 1024) { showUploadError('Photo must be under 10MB.'); return; }
+    document.getElementById('uploadError').className = 'alert';
     userPhoto = file;
     const reader = new FileReader();
     reader.onload = ev => {
       uploadPreview.src = ev.target.result;
-      uploadPreview.style.display = 'block';
-      uploadHint.style.display = 'none';
+      sourcePicker.style.display = 'none';
+      previewWrap.style.display = 'block';
       document.getElementById('tryOnBtn').disabled = false;
     };
     reader.readAsDataURL(file);
-  });
+  }
+
+  cameraInput.addEventListener('change',  e => handlePhotoFile(e.target.files?.[0]));
+  galleryInput.addEventListener('change', e => handlePhotoFile(e.target.files?.[0]));
+
+  function resetPhoto() {
+    userPhoto = null;
+    cameraInput.value = '';
+    galleryInput.value = '';
+    uploadPreview.src = '';
+    previewWrap.style.display = 'none';
+    sourcePicker.style.display = 'grid';
+    document.getElementById('tryOnBtn').disabled = true;
+    document.getElementById('uploadError').className = 'alert';
+  }
 
   function showUploadError(msg) {
     const errEl = document.getElementById('uploadError');
@@ -518,13 +580,7 @@
   }
 
   function retryFlow() {
-    userPhoto = null;
-    photoInput.value = '';
-    uploadHint.style.display = 'block';
-    uploadPreview.style.display = 'none';
-    uploadPreview.src = '';
-    document.getElementById('tryOnBtn').disabled = true;
-    document.getElementById('uploadError').className = 'alert';
+    resetPhoto();
     hide('resultView');
     show('uploadView');
   }

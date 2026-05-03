@@ -1300,7 +1300,7 @@
             <div class="field-hint">Don't see your product? <a href="#" onclick="closeCreateQrModal(); openAddProduct(); return false;" style="color: var(--indigo); font-weight:600;">Add a new product first</a> — image gets pre-processed for AI.</div>
           </div>
           <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .75rem; background: var(--surface); border-radius: var(--r-md);">
-            <input type="checkbox" id="qrRequiresPasscode" style="width: auto;">
+            <input type="checkbox" id="qrRequiresPasscode" style="width: auto;" checked>
             <label for="qrRequiresPasscode" style="margin: 0; cursor: pointer; font-size: .9rem;">🔑 Require a passcode to scan this QR</label>
           </div>
           <div class="field">
@@ -1392,7 +1392,7 @@
             <textarea id="apDesc" rows="2" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
           </div>
           <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .75rem; background: var(--surface); border-radius: var(--r-md); margin-bottom: .75rem;">
-            <input type="checkbox" id="apQrPasscode" style="width: auto;">
+            <input type="checkbox" id="apQrPasscode" style="width: auto;" checked>
             <label for="apQrPasscode" style="margin: 0; cursor: pointer; font-size: .9rem;">🔑 Require a passcode for this product's QR</label>
           </div>
           <div class="field">
@@ -2430,7 +2430,7 @@
     document.getElementById('apError').className = 'alert';
     ['apSku','apName','apPrice','apDesc','apQrLimit'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('apCurrency').value = 'PKR';
-    document.getElementById('apQrPasscode').checked = false;
+    document.getElementById('apQrPasscode').checked = true;
     apImageFile = null;
     document.getElementById('apImageFile').value = '';
     document.getElementById('apImagePreview').style.display = 'none';
@@ -2692,7 +2692,7 @@
     document.getElementById('createQrError').textContent = '';
     document.getElementById('qrProductPick').value = '';
     document.getElementById('qrTotalLimit').value = '';
-    document.getElementById('qrRequiresPasscode').checked = false;
+    document.getElementById('qrRequiresPasscode').checked = true;
     loadProducts();  // refresh dropdown
     document.getElementById('createQrModal').classList.add('open');
   }
