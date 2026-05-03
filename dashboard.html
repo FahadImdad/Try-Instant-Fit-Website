@@ -1201,13 +1201,13 @@
         statusEl.style.background = '#d1fae5';
         statusEl.style.color = '#065f46';
         statusEl.style.borderColor = '#6ee7b7';
-        statusEl.innerHTML = '✓ Product image pre-processed. Every customer try-on will be fast (1 AI call).';
+        statusEl.innerHTML = '✓ Product is ready. Customers can scan the QR now.';
       } else if (garmentIsolated === false) {
         statusEl.style.display = 'block';
         statusEl.style.background = '#fef3c7';
         statusEl.style.color = '#92400e';
         statusEl.style.borderColor = '#fcd34d';
-        statusEl.innerHTML = '⚠ Pre-processing skipped — first customer scan will take ~15s extra (it processes then caches).';
+        statusEl.innerHTML = '⚠ Setup incomplete — the first customer scan will take ~15s extra.';
       } else {
         statusEl.style.display = 'none';
       }
