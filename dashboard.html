@@ -612,9 +612,17 @@
             <div class="field-hint">Shown to customers on the scan page.</div>
           </div>
           <div class="field">
-            <label for="qrDisplayImage">Product Image URL (optional)</label>
-            <input type="url" id="qrDisplayImage" placeholder="https://…">
-            <div class="field-hint">Customer-facing product photo to show on the scan page.</div>
+            <label>Product Image *</label>
+            <div id="qrImageDropZone" style="border: 2px dashed var(--border); border-radius: var(--r-md); padding: 1.5rem 1rem; text-align: center; cursor: pointer; transition: all .2s; background: var(--surface);">
+              <input type="file" id="qrImageFile" accept="image/jpeg,image/png,image/webp" style="display: none;">
+              <div id="qrImageHint">
+                <div style="font-size: 2rem; margin-bottom: .25rem;">📷</div>
+                <p style="margin: 0; font-size: .9rem;"><strong>Click to upload</strong> or drag a product photo here</p>
+                <p style="margin: .25rem 0 0; font-size: .75rem; color: var(--muted);">JPG, PNG, or WebP up to 10MB</p>
+              </div>
+              <img id="qrImagePreview" style="display: none; max-height: 200px; max-width: 100%; border-radius: var(--r-sm); margin: 0 auto;">
+            </div>
+            <div class="field-hint">Customer-facing photo shown on the scan page. We'll also use this to generate the AI try-on.</div>
           </div>
           <div class="field" style="display: flex; align-items: center; gap: .75rem;">
             <input type="checkbox" id="qrRequiresPasscode" style="width: auto;">
@@ -1024,16 +1032,71 @@
   }
 
   // ── Create QR Modal ──
+  let qrImageFileSelected = null;
+
   function openCreateQrModal() {
     document.getElementById('createQrError').className = 'alert';
     document.getElementById('createQrError').textContent = '';
-    ['qrProductId','qrProductName','qrDisplayImage','qrTotalLimit'].forEach(id => document.getElementById(id).value = '');
+    ['qrProductId','qrProductName','qrTotalLimit'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('qrRequiresPasscode').checked = false;
+    qrImageFileSelected = null;
+    document.getElementById('qrImageFile').value = '';
+    document.getElementById('qrImagePreview').style.display = 'none';
+    document.getElementById('qrImagePreview').src = '';
+    document.getElementById('qrImageHint').style.display = 'block';
     document.getElementById('createQrModal').classList.add('open');
   }
   function closeCreateQrModal() {
     document.getElementById('createQrModal').classList.remove('open');
   }
+
+  // Wire up image upload (drag-drop + click)
+  (function wireQrImageUpload() {
+    const dropZone = document.getElementById('qrImageDropZone');
+    const fileInput = document.getElementById('qrImageFile');
+    const preview = document.getElementById('qrImagePreview');
+    const hint = document.getElementById('qrImageHint');
+    if (!dropZone) return;
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', e => handleFile(e.target.files?.[0]));
+
+    ['dragenter','dragover'].forEach(evt => dropZone.addEventListener(evt, e => {
+      e.preventDefault(); e.stopPropagation();
+      dropZone.style.borderColor = 'var(--cyan)';
+      dropZone.style.background = 'rgba(0,200,232,.05)';
+    }));
+    ['dragleave','drop'].forEach(evt => dropZone.addEventListener(evt, e => {
+      e.preventDefault(); e.stopPropagation();
+      dropZone.style.borderColor = 'var(--border)';
+      dropZone.style.background = 'var(--surface)';
+    }));
+    dropZone.addEventListener('drop', e => {
+      const file = e.dataTransfer?.files?.[0];
+      if (file) handleFile(file);
+    });
+
+    function handleFile(file) {
+      if (!file) return;
+      if (!['image/jpeg','image/png','image/webp'].includes(file.type)) {
+        alert('Please upload a JPG, PNG, or WebP image.');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        alert('Image must be under 10MB.');
+        return;
+      }
+      qrImageFileSelected = file;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        preview.src = ev.target.result;
+        preview.style.display = 'block';
+        hint.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+  })();
 
   async function submitCreateQr(e) {
     e.preventDefault();
@@ -1041,23 +1104,27 @@
     const errEl = document.getElementById('createQrError');
     errEl.className = 'alert';
 
+    if (!qrImageFileSelected) {
+      errEl.textContent = 'Please upload a product image.';
+      errEl.className = 'alert error';
+      return false;
+    }
+
     const totalLimitVal = document.getElementById('qrTotalLimit').value;
-    const payload = {
-      brand_id: activeBrandId,
-      product_id: document.getElementById('qrProductId').value.trim(),
-      product_name: document.getElementById('qrProductName').value.trim(),
-      display_image_url: document.getElementById('qrDisplayImage').value.trim() || undefined,
-      requires_passcode: document.getElementById('qrRequiresPasscode').checked,
-      total_limit: totalLimitVal ? parseInt(totalLimitVal, 10) : undefined,
-    };
+    const fd = new FormData();
+    fd.append('brand_id', activeBrandId);
+    fd.append('product_id', document.getElementById('qrProductId').value.trim());
+    fd.append('product_name', document.getElementById('qrProductName').value.trim());
+    fd.append('display_image', qrImageFileSelected);
+    fd.append('requires_passcode', document.getElementById('qrRequiresPasscode').checked ? 'true' : 'false');
+    if (totalLimitVal) fd.append('total_limit', totalLimitVal);
 
     btn.disabled = true;
-    btn.textContent = 'Generating…';
+    btn.textContent = 'Uploading & generating…';
     try {
       const res = await fetch(`${API}/api/qr/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: fd,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Generation failed');
