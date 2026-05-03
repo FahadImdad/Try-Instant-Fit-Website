@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/api/:path*",  "destination": "https://api.tryinstantfit.com/api/:path*" },
     { "source": "/scan/:token", "destination": "/scan.html?token=:token" },
     { "source": "/admin",       "destination": "/admin.html" },
     { "source": "/dashboard",   "destination": "/dashboard.html" },

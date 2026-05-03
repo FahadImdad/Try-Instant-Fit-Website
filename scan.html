@@ -375,7 +375,8 @@
 </div>
 
 <script>
-  const API = 'https://api.tryinstantfit.com';
+  // Same-origin via Vercel rewrite (see vercel.json). Avoids adblock/CORS issues.
+  const API = '';
 
   let qrInfo = null;       // { qr_id, product_id, product_name, ..., requires_passcode, brand: {name, ...} }
   let validatedPasscode = null;  // { code, passcode_id, remaining }

@@ -286,7 +286,8 @@
 
     <script src="js/script.js"></script>
     <script>
-        const API = 'https://api.tryinstantfit.com';
+        // Same-origin via Vercel rewrite (see vercel.json). Avoids adblock/CORS issues.
+        const API = '';
 
         async function handleSubmit(event) {
             event.preventDefault();

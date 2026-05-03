@@ -204,7 +204,8 @@
 </div>
 
 <script>
-const API = 'https://api.tryinstantfit.com';
+// Same-origin via Vercel rewrite (see vercel.json). Avoids adblock/CORS issues.
+const API = '';
 let logoFileSelected = null;
 let googleIdToken = null;        // captured after user signs in with Google
 let googleVerifiedEmail = null;  // for display only — backend re-verifies the token

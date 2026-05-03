@@ -407,7 +407,8 @@
 </div>
 
 <script>
-const API = 'https://api.tryinstantfit.com';
+// Same-origin via Vercel rewrite (see vercel.json). Avoids adblock/CORS issues.
+const API = '';
 
 let authHeader = sessionStorage.getItem('admin_auth') || '';
 let allSubs = [];

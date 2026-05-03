@@ -1645,7 +1645,9 @@
 
 <script src="js/script.js"></script>
 <script>
-  const API = 'https://api.tryinstantfit.com';
+  // Empty = same-origin. Vercel rewrites /api/* to api.tryinstantfit.com/api/*
+  // so adblockers/extensions can't intercept what looks like a third-party host.
+  const API = '';
   let activeBrandId = null;
 
   // ── Google Sign-In setup (only auth method) ──
