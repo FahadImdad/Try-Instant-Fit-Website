@@ -345,6 +345,105 @@
       .passcode-row { grid-template-columns: 1fr 1fr; row-gap: .5rem; }
     }
 
+    /* Unified products+QR list */
+    .unified-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1rem;
+    }
+    .unified-tile {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all .2s;
+    }
+    .unified-tile:hover { box-shadow: var(--sh1); transform: translateY(-2px); }
+    .unified-tile-head {
+      display: flex;
+      gap: .85rem;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .unified-tile-img {
+      width: 88px;
+      height: 110px;
+      object-fit: cover;
+      border-radius: var(--r-sm);
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+    .unified-tile-img-placeholder {
+      width: 88px;
+      height: 110px;
+      background: linear-gradient(135deg, var(--surface), var(--surface2));
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .unified-tile-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .25rem; }
+    .unified-tile-name { font-weight: 700; font-size: 1rem; line-height: 1.2; color: var(--text); }
+    .unified-tile-sku { font-size: .72rem; color: var(--muted); font-family: monospace; }
+    .unified-tile-price { font-size: .95rem; font-weight: 700; color: var(--indigo); margin-top: auto; }
+    .unified-tile-price.empty { color: var(--muted); font-weight: 500; font-style: italic; font-size: .82rem; }
+
+    .unified-tile-qr {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      align-items: center;
+    }
+    .unified-tile-qr-img {
+      width: 96px;
+      height: 96px;
+      flex-shrink: 0;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 4px;
+    }
+    .unified-tile-qr-img img { width: 100%; height: 100%; display: block; }
+    .unified-tile-qr-info { flex: 1; min-width: 0; }
+    .unified-tile-qr-info .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: .8rem;
+      padding: .15rem 0;
+    }
+    .unified-tile-qr-info .row strong { color: var(--text); }
+    .unified-tile-qr-info .row .muted { color: var(--muted); }
+
+    .unified-tile-no-qr {
+      padding: 1rem;
+      background: var(--surface);
+      text-align: center;
+      font-size: .82rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    .unified-tile-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: .35rem;
+      padding: .75rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .unified-tile-actions .btn { font-size: .78rem; padding: .5rem; }
+    .unified-tile-actions .btn-row-3 { grid-column: span 1; }
+    @media (max-width: 480px) {
+      .unified-tile-head { flex-direction: column; }
+      .unified-tile-img, .unified-tile-img-placeholder { width: 100%; height: 200px; }
+    }
+
     /* Products list */
     .products-list {
       display: grid;
@@ -907,27 +1006,37 @@
     <div id="loginView">
       <div class="login-wrap">
         <div style="text-align: center; margin-bottom: 2rem;">
-          <h1 style="font-size: clamp(1.8rem,3.5vw,2.5rem); margin-bottom: .5rem;">Analytics Dashboard</h1>
-          <p style="color: var(--muted);">Enter your email or Brand ID to see your try-on stats.</p>
+          <img src="/assets/favicon.jpg" alt="" style="width: 64px; height: 64px; border-radius: 16px; margin: 0 auto 1rem; display: block;">
+          <h1 style="font-size: clamp(1.5rem,3vw,2rem); margin-bottom: .5rem;">Sign In</h1>
+          <p style="color: var(--muted);">Welcome back. Enter your email to continue.</p>
         </div>
         <div class="card" style="box-shadow: var(--sh2); padding: 2.25rem;">
           <div class="alert" id="loginError"></div>
           <div class="field">
-            <label for="loginEmail">Email Address</label>
-            <input type="email" id="loginEmail" placeholder="you@yourbrand.com">
-            <div class="field-hint">The email you used to register.</div>
+            <label for="loginEmail">Brand Email</label>
+            <input type="email" id="loginEmail" placeholder="you@yourbrand.com" autocomplete="email">
+            <div class="field-hint">The email you registered with.</div>
           </div>
-          <div style="text-align: center; color: var(--muted); font-size: .85rem; margin: .75rem 0; font-weight: 600;">— or —</div>
-          <div class="field">
-            <label for="loginBrandId">Brand ID</label>
-            <input type="text" id="loginBrandId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
-            <div class="field-hint">Found on your install code page.</div>
-          </div>
+          <details style="margin-bottom: 1rem;">
+            <summary style="cursor: pointer; font-size: .85rem; color: var(--muted); user-select: none;">Or sign in with Brand ID instead</summary>
+            <div class="field" style="margin-top: 1rem;">
+              <label for="loginBrandId">Brand ID</label>
+              <input type="text" id="loginBrandId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family: monospace; font-size: .85rem;">
+              <div class="field-hint">From your registration confirmation.</div>
+            </div>
+          </details>
           <button class="btn btn-primary" style="width:100%; font-size:1rem; padding:.9rem;" id="loginBtn" onclick="loadDashboard()">
-            View My Analytics →
+            Sign In →
           </button>
+          <label style="display: flex; align-items: center; gap: .5rem; margin-top: 1rem; font-size: .85rem; cursor: pointer; color: var(--muted);">
+            <input type="checkbox" id="rememberMe" checked style="width: auto;">
+            Remember me on this device
+          </label>
           <p style="text-align: center; margin-top: 1.25rem; font-size: .85rem; color: var(--muted);">
-            Don't have a Brand ID? <a href="/contact-us" style="color: var(--cyan); font-weight: 700;">Contact us to register →</a>
+            New brand? <a href="/register" style="color: var(--cyan); font-weight: 700;">Register free →</a>
+          </p>
+          <p style="text-align: center; margin-top: .5rem; font-size: .82rem; color: var(--muted);">
+            <a href="/contact-us" style="color: var(--muted);">Need help signing in?</a>
           </p>
         </div>
       </div>
@@ -1070,32 +1179,21 @@
             </div>
           </div>
 
-          <!-- ── Section: Products ── -->
+          <!-- ── Section: Products & QRs (unified) ── -->
           <div class="sw-section">
             <div class="sw-section-head">
               <div>
-                <h3>👕 Products</h3>
-                <p>Your inventory. Add products with name, price &amp; image — then generate a QR for each.</p>
+                <h3>👕 Products & QRs</h3>
+                <p>Each product comes with its own printable QR. Add a product → QR auto-generated.</p>
               </div>
               <button class="btn btn-primary btn-sm" onclick="openAddProduct()">+ Add Product</button>
             </div>
-            <div id="productsList" class="products-list">
-              <div class="empty-state-mini">Loading products…</div>
+            <div id="unifiedList" class="unified-list">
+              <div class="empty-state-mini">Loading…</div>
             </div>
-          </div>
-
-          <!-- ── Section: QR Codes ── -->
-          <div class="sw-section">
-            <div class="sw-section-head">
-              <div>
-                <h3>📱 QR Codes</h3>
-                <p>One QR per product. Print on tags, displays, or shopping bags.</p>
-              </div>
-              <button class="btn btn-primary btn-sm" onclick="openCreateQrModal()">+ Generate QR</button>
-            </div>
-            <div id="qrGrid" class="qr-grid">
-              <div class="empty-state-mini">Loading QRs…</div>
-            </div>
+            <!-- Hidden legacy elements (kept for JS compatibility, not displayed) -->
+            <div id="productsList" style="display:none;"></div>
+            <div id="qrGrid" style="display:none;"></div>
           </div>
         </div>
 
@@ -1518,13 +1616,31 @@
   const API = 'https://api.tryinstantfit.com';
   let activeBrandId = null;
 
-  // ── Auto-load from URL param ──
+  // ── Auto-load from URL param OR localStorage ──
   (function() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     const email = params.get('email');
-    if (id) { document.getElementById('loginBrandId').value = id; loadDashboard(); }
-    else if (email) { document.getElementById('loginEmail').value = email; loadDashboard(); }
+    if (id) {
+      document.getElementById('loginBrandId').value = id;
+      loadDashboard();
+      return;
+    }
+    if (email) {
+      document.getElementById('loginEmail').value = email;
+      loadDashboard();
+      return;
+    }
+    // Fallback to localStorage (remembered session)
+    const remembered = localStorage.getItem('tif_brand_id');
+    const rememberedEmail = localStorage.getItem('tif_brand_email');
+    if (remembered) {
+      document.getElementById('loginBrandId').value = remembered;
+      loadDashboard();
+    } else if (rememberedEmail) {
+      document.getElementById('loginEmail').value = rememberedEmail;
+      loadDashboard();
+    }
   })();
 
   // ── Login / Load ──
@@ -1551,13 +1667,20 @@
 
       if (!brandId) { showLoginError('Please enter your email or Brand ID.'); return; }
 
+      // Persist for next visit if remember-me is checked
+      const rememberMe = document.getElementById('rememberMe')?.checked;
+      if (rememberMe) {
+        localStorage.setItem('tif_brand_id', brandId);
+        if (emailInput) localStorage.setItem('tif_brand_email', emailInput);
+      }
+
       await fetchAndRender(brandId);
 
     } catch (err) {
       showLoginError('Network error. Please try again.');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'View My Analytics →';
+      btn.textContent = 'Sign In →';
     }
   }
 
@@ -1817,6 +1940,8 @@
 
   function logout() {
     activeBrandId = null;
+    localStorage.removeItem('tif_brand_id');
+    localStorage.removeItem('tif_brand_email');
     hide('dashView');
     hide('loadingView');
     show('loginView');
@@ -2078,21 +2203,20 @@
   }
 
   // ════════════════════════════════════════════════════════════════
-  // PRODUCTS
+  // PRODUCTS (unified with QR codes)
   // ════════════════════════════════════════════════════════════════
   let allProducts = [];
+  let allQrs = [];
   let apImageFile = null;
 
   async function loadProducts() {
     if (!activeBrandId) return;
-    const list = document.getElementById('productsList');
     try {
       const res = await fetch(`${API}/api/brands/${activeBrandId}/products`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load');
       allProducts = data.products || [];
-      renderProducts();
-      // Refresh QR product picker
+      // Refresh QR product picker (used by legacy "+ Generate QR" if still around)
       const sel = document.getElementById('qrProductPick');
       if (sel) {
         const current = sel.value;
@@ -2102,32 +2226,95 @@
           ).join('');
         sel.value = current;
       }
+      renderUnified();
     } catch (err) {
-      list.innerHTML = `<div class="empty-state-mini">⚠ ${escapeHtml(err.message)}</div>`;
+      document.getElementById('unifiedList').innerHTML = `<div class="empty-state-mini">⚠ ${escapeHtml(err.message)}</div>`;
     }
   }
 
-  function renderProducts() {
-    const list = document.getElementById('productsList');
+  function renderUnified() {
+    const list = document.getElementById('unifiedList');
+    if (!list) return;
     if (allProducts.length === 0) {
-      list.innerHTML = `<div class="empty-state-mini" style="grid-column: 1 / -1;">No products yet. Click "+ Add Product" to start.</div>`;
+      list.innerHTML = `
+        <div class="empty-state-mini" style="grid-column: 1 / -1;">
+          <div style="font-size: 2.5rem; margin-bottom: .75rem;">👕</div>
+          <p style="margin:0; font-weight:600; color:var(--text);">No products yet.</p>
+          <p style="margin:.4rem 0 1rem; font-size:.85rem;">Add a product — its QR is auto-generated and ready to print.</p>
+          <button class="btn btn-primary btn-sm" onclick="openAddProduct()">+ Add Your First Product</button>
+        </div>`;
       return;
     }
-    list.innerHTML = allProducts.map(p => `
-      <div class="product-tile">
-        ${p.image_url
-          ? `<img class="product-tile-img" src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.name)}" loading="lazy">`
-          : '<div class="product-tile-img-placeholder">👕</div>'}
-        <div class="product-tile-body">
-          <div class="product-tile-name">${escapeHtml(p.name)}</div>
-          <div class="product-tile-sku">${escapeHtml(p.sku)}${!p.active ? ' · disabled' : ''}</div>
-          <div class="product-tile-price ${p.price ? '' : 'empty'}">${p.price ? formatPrice(p.price, p.currency) : 'No price set'}</div>
-        </div>
-        <div class="product-tile-actions">
-          <button class="btn btn-secondary" onclick="editProduct('${p.id}')">Edit</button>
-          <button class="btn btn-secondary" style="color:#991b1b;" onclick="deleteProduct('${p.id}', ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">Delete</button>
-        </div>
-      </div>`).join('');
+
+    // Index QRs by product_uuid for quick lookup
+    const qrByProductUuid = {};
+    allQrs.forEach(q => { if (q.product_uuid) qrByProductUuid[q.product_uuid] = q; });
+
+    list.innerHTML = allProducts.map(p => {
+      const qr = qrByProductUuid[p.id];
+      return `
+        <div class="unified-tile">
+          <div class="unified-tile-head">
+            ${p.image_url
+              ? `<img class="unified-tile-img" src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.name)}" loading="lazy">`
+              : '<div class="unified-tile-img-placeholder">👕</div>'}
+            <div class="unified-tile-info">
+              <div class="unified-tile-name">${escapeHtml(p.name)}</div>
+              <div class="unified-tile-sku">${escapeHtml(p.sku)}${!p.active ? ' · disabled' : ''}</div>
+              <div class="unified-tile-price ${p.price ? '' : 'empty'}">${p.price ? formatPrice(p.price, p.currency) : 'No price set'}</div>
+            </div>
+          </div>
+          ${qr ? `
+            <div class="unified-tile-qr">
+              <div class="unified-tile-qr-img">
+                <img src="${qrImageUrl(qr.scan_url, 200)}" alt="QR for ${escapeHtml(p.name)}">
+              </div>
+              <div class="unified-tile-qr-info">
+                <div class="row"><span class="muted">Try-Ons</span><strong>${fmt(qr.total_used || 0)}${qr.total_limit !== null ? ' / ' + fmt(qr.total_limit) : ''}</strong></div>
+                <div class="row"><span class="muted">Passcode</span><strong>${qr.requires_passcode ? '🔑 Required' : 'Open'}</strong></div>
+                <div class="row"><span class="muted">Status</span>${qr.active ? '<span class="status-badge pill-active">Active</span>' : '<span class="status-badge pill-inactive">Disabled</span>'}</div>
+              </div>
+            </div>
+            <div class="unified-tile-actions">
+              <button class="btn btn-primary" onclick="viewQrImage(${JSON.stringify(qr.scan_url).replace(/"/g, '&quot;')}, ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">📱 View QR</button>
+              ${(p.image_url || p.isolated_garment_url)
+                ? `<button class="btn btn-secondary" onclick="viewProductImages(${JSON.stringify(p.name).replace(/"/g, '&quot;')}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')})">View Processed</button>`
+                : '<span></span>'}
+              ${qr.active
+                ? `<button class="btn btn-secondary" style="color:#92400e; border-color:#fcd34d;" onclick="toggleQrActive('${qr.id}', false, ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">Disable QR</button>`
+                : `<button class="btn btn-primary" onclick="toggleQrActive('${qr.id}', true, ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">Re-enable QR</button>`}
+              <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteProduct('${p.id}', ${JSON.stringify(p.name).replace(/"/g, '&quot;')}, '${qr.id}')">Delete</button>
+            </div>
+          ` : `
+            <div class="unified-tile-no-qr">
+              ⚠️ No QR code yet. <button class="btn btn-primary btn-sm" style="margin-left: .5rem;" onclick="generateQrForProduct('${p.id}')">Generate QR</button>
+            </div>
+            <div class="unified-tile-actions">
+              <button class="btn btn-secondary" onclick="editProduct('${p.id}')">Edit Product</button>
+              <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteProduct('${p.id}', ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">Delete</button>
+            </div>
+          `}
+        </div>`;
+    }).join('');
+  }
+
+  // Generate a QR for a product that doesn't have one yet
+  async function generateQrForProduct(productUuid) {
+    try {
+      const res = await fetch(`${API}/api/qr/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brand_id: activeBrandId, product_uuid: productUuid }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      await loadQrCodes();
+      const product = allProducts.find(p => p.id === productUuid);
+      showQrSuccess(data.scan_url, data.qr.product_name, true, {
+        uploaded: product?.image_url,
+        isolated: data.isolated_garment_url || product?.isolated_garment_url,
+      });
+    } catch (err) { alert('Error: ' + err.message); }
   }
 
   function formatPrice(price, currency) {
@@ -2241,11 +2428,15 @@
     return false;
   }
 
-  async function deleteProduct(id, name) {
-    if (!confirm(`Delete "${name}"?\n\nIts QR codes will keep working but won't show product info. To stop QRs, disable them too.`)) return;
+  async function deleteProduct(id, name, qrId) {
+    if (!confirm(`Delete "${name}"?\n\nThis also deletes its QR code permanently. Cannot be undone.`)) return;
     try {
+      // Delete the QR first if present
+      if (qrId) {
+        await fetch(`${API}/api/qr/${qrId}?hard=true`, { method: 'DELETE' });
+      }
       const res = await fetch(`${API}/api/products/${id}?hard=true`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete');
+      if (!res.ok) throw new Error('Failed to delete product');
       await loadProducts();
       await loadQrCodes();
     } catch (err) { alert('Error: ' + err.message); }
@@ -2280,15 +2471,15 @@
 
   async function loadQrCodes() {
     if (!activeBrandId) return;
-    const grid = document.getElementById('qrGrid');
-    grid.innerHTML = `<div class="empty-state"><div class="spinner-lg" style="margin: 1rem auto;"></div><p style="margin:0; color:var(--muted);">Loading…</p></div>`;
     try {
       const res = await fetch(`${API}/api/brands/${activeBrandId}/qr-codes`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load');
-      renderQrCodes(data.qr_codes || []);
+      allQrs = data.qr_codes || [];
+      renderUnified();  // re-render unified tiles with QR data
     } catch (err) {
-      grid.innerHTML = `<div class="empty-state"><p style="color:#991b1b;">Error: ${escapeHtml(err.message)}</p></div>`;
+      console.error('[loadQrCodes]', err);
+      // Don't blow up — products list still renders without QRs
     }
   }
 
