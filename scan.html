@@ -140,6 +140,9 @@
 
     /* Photo upload */
     .upload-zone {
+      display: block;                /* labels are inline by default — override */
+      width: 100%;
+      box-sizing: border-box;
       border: 2px dashed var(--border);
       border-radius: var(--r-lg);
       padding: 2rem 1rem;
@@ -149,15 +152,16 @@
       background: var(--surface);
     }
     .upload-zone:hover, .upload-zone.dragging { border-color: var(--cyan); background: rgba(0,200,232,.05); }
-    .upload-zone .icon { font-size: 2.5rem; margin-bottom: .5rem; }
+    .upload-zone .icon { font-size: 2.5rem; margin-bottom: .5rem; line-height: 1; }
     .upload-zone p { margin: 0; font-size: .9rem; color: var(--muted); }
     .upload-zone strong { color: var(--text); }
     .upload-preview {
       width: 100%;
-      max-height: 320px;
+      max-height: 360px;
       object-fit: contain;
       border-radius: var(--r-md);
-      margin-bottom: 1rem;
+      display: block;
+      margin: 0 auto;
     }
 
     /* Result */
@@ -209,6 +213,19 @@
       padding: 1.5rem 1rem;
     }
     .scan-footer a { color: rgba(255,255,255,.7); }
+
+    /* Tighter padding on small phones */
+    @media (max-width: 420px) {
+      .scan-wrap { padding: 1rem .75rem; }
+      .scan-card { padding: 1.25rem; }
+      .product-image, .product-image-placeholder { width: 64px; height: 64px; }
+      .product-info h2 { font-size: 1rem; }
+      h3.step-title { font-size: .95rem; }
+      .upload-zone { padding: 1.5rem .75rem; }
+    }
+
+    /* Make sure all images scale */
+    img { max-width: 100%; }
   </style>
 </head>
 <body>
