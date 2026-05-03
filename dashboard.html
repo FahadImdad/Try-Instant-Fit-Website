@@ -8,6 +8,7 @@
   <link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
   <link rel="apple-touch-icon" href="/assets/favicon.jpg">
   <link rel="stylesheet" href="css/styles.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     /* ── Login card ── */
     .login-wrap { max-width: 480px; margin: 0 auto; }
@@ -1012,6 +1013,17 @@
         </div>
         <div class="card" style="box-shadow: var(--sh2); padding: 2.25rem;">
           <div class="alert" id="loginError"></div>
+
+          <!-- Google Sign-In button (primary) -->
+          <div id="googleSignInWrap" style="display: none; margin-bottom: 1.5rem;">
+            <div id="googleSignInBtn" style="display: flex; justify-content: center;"></div>
+            <div style="display: flex; align-items: center; gap: .75rem; margin: 1.25rem 0; color: var(--muted); font-size: .8rem;">
+              <div style="flex: 1; height: 1px; background: var(--border);"></div>
+              <span>OR</span>
+              <div style="flex: 1; height: 1px; background: var(--border);"></div>
+            </div>
+          </div>
+
           <div class="field">
             <label for="loginEmail">Brand Email</label>
             <input type="email" id="loginEmail" placeholder="you@yourbrand.com" autocomplete="email">
@@ -1615,6 +1627,73 @@
 <script>
   const API = 'https://api.tryinstantfit.com';
   let activeBrandId = null;
+
+  // ── Google Sign-In setup ──
+  let googleClientId = null;
+  async function initGoogleSignIn() {
+    try {
+      const res = await fetch(`${API}/api/auth/config`);
+      const cfg = await res.json();
+      if (!cfg.google_enabled || !cfg.google_client_id) return;
+      googleClientId = cfg.google_client_id;
+
+      // Wait for GSI script to load
+      const tryInit = () => {
+        if (typeof google === 'undefined' || !google.accounts) {
+          setTimeout(tryInit, 200);
+          return;
+        }
+        google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleGoogleSignIn,
+          auto_select: false,
+        });
+        google.accounts.id.renderButton(
+          document.getElementById('googleSignInBtn'),
+          { theme: 'outline', size: 'large', text: 'signin_with', shape: 'rectangular', width: 320 }
+        );
+        document.getElementById('googleSignInWrap').style.display = 'block';
+      };
+      tryInit();
+    } catch (e) {
+      // Silent fail — fallback to email login
+    }
+  }
+
+  async function handleGoogleSignIn(response) {
+    const errEl = document.getElementById('loginError');
+    errEl.className = 'alert';
+    try {
+      const res = await fetch(`${API}/api/brands/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_token: response.credential }),
+      });
+      const data = await res.json();
+
+      if (res.status === 404) {
+        // No brand registered — offer to register
+        errEl.textContent = `No brand registered with ${data.email}. Click "Register Free" below to create your account.`;
+        errEl.className = 'alert error';
+        return;
+      }
+      if (!res.ok) throw new Error(data.error || 'Sign-in failed');
+
+      // Persist
+      const rememberMe = document.getElementById('rememberMe')?.checked;
+      if (rememberMe) {
+        localStorage.setItem('tif_brand_id', data.brand_id);
+        localStorage.setItem('tif_brand_email', data.email);
+      }
+
+      await fetchAndRender(data.brand_id);
+    } catch (err) {
+      errEl.textContent = err.message; errEl.className = 'alert error';
+    }
+  }
+
+  // Initialize GSI as soon as page loads
+  initGoogleSignIn();
 
   // ── Auto-load from URL param OR localStorage ──
   (function() {

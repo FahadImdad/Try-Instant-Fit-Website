@@ -8,6 +8,7 @@
   <link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
   <link rel="apple-touch-icon" href="/assets/favicon.jpg">
   <link rel="stylesheet" href="css/styles.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     body { background: #f6f7fb; }
     .reg-shell { max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
@@ -87,6 +88,16 @@
   <div class="reg-card" id="formCard">
     <h1>Create Your Brand Account</h1>
     <p class="sub">Get full access to the dashboard immediately. Add credits when you're ready to launch — no card required up front, no trial expiration.</p>
+
+    <!-- Google Sign-Up button -->
+    <div id="googleSignUpWrap" style="display: none; margin-bottom: 1.5rem;">
+      <div id="googleSignUpBtn" style="display: flex; justify-content: center;"></div>
+      <div style="display: flex; align-items: center; gap: .75rem; margin: 1.25rem 0; color: var(--muted); font-size: .8rem;">
+        <div style="flex: 1; height: 1px; background: var(--border);"></div>
+        <span>OR fill the form manually</span>
+        <div style="flex: 1; height: 1px; background: var(--border);"></div>
+      </div>
+    </div>
 
     <div class="alert" id="regError"></div>
 
@@ -181,6 +192,73 @@
 <script>
 const API = 'https://api.tryinstantfit.com';
 let logoFileSelected = null;
+
+// ── Google Sign-Up ──
+async function initGoogleSignUp() {
+  try {
+    const res = await fetch(`${API}/api/auth/config`);
+    const cfg = await res.json();
+    if (!cfg.google_enabled || !cfg.google_client_id) return;
+
+    const tryInit = () => {
+      if (typeof google === 'undefined' || !google.accounts) {
+        setTimeout(tryInit, 200);
+        return;
+      }
+      google.accounts.id.initialize({
+        client_id: cfg.google_client_id,
+        callback: handleGoogleSignUp,
+        auto_select: false,
+      });
+      google.accounts.id.renderButton(
+        document.getElementById('googleSignUpBtn'),
+        { theme: 'outline', size: 'large', text: 'signup_with', shape: 'rectangular', width: 320 }
+      );
+      document.getElementById('googleSignUpWrap').style.display = 'block';
+    };
+    tryInit();
+  } catch (e) { /* silent fallback */ }
+}
+
+async function handleGoogleSignUp(response) {
+  const errEl = document.getElementById('regError');
+  errEl.className = 'alert';
+  try {
+    const res = await fetch(`${API}/api/brands/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_token: response.credential }),
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      // Already registered — sign in directly
+      window.location.href = `/dashboard?id=${data.brand_id}`;
+      return;
+    }
+
+    if (res.status === 404) {
+      // Not registered yet — pre-fill the form
+      document.getElementById('regName').value = data.name || '';
+      document.getElementById('regEmail').value = data.email || '';
+      document.getElementById('regEmail').readOnly = true;
+      document.getElementById('regEmail').style.background = 'var(--surface)';
+      // Hide the Google button now that we've populated
+      document.getElementById('googleSignUpWrap').style.display = 'none';
+      // Show success message
+      errEl.textContent = `✓ Verified ${data.email} via Google. Complete the form below to finish registration.`;
+      errEl.className = 'alert success';
+      // Scroll to brand name
+      document.getElementById('regName').focus();
+      return;
+    }
+    throw new Error(data.error || 'Google sign-up failed');
+  } catch (err) {
+    errEl.textContent = err.message; errEl.className = 'alert error';
+  }
+}
+
+initGoogleSignUp();
 
 (function wireLogoUpload() {
   const dz = document.getElementById('logoDropZone');
