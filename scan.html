@@ -276,7 +276,8 @@
       <div class="product-info">
         <h2 id="productName">Product Name</h2>
         <p id="brandName">Brand Name</p>
-        <span class="brand-pill" id="remainingPill" style="display:none;"></span>
+        <p id="productPrice" style="display:none; font-size:.95rem; font-weight:700; color:var(--indigo); margin: .15rem 0 0;"></p>
+        <span class="brand-pill" id="remainingPill" style="display:none; margin-top: .35rem;"></span>
       </div>
     </div>
     <h3 class="step-title"><span class="step-num" id="uploadStepNum">1</span> Upload Your Photo</h3>
@@ -365,6 +366,18 @@
       img.src = qrInfo.display_image_url;
       img.style.display = 'block';
       img.onload = () => document.getElementById('productImagePlaceholder').style.display = 'none';
+    }
+    // Show price if available
+    if (qrInfo.product_price !== null && qrInfo.product_price !== undefined) {
+      const priceEl = document.getElementById('productPrice');
+      if (priceEl) {
+        const c = qrInfo.product_currency || 'PKR';
+        const n = Number(qrInfo.product_price);
+        priceEl.textContent = c === 'PKR' ? 'Rs ' + n.toLocaleString('en-PK')
+          : c === 'USD' ? '$' + n.toFixed(2)
+          : `${c} ${n.toLocaleString()}`;
+        priceEl.style.display = 'block';
+      }
     }
     if (qrInfo.remaining !== null && !qrInfo.requires_passcode) {
       document.getElementById('remainingPill').textContent = `${qrInfo.remaining} tries left`;

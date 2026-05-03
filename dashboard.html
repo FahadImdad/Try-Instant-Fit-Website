@@ -283,6 +283,135 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
+    /* ── Scan & Wear sections ── */
+    .sw-section {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .sw-section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .sw-section-head h3 { margin: 0 0 .15rem; font-size: 1.05rem; }
+    .sw-section-head p { margin: 0; font-size: .82rem; color: var(--muted); }
+    .empty-state-mini {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      font-size: .9rem;
+      background: var(--surface);
+      border-radius: var(--r-md);
+    }
+
+    /* Brand passcodes list */
+    .passcodes-list { display: flex; flex-direction: column; gap: .5rem; }
+    .passcode-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      align-items: center;
+      gap: 1rem;
+      padding: .75rem 1rem;
+      background: var(--surface);
+      border-radius: var(--r-md);
+      border: 1px solid var(--border);
+    }
+    .passcode-code {
+      font-family: monospace;
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: .05em;
+      background: white;
+      padding: .35rem .65rem;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      color: var(--indigo);
+    }
+    .passcode-label { font-size: .9rem; color: var(--text); }
+    .passcode-label-empty { color: var(--muted); font-style: italic; }
+    .passcode-usage {
+      font-size: .85rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .passcode-usage strong { color: var(--text); }
+    @media (max-width:560px){
+      .passcode-row { grid-template-columns: 1fr 1fr; row-gap: .5rem; }
+    }
+
+    /* Products list */
+    .products-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: .85rem;
+    }
+    .product-tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-tile-img {
+      width: 100%;
+      aspect-ratio: 4/5;
+      object-fit: cover;
+      background: var(--surface2);
+      display: block;
+    }
+    .product-tile-img-placeholder {
+      width: 100%;
+      aspect-ratio: 4/5;
+      background: linear-gradient(135deg, var(--surface), var(--surface2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: var(--muted);
+    }
+    .product-tile-body { padding: .65rem .75rem; flex: 1; display: flex; flex-direction: column; gap: .2rem; }
+    .product-tile-name { font-weight: 700; font-size: .9rem; line-height: 1.2; color: var(--text); }
+    .product-tile-sku { font-size: .7rem; color: var(--muted); font-family: monospace; }
+    .product-tile-price { font-size: .85rem; font-weight: 700; color: var(--indigo); margin-top: auto; padding-top: .35rem; }
+    .product-tile-price.empty { color: var(--muted); font-weight: 500; font-style: italic; }
+    .product-tile-actions {
+      display: flex;
+      gap: .25rem;
+      padding: .5rem .65rem;
+      border-top: 1px solid var(--border);
+      background: white;
+    }
+    .product-tile-actions .btn { flex: 1; font-size: .75rem; padding: .4rem; }
+
+    /* QR card price/image enhancements */
+    .qr-card-product {
+      display: flex;
+      gap: .75rem;
+      align-items: center;
+      padding: .65rem;
+      background: var(--surface);
+      border-radius: var(--r-md);
+      margin-bottom: .75rem;
+    }
+    .qr-card-product img {
+      width: 56px;
+      height: 56px;
+      object-fit: cover;
+      border-radius: var(--r-sm);
+      flex-shrink: 0;
+      background: var(--surface2);
+    }
+    .qr-card-product-info { flex: 1; min-width: 0; }
+    .qr-card-product-name { font-weight: 700; font-size: .85rem; }
+    .qr-card-product-price { font-size: .78rem; color: var(--indigo); font-weight: 700; margin-top: .15rem; }
+
     /* ── Scan & Wear: QR Cards ── */
     .sw-toolbar {
       display: flex;
@@ -857,17 +986,45 @@
           <!-- Per-source stat strip -->
           <div class="source-stats" id="scanWearStats"></div>
 
-          <div class="sw-toolbar">
-            <div>
-              <h3 style="margin:0; font-size:1.1rem;">Your QR Codes</h3>
-              <p style="margin:.25rem 0 0; font-size:.85rem; color:var(--muted);">Generate one QR per product — print on tags, displays, or shopping bags.</p>
+          <!-- ── Section: Brand-wide Passcodes ── -->
+          <div class="sw-section">
+            <div class="sw-section-head">
+              <div>
+                <h3>🔑 Passcodes</h3>
+                <p>One passcode works across <strong>all your QR codes</strong>. Issue per-customer try-on limits.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openAddPasscode()">+ Add Passcode</button>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="openCreateQrModal()">+ Generate QR Code</button>
+            <div id="brandPasscodesList" class="passcodes-list">
+              <div class="empty-state-mini">Loading passcodes…</div>
+            </div>
           </div>
-          <div id="qrGrid" class="qr-grid">
-            <div class="empty-state">
-              <div class="icon">📱</div>
-              <p style="margin:0; font-weight:600; color:var(--text);">Loading your QRs…</p>
+
+          <!-- ── Section: Products ── -->
+          <div class="sw-section">
+            <div class="sw-section-head">
+              <div>
+                <h3>👕 Products</h3>
+                <p>Your inventory. Add products with name, price &amp; image — then generate a QR for each.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openAddProduct()">+ Add Product</button>
+            </div>
+            <div id="productsList" class="products-list">
+              <div class="empty-state-mini">Loading products…</div>
+            </div>
+          </div>
+
+          <!-- ── Section: QR Codes ── -->
+          <div class="sw-section">
+            <div class="sw-section-head">
+              <div>
+                <h3>📱 QR Codes</h3>
+                <p>One QR per product. Print on tags, displays, or shopping bags.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openCreateQrModal()">+ Generate QR</button>
+            </div>
+            <div id="qrGrid" class="qr-grid">
+              <div class="empty-state-mini">Loading QRs…</div>
             </div>
           </div>
         </div>
@@ -932,47 +1089,115 @@
       <div class="modal">
         <button class="modal-close" onclick="closeCreateQrModal()">&times;</button>
         <h3>Generate a QR Code</h3>
-        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.5rem;">One QR per product. Customers scan it to try the garment on.</p>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.5rem;">Pick a product from your inventory. Customers scan to try it on.</p>
         <div class="alert" id="createQrError"></div>
         <form onsubmit="return submitCreateQr(event);">
           <div class="field">
-            <label for="qrProductId">Product ID / SKU *</label>
-            <input type="text" id="qrProductId" required placeholder="e.g. summer-dress-001">
-            <div class="field-hint">Your internal product code. Must match the product image you've uploaded.</div>
+            <label for="qrProductPick">Pick a Product *</label>
+            <select id="qrProductPick" required style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-size: .95rem; font-family: inherit; background: white;">
+              <option value="">— Select an existing product —</option>
+            </select>
+            <div class="field-hint">Don't see your product? <a href="#" onclick="closeCreateQrModal(); openAddProduct(); return false;" style="color: var(--indigo); font-weight:600;">Add a new product first</a> — image gets pre-processed for AI.</div>
           </div>
-          <div class="field">
-            <label for="qrProductName">Product Name *</label>
-            <input type="text" id="qrProductName" required placeholder="e.g. Summer Floral Dress">
-            <div class="field-hint">Shown to customers on the scan page.</div>
-          </div>
-          <div class="field">
-            <label>Product Image *</label>
-            <div id="qrImageDropZone" style="border: 2px dashed var(--border); border-radius: var(--r-md); padding: 1.5rem 1rem; text-align: center; cursor: pointer; transition: all .2s; background: var(--surface);">
-              <input type="file" id="qrImageFile" accept="image/jpeg,image/png,image/webp" style="display: none;">
-              <div id="qrImageHint">
-                <div style="font-size: 2rem; margin-bottom: .25rem;">📷</div>
-                <p style="margin: 0; font-size: .9rem;"><strong>Click to upload</strong> or drag a product photo here</p>
-                <p style="margin: .25rem 0 0; font-size: .75rem; color: var(--muted);">JPG, PNG, or WebP up to 10MB</p>
-              </div>
-              <img id="qrImagePreview" style="display: none; max-height: 200px; max-width: 100%; border-radius: var(--r-sm); margin: 0 auto;">
-            </div>
-            <div class="field-hint">Customer-facing photo shown on the scan page. We'll also use this to generate the AI try-on.</div>
-          </div>
-          <div class="field" style="display: flex; align-items: center; gap: .75rem;">
+          <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .75rem; background: var(--surface); border-radius: var(--r-md);">
             <input type="checkbox" id="qrRequiresPasscode" style="width: auto;">
-            <label for="qrRequiresPasscode" style="margin: 0; cursor: pointer;">Require a passcode to scan</label>
+            <label for="qrRequiresPasscode" style="margin: 0; cursor: pointer; font-size: .9rem;">🔑 Require a passcode to scan this QR</label>
           </div>
           <div class="field">
-            <label for="qrTotalLimit">Total try-on limit (optional)</label>
+            <label for="qrTotalLimit">Total try-on cap (optional)</label>
             <input type="number" id="qrTotalLimit" min="0" placeholder="Leave blank for unlimited">
-            <div class="field-hint">Cap total try-ons across all customers. Useful for in-store campaigns.</div>
+            <div class="field-hint">Cap total try-ons on this specific QR. Useful for limited campaigns.</div>
           </div>
           <button type="submit" class="btn btn-primary" id="createQrSubmit" style="width:100%; padding: .9rem;">Generate QR →</button>
         </form>
       </div>
     </div>
 
-    <!-- ── Modal: Manage Passcodes ── -->
+    <!-- ── Modal: Add Brand-wide Passcode (NEW) ── -->
+    <div class="modal-backdrop" id="addPasscodeModal" onclick="if(event.target===this)closeAddPasscode()">
+      <div class="modal">
+        <button class="modal-close" onclick="closeAddPasscode()">&times;</button>
+        <h3>Add Passcode</h3>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.5rem;">This passcode will work across <strong>all your QR codes</strong>. Set a try-on limit per customer.</p>
+        <div class="alert" id="bpcError"></div>
+        <form onsubmit="return submitAddPasscode(event);">
+          <div class="field">
+            <label for="bpcCode">Code (or auto-generate)</label>
+            <input type="text" id="bpcCode" style="font-family: monospace; text-transform: uppercase;" placeholder="e.g. SARAH50">
+            <div class="field-hint">Leave blank for an auto-generated code.</div>
+          </div>
+          <div class="field">
+            <label for="bpcLabel">Customer Name (optional)</label>
+            <input type="text" id="bpcLabel" placeholder="e.g. Sarah Khan">
+            <div class="field-hint">Helps you remember who you gave it to.</div>
+          </div>
+          <div class="field">
+            <label for="bpcLimit">Try-On Limit *</label>
+            <input type="number" id="bpcLimit" min="1" required placeholder="e.g. 5">
+            <div class="field-hint">How many try-ons this customer can do (across all your products).</div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="bpcSubmit" style="width:100%; padding:.9rem;">Generate Passcode →</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Modal: Add Product ── -->
+    <div class="modal-backdrop" id="addProductModal" onclick="if(event.target===this)closeAddProduct()">
+      <div class="modal">
+        <button class="modal-close" onclick="closeAddProduct()">&times;</button>
+        <h3>Add Product</h3>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.5rem;">Add a product to your inventory. You can generate a QR for it next.</p>
+        <div class="alert" id="apError"></div>
+        <form onsubmit="return submitAddProduct(event);">
+          <div class="field">
+            <label>Product Image *</label>
+            <div id="apImageDropZone" style="border: 2px dashed var(--border); border-radius: var(--r-md); padding: 1.5rem 1rem; text-align: center; cursor: pointer; background: var(--surface);">
+              <input type="file" id="apImageFile" accept="image/jpeg,image/png,image/webp" style="display: none;">
+              <div id="apImageHint">
+                <div style="font-size: 2rem;">📷</div>
+                <p style="margin: .25rem 0 0; font-size: .9rem;"><strong>Click to upload</strong> or drag a photo</p>
+                <p style="margin: .15rem 0 0; font-size: .72rem; color: var(--muted);">JPG/PNG/WebP up to 10MB</p>
+              </div>
+              <img id="apImagePreview" style="display: none; max-height: 220px; max-width: 100%; border-radius: var(--r-sm); margin: 0 auto;">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="field">
+              <label for="apSku">SKU / Code *</label>
+              <input type="text" id="apSku" required placeholder="e.g. KURTA-001">
+            </div>
+            <div class="field">
+              <label for="apName">Name *</label>
+              <input type="text" id="apName" required placeholder="e.g. Black Cotton Kurta">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 110px; gap: 1rem;">
+            <div class="field">
+              <label for="apPrice">Price</label>
+              <input type="number" id="apPrice" step="1" min="0" placeholder="e.g. 4500">
+            </div>
+            <div class="field">
+              <label for="apCurrency">Currency</label>
+              <select id="apCurrency">
+                <option value="PKR" selected>PKR</option>
+                <option value="USD">USD</option>
+                <option value="AED">AED</option>
+                <option value="GBP">GBP</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="apDesc">Description (optional)</label>
+            <textarea id="apDesc" rows="2" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" id="apSubmit" style="width:100%; padding:.9rem;">Add Product → (~15s)</button>
+          <p style="font-size:.78rem; color:var(--muted); text-align:center; margin: .75rem 0 0;">We'll process the image with AI for try-ons. Takes about 15 seconds.</p>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Modal: Manage Passcodes (LEGACY — to be removed) ── -->
     <div class="modal-backdrop" id="passcodeModal" onclick="if(event.target===this)closePasscodeModal()">
       <div class="modal" style="max-width: 720px;">
         <button class="modal-close" onclick="closePasscodeModal()">&times;</button>
@@ -1461,9 +1686,270 @@
   function switchTab(tabName) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabName));
-    if (tabName === 'scanwear' && activeBrandId) loadQrCodes();
-    // tab-mirror is static (Contact Us card) — no fetching needed
+    if (tabName === 'scanwear' && activeBrandId) {
+      loadBrandPasscodes();
+      loadProducts();
+      loadQrCodes();
+    }
   }
+
+  // ════════════════════════════════════════════════════════════════
+  // BRAND-WIDE PASSCODES
+  // ════════════════════════════════════════════════════════════════
+  let allBrandPasscodes = [];
+
+  async function loadBrandPasscodes() {
+    if (!activeBrandId) return;
+    const list = document.getElementById('brandPasscodesList');
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/passcodes`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load');
+      allBrandPasscodes = data.passcodes || [];
+      renderBrandPasscodes();
+    } catch (err) {
+      list.innerHTML = `<div class="empty-state-mini">⚠ ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  function renderBrandPasscodes() {
+    const list = document.getElementById('brandPasscodesList');
+    if (allBrandPasscodes.length === 0) {
+      list.innerHTML = `<div class="empty-state-mini">No passcodes yet. Add one to control how many try-ons each customer gets.</div>`;
+      return;
+    }
+    list.innerHTML = allBrandPasscodes.map(p => {
+      const remaining = p.use_limit - p.used_count;
+      const exhausted = remaining <= 0;
+      const inactive = !p.active;
+      return `
+        <div class="passcode-row">
+          <span class="passcode-code">${escapeHtml(p.code)}</span>
+          <span class="passcode-label ${p.customer_label ? '' : 'passcode-label-empty'}">${p.customer_label ? escapeHtml(p.customer_label) : '(no label)'}</span>
+          <span class="passcode-usage"><strong>${p.used_count}/${p.use_limit}</strong> used</span>
+          <span>${inactive ? '<span class="status-badge pill-inactive">Disabled</span>' : exhausted ? '<span class="status-badge pill-inactive">Used Up</span>' : '<span class="status-badge pill-active">Active</span>'}</span>
+          <div style="display: flex; gap: .35rem;">
+            <button class="btn btn-secondary" style="font-size:.75rem; padding:.35rem .6rem;" onclick="viewPasscodeTryons('${p.id}', ${JSON.stringify(p.code).replace(/"/g, '&quot;')})">Try-Ons</button>
+            <button class="btn btn-secondary" style="font-size:.75rem; padding:.35rem .6rem; color:#991b1b;" onclick="deletePasscode('${p.id}', ${JSON.stringify(p.code).replace(/"/g, '&quot;')})">Delete</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function openAddPasscode() {
+    document.getElementById('bpcError').className = 'alert';
+    ['bpcCode','bpcLabel','bpcLimit'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('addPasscodeModal').classList.add('open');
+  }
+  function closeAddPasscode() { document.getElementById('addPasscodeModal').classList.remove('open'); }
+
+  async function submitAddPasscode(e) {
+    e.preventDefault();
+    const errEl = document.getElementById('bpcError');
+    const btn = document.getElementById('bpcSubmit');
+    errEl.className = 'alert';
+    btn.disabled = true; btn.textContent = 'Creating…';
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/passcodes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: document.getElementById('bpcCode').value.trim() || undefined,
+          customer_label: document.getElementById('bpcLabel').value.trim() || undefined,
+          use_limit: parseInt(document.getElementById('bpcLimit').value, 10),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      closeAddPasscode();
+      await loadBrandPasscodes();
+    } catch (err) {
+      errEl.textContent = err.message; errEl.className = 'alert error';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Generate Passcode →';
+    }
+    return false;
+  }
+
+  async function deletePasscode(id, code) {
+    if (!confirm(`Delete passcode "${code}"?\n\nThis cannot be undone.`)) return;
+    try {
+      const res = await fetch(`${API}/api/passcodes/${id}?hard=true`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
+      await loadBrandPasscodes();
+    } catch (err) { alert('Error: ' + err.message); }
+  }
+
+  async function viewPasscodeTryons(id, code) {
+    // Phase 3 will add a proper modal with sales feedback. For now, alert summary.
+    try {
+      const res = await fetch(`${API}/api/passcodes/${id}`);
+      const data = await res.json();
+      const tryons = data.tryons || [];
+      const sold = tryons.filter(t => t.sold).length;
+      alert(`Passcode "${code}"\n\n${tryons.length} try-ons run\n${sold} marked as sold\n\n(Sales feedback view coming soon)`);
+    } catch (err) { alert('Error: ' + err.message); }
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // PRODUCTS
+  // ════════════════════════════════════════════════════════════════
+  let allProducts = [];
+  let apImageFile = null;
+
+  async function loadProducts() {
+    if (!activeBrandId) return;
+    const list = document.getElementById('productsList');
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/products`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load');
+      allProducts = data.products || [];
+      renderProducts();
+      // Refresh QR product picker
+      const sel = document.getElementById('qrProductPick');
+      if (sel) {
+        const current = sel.value;
+        sel.innerHTML = '<option value="">— Select an existing product —</option>' +
+          allProducts.filter(p => p.active).map(p =>
+            `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(p.sku)})${p.price ? ' — ' + formatPrice(p.price, p.currency) : ''}</option>`
+          ).join('');
+        sel.value = current;
+      }
+    } catch (err) {
+      list.innerHTML = `<div class="empty-state-mini">⚠ ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  function renderProducts() {
+    const list = document.getElementById('productsList');
+    if (allProducts.length === 0) {
+      list.innerHTML = `<div class="empty-state-mini" style="grid-column: 1 / -1;">No products yet. Click "+ Add Product" to start.</div>`;
+      return;
+    }
+    list.innerHTML = allProducts.map(p => `
+      <div class="product-tile">
+        ${p.image_url
+          ? `<img class="product-tile-img" src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.name)}" loading="lazy">`
+          : '<div class="product-tile-img-placeholder">👕</div>'}
+        <div class="product-tile-body">
+          <div class="product-tile-name">${escapeHtml(p.name)}</div>
+          <div class="product-tile-sku">${escapeHtml(p.sku)}${!p.active ? ' · disabled' : ''}</div>
+          <div class="product-tile-price ${p.price ? '' : 'empty'}">${p.price ? formatPrice(p.price, p.currency) : 'No price set'}</div>
+        </div>
+        <div class="product-tile-actions">
+          <button class="btn btn-secondary" onclick="editProduct('${p.id}')">Edit</button>
+          <button class="btn btn-secondary" style="color:#991b1b;" onclick="deleteProduct('${p.id}', ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">Delete</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function formatPrice(price, currency) {
+    const n = Number(price);
+    if (currency === 'PKR') return 'Rs ' + n.toLocaleString('en-PK');
+    if (currency === 'USD') return '$' + n.toFixed(2);
+    return `${currency} ${n.toLocaleString()}`;
+  }
+
+  function openAddProduct() {
+    document.getElementById('apError').className = 'alert';
+    ['apSku','apName','apPrice','apDesc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('apCurrency').value = 'PKR';
+    apImageFile = null;
+    document.getElementById('apImageFile').value = '';
+    document.getElementById('apImagePreview').style.display = 'none';
+    document.getElementById('apImagePreview').src = '';
+    document.getElementById('apImageHint').style.display = 'block';
+    document.getElementById('addProductModal').classList.add('open');
+  }
+  function closeAddProduct() { document.getElementById('addProductModal').classList.remove('open'); }
+
+  // Wire up product image upload
+  (function wireApImageUpload() {
+    const dz = document.getElementById('apImageDropZone');
+    const fi = document.getElementById('apImageFile');
+    const pv = document.getElementById('apImagePreview');
+    const hint = document.getElementById('apImageHint');
+    if (!dz) return;
+    dz.addEventListener('click', () => fi.click());
+    fi.addEventListener('change', e => handle(e.target.files?.[0]));
+    function handle(f) {
+      if (!f) return;
+      if (!['image/jpeg','image/png','image/webp'].includes(f.type)) { alert('JPG/PNG/WebP only.'); return; }
+      if (f.size > 10*1024*1024) { alert('Max 10MB.'); return; }
+      apImageFile = f;
+      const r = new FileReader();
+      r.onload = e => { pv.src = e.target.result; pv.style.display = 'block'; hint.style.display = 'none'; };
+      r.readAsDataURL(f);
+    }
+    ['dragenter','dragover'].forEach(evt => dz.addEventListener(evt, e => {
+      e.preventDefault(); dz.style.borderColor = 'var(--cyan)';
+    }));
+    ['dragleave','drop'].forEach(evt => dz.addEventListener(evt, e => {
+      e.preventDefault(); dz.style.borderColor = 'var(--border)';
+      if (evt === 'drop') handle(e.dataTransfer?.files?.[0]);
+    }));
+  })();
+
+  async function submitAddProduct(e) {
+    e.preventDefault();
+    const errEl = document.getElementById('apError');
+    const btn = document.getElementById('apSubmit');
+    errEl.className = 'alert';
+    if (!apImageFile) { errEl.textContent = 'Please upload a product image.'; errEl.className = 'alert error'; return false; }
+    btn.disabled = true; btn.textContent = 'Processing image (~15s)…';
+    const fd = new FormData();
+    fd.append('sku', document.getElementById('apSku').value.trim());
+    fd.append('name', document.getElementById('apName').value.trim());
+    if (document.getElementById('apPrice').value) fd.append('price', document.getElementById('apPrice').value);
+    fd.append('currency', document.getElementById('apCurrency').value);
+    if (document.getElementById('apDesc').value.trim()) fd.append('description', document.getElementById('apDesc').value.trim());
+    fd.append('image', apImageFile);
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/products`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      closeAddProduct();
+      await loadProducts();
+    } catch (err) {
+      errEl.textContent = err.message; errEl.className = 'alert error';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Add Product → (~15s)';
+    }
+    return false;
+  }
+
+  async function deleteProduct(id, name) {
+    if (!confirm(`Delete "${name}"?\n\nIts QR codes will keep working but won't show product info. To stop QRs, disable them too.`)) return;
+    try {
+      const res = await fetch(`${API}/api/products/${id}?hard=true`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
+      await loadProducts();
+      await loadQrCodes();
+    } catch (err) { alert('Error: ' + err.message); }
+  }
+
+  async function editProduct(id) {
+    const p = allProducts.find(x => x.id === id);
+    if (!p) return;
+    const newName = prompt('Product name:', p.name);
+    if (newName === null) return;
+    const newPrice = prompt(`Price (in ${p.currency}, leave blank to clear):`, p.price ?? '');
+    if (newPrice === null) return;
+    try {
+      const res = await fetch(`${API}/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newName.trim() || p.name,
+          price: newPrice.trim() === '' ? null : parseFloat(newPrice),
+        }),
+      });
+      if (!res.ok) throw new Error('Update failed');
+      await loadProducts();
+    } catch (err) { alert('Error: ' + err.message); }
+  }
+
 
   // ── Scan & Wear: QR Codes ──
   function qrImageUrl(scanUrl, size = 200) {
@@ -1499,30 +1985,39 @@
     grid.innerHTML = qrs.map(q => {
       const used = q.total_used || 0;
       const limit = q.total_limit;
-      const usagePct = limit ? Math.min(100, (used / limit) * 100) : 0;
       const statusPill = !q.active
         ? '<span class="status-badge pill-inactive">Inactive</span>'
         : '<span class="status-badge pill-active">Active</span>';
+      const productImg = q.display_image_url;
+      const productPrice = q.product?.price ? formatPrice(q.product.price, q.product.currency) : null;
       return `
         <div class="qr-card">
+          <div class="qr-card-product">
+            ${productImg
+              ? `<img src="${escapeHtml(productImg)}" alt="${escapeHtml(q.product_name)}" onerror="this.style.display='none'">`
+              : '<div style="width:56px; height:56px; background: var(--surface2); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">👕</div>'}
+            <div class="qr-card-product-info">
+              <div class="qr-card-product-name">${escapeHtml(q.product_name)}</div>
+              ${productPrice ? `<div class="qr-card-product-price">${productPrice}</div>` : `<div style="font-size:.72rem; color:var(--muted);">${escapeHtml(q.product_id)}</div>`}
+            </div>
+            ${statusPill}
+          </div>
           <div class="qr-card-head">
             <div class="qr-image-box">
               <img src="${qrImageUrl(q.scan_url, 200)}" alt="QR for ${escapeHtml(q.product_name)}">
             </div>
             <div class="qr-card-meta">
-              <h4>${escapeHtml(q.product_name)} ${statusPill}</h4>
-              <p>SKU: ${escapeHtml(q.product_id)}</p>
-              <p style="margin-top:.4rem; font-size:.72rem; word-break: break-all;">${escapeHtml(q.scan_url)}</p>
-            </div>
-          </div>
-          <div class="qr-stats">
-            <div>
-              <div class="qr-stat-label">Try-Ons Used</div>
-              <div class="qr-stat-val">${fmt(used)}${limit !== null ? ' / ' + fmt(limit) : ''}</div>
-            </div>
-            <div>
-              <div class="qr-stat-label">Passcodes</div>
-              <div class="qr-stat-val">${q.requires_passcode ? `${fmt(q.active_passcodes || 0)} active` : '<span style="color:var(--muted); font-weight:400;">Not required</span>'}</div>
+              <p style="margin: 0; font-size:.72rem; word-break: break-all;">${escapeHtml(q.scan_url)}</p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap:.4rem; margin-top:.5rem;">
+                <div>
+                  <div class="qr-stat-label">Try-Ons</div>
+                  <div class="qr-stat-val">${fmt(used)}${limit !== null ? ' / ' + fmt(limit) : ''}</div>
+                </div>
+                <div>
+                  <div class="qr-stat-label">Passcode</div>
+                  <div class="qr-stat-val">${q.requires_passcode ? '🔑 Required' : '<span style="color:var(--muted); font-weight:400;">Open</span>'}</div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="qr-actions">
@@ -1530,7 +2025,6 @@
             ${q.display_image_url || q.isolated_garment_url
               ? `<button class="btn btn-secondary" onclick="viewProductImages(${JSON.stringify(q.product_name).replace(/"/g, '&quot;')}, ${JSON.stringify(q.display_image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(q.isolated_garment_url || '').replace(/"/g, '&quot;')})">View Processed</button>`
               : ''}
-            ${q.requires_passcode ? `<button class="btn btn-primary" onclick="openPasscodes('${q.id}', ${JSON.stringify(q.product_name).replace(/"/g, '&quot;')})">Manage Codes</button>` : ''}
           </div>
           <div style="display: flex; gap: .5rem; margin-top: .5rem; padding-top: .5rem; border-top: 1px solid var(--border);">
             ${q.active
@@ -1577,72 +2071,19 @@
     }
   }
 
-  // ── Create QR Modal ──
-  let qrImageFileSelected = null;
-
+  // ── Create QR Modal (now picks from products) ──
   function openCreateQrModal() {
     document.getElementById('createQrError').className = 'alert';
     document.getElementById('createQrError').textContent = '';
-    ['qrProductId','qrProductName','qrTotalLimit'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('qrProductPick').value = '';
+    document.getElementById('qrTotalLimit').value = '';
     document.getElementById('qrRequiresPasscode').checked = false;
-    qrImageFileSelected = null;
-    document.getElementById('qrImageFile').value = '';
-    document.getElementById('qrImagePreview').style.display = 'none';
-    document.getElementById('qrImagePreview').src = '';
-    document.getElementById('qrImageHint').style.display = 'block';
+    loadProducts();  // refresh dropdown
     document.getElementById('createQrModal').classList.add('open');
   }
   function closeCreateQrModal() {
     document.getElementById('createQrModal').classList.remove('open');
   }
-
-  // Wire up image upload (drag-drop + click)
-  (function wireQrImageUpload() {
-    const dropZone = document.getElementById('qrImageDropZone');
-    const fileInput = document.getElementById('qrImageFile');
-    const preview = document.getElementById('qrImagePreview');
-    const hint = document.getElementById('qrImageHint');
-    if (!dropZone) return;
-
-    dropZone.addEventListener('click', () => fileInput.click());
-
-    fileInput.addEventListener('change', e => handleFile(e.target.files?.[0]));
-
-    ['dragenter','dragover'].forEach(evt => dropZone.addEventListener(evt, e => {
-      e.preventDefault(); e.stopPropagation();
-      dropZone.style.borderColor = 'var(--cyan)';
-      dropZone.style.background = 'rgba(0,200,232,.05)';
-    }));
-    ['dragleave','drop'].forEach(evt => dropZone.addEventListener(evt, e => {
-      e.preventDefault(); e.stopPropagation();
-      dropZone.style.borderColor = 'var(--border)';
-      dropZone.style.background = 'var(--surface)';
-    }));
-    dropZone.addEventListener('drop', e => {
-      const file = e.dataTransfer?.files?.[0];
-      if (file) handleFile(file);
-    });
-
-    function handleFile(file) {
-      if (!file) return;
-      if (!['image/jpeg','image/png','image/webp'].includes(file.type)) {
-        alert('Please upload a JPG, PNG, or WebP image.');
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        alert('Image must be under 10MB.');
-        return;
-      }
-      qrImageFileSelected = file;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        preview.src = ev.target.result;
-        preview.style.display = 'block';
-        hint.style.display = 'none';
-      };
-      reader.readAsDataURL(file);
-    }
-  })();
 
   async function submitCreateQr(e) {
     e.preventDefault();
@@ -1650,35 +2091,37 @@
     const errEl = document.getElementById('createQrError');
     errEl.className = 'alert';
 
-    if (!qrImageFileSelected) {
-      errEl.textContent = 'Please upload a product image.';
+    const productUuid = document.getElementById('qrProductPick').value;
+    if (!productUuid) {
+      errEl.textContent = 'Please pick a product. Add one first if you don\'t have any.';
       errEl.className = 'alert error';
       return false;
     }
 
     const totalLimitVal = document.getElementById('qrTotalLimit').value;
-    const fd = new FormData();
-    fd.append('brand_id', activeBrandId);
-    fd.append('product_id', document.getElementById('qrProductId').value.trim());
-    fd.append('product_name', document.getElementById('qrProductName').value.trim());
-    fd.append('display_image', qrImageFileSelected);
-    fd.append('requires_passcode', document.getElementById('qrRequiresPasscode').checked ? 'true' : 'false');
-    if (totalLimitVal) fd.append('total_limit', totalLimitVal);
+    const payload = {
+      brand_id: activeBrandId,
+      product_uuid: productUuid,
+      requires_passcode: document.getElementById('qrRequiresPasscode').checked,
+      total_limit: totalLimitVal ? parseInt(totalLimitVal, 10) : undefined,
+    };
 
     btn.disabled = true;
-    btn.textContent = 'Processing image (~15s)…';
+    btn.textContent = 'Generating…';
     try {
       const res = await fetch(`${API}/api/qr/generate`, {
         method: 'POST',
-        body: fd,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Generation failed');
 
       closeCreateQrModal();
+      const product = allProducts.find(p => p.id === productUuid);
       showQrSuccess(data.scan_url, data.qr.product_name, data.garment_isolated, {
-        uploaded: data.uploaded_image_url,
-        isolated: data.isolated_garment_url,
+        uploaded: product?.image_url,
+        isolated: data.isolated_garment_url || product?.isolated_garment_url,
       });
       loadQrCodes();
     } catch (err) {
