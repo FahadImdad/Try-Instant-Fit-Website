@@ -249,6 +249,176 @@
       th:nth-child(3), td:nth-child(3) { display: none; }
       .stat-value { font-size: 1.75rem; }
     }
+
+    /* ── Tab Navigation ── */
+    .tab-nav {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: .85rem 1.25rem;
+      font-size: .95rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: inherit;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all .2s;
+      position: relative;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: var(--cyan);
+      border-bottom-color: var(--cyan);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Scan & Wear: QR Cards ── */
+    .sw-toolbar {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+    .qr-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      padding: 1.25rem;
+      transition: all .2s;
+    }
+    .qr-card:hover { box-shadow: var(--sh1); transform: translateY(-2px); }
+    .qr-card-head {
+      display: flex;
+      gap: 1rem;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+    .qr-image-box {
+      width: 96px;
+      height: 96px;
+      flex-shrink: 0;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 4px;
+    }
+    .qr-image-box img { width: 100%; height: 100%; display: block; }
+    .qr-card-meta { flex: 1; min-width: 0; }
+    .qr-card-meta h4 { margin: 0 0 .25rem; font-size: 1rem; word-break: break-word; }
+    .qr-card-meta p { margin: 0; font-size: .82rem; color: var(--muted); }
+    .qr-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: .5rem;
+      padding: .75rem;
+      background: var(--surface);
+      border-radius: var(--r-md);
+      margin-bottom: .75rem;
+    }
+    .qr-stat-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    .qr-stat-val { font-size: .95rem; font-weight: 700; color: var(--text); }
+    .qr-actions {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+    .qr-actions .btn { font-size: .8rem; padding: .55rem .85rem; flex: 1; }
+    .pill-inactive { background: #fee2e2; color: #991b1b; }
+    .pill-active { background: #d1fae5; color: #065f46; }
+
+    /* ── Scan & Wear: Modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 9998;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: white;
+      border-radius: var(--r-xl);
+      padding: 2rem;
+      max-width: 560px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--sh3);
+    }
+    .modal h3 { margin: 0 0 .5rem; font-size: 1.25rem; }
+    .modal-close {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--muted);
+      margin-top: -.5rem;
+      margin-right: -.5rem;
+    }
+
+    /* ── Passcodes Table ── */
+    .pc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .85rem;
+    }
+    .pc-table th, .pc-table td {
+      padding: .65rem .75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .pc-table th {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+      font-weight: 700;
+      background: var(--surface);
+    }
+    .pc-code-pill {
+      display: inline-block;
+      padding: .2rem .6rem;
+      border-radius: var(--r-sm);
+      background: #eff6ff;
+      color: #1e40af;
+      font-family: monospace;
+      font-weight: 700;
+      font-size: .85rem;
+    }
+    .pc-progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      width: 100px;
+    }
+    .pc-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #14b8a6);
+      transition: width .3s;
+    }
+    .pc-progress-fill.warning { background: linear-gradient(90deg, #f59e0b, #f97316); }
+    .pc-progress-fill.danger { background: linear-gradient(90deg, #ef4444, #dc2626); }
   </style>
 </head>
 <body>
@@ -370,22 +540,48 @@
           </div>
         </div>
 
-        <!-- Products breakdown -->
-        <div class="products-section" id="productsSection" style="display:none;">
-          <div class="section-head">
-            <h3>Products</h3>
-            <span style="font-size: .8rem; color: var(--muted);" id="productsSubtitle"></span>
-          </div>
-          <div class="products-grid" id="productsGrid"></div>
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="tryons" onclick="switchTab('tryons')">📊 Try-Ons & Analytics</button>
+          <button class="tab-btn" data-tab="scanwear" onclick="switchTab('scanwear')">📱 Scan & Wear</button>
         </div>
 
-        <!-- Recent try-ons table -->
-        <div class="table-wrap">
-          <div class="table-head">
-            <h3>Recent Try-Ons</h3>
-            <span style="font-size: .8rem; color: var(--muted);">Last 20 records</span>
+        <!-- Tab: Try-Ons (existing) -->
+        <div id="tab-tryons" class="tab-content active">
+          <!-- Products breakdown -->
+          <div class="products-section" id="productsSection" style="display:none;">
+            <div class="section-head">
+              <h3>Products</h3>
+              <span style="font-size: .8rem; color: var(--muted);" id="productsSubtitle"></span>
+            </div>
+            <div class="products-grid" id="productsGrid"></div>
           </div>
-          <div id="tableBody"></div>
+
+          <!-- Recent try-ons table -->
+          <div class="table-wrap">
+            <div class="table-head">
+              <h3>Recent Try-Ons</h3>
+              <span style="font-size: .8rem; color: var(--muted);">Last 20 records</span>
+            </div>
+            <div id="tableBody"></div>
+          </div>
+        </div>
+
+        <!-- Tab: Scan & Wear -->
+        <div id="tab-scanwear" class="tab-content">
+          <div class="sw-toolbar">
+            <div>
+              <h3 style="margin:0; font-size:1.1rem;">Your QR Codes</h3>
+              <p style="margin:.25rem 0 0; font-size:.85rem; color:var(--muted);">Generate one QR per product — print on tags, displays, or shopping bags.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openCreateQrModal()">+ Generate QR Code</button>
+          </div>
+          <div id="qrGrid" class="qr-grid">
+            <div class="empty-state">
+              <div class="icon">📱</div>
+              <p style="margin:0; font-weight:600; color:var(--text);">Loading your QRs…</p>
+            </div>
+          </div>
         </div>
 
         <!-- Lightbox -->
@@ -394,6 +590,101 @@
           <img id="lightboxImg" src="" alt="try-on result">
         </div>
 
+      </div>
+    </div>
+
+    <!-- ── Modal: Create QR ── -->
+    <div class="modal-backdrop" id="createQrModal" onclick="if(event.target===this)closeCreateQrModal()">
+      <div class="modal">
+        <button class="modal-close" onclick="closeCreateQrModal()">&times;</button>
+        <h3>Generate a QR Code</h3>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.5rem;">One QR per product. Customers scan it to try the garment on.</p>
+        <div class="alert" id="createQrError"></div>
+        <form onsubmit="return submitCreateQr(event);">
+          <div class="field">
+            <label for="qrProductId">Product ID / SKU *</label>
+            <input type="text" id="qrProductId" required placeholder="e.g. summer-dress-001">
+            <div class="field-hint">Your internal product code. Must match the product image you've uploaded.</div>
+          </div>
+          <div class="field">
+            <label for="qrProductName">Product Name *</label>
+            <input type="text" id="qrProductName" required placeholder="e.g. Summer Floral Dress">
+            <div class="field-hint">Shown to customers on the scan page.</div>
+          </div>
+          <div class="field">
+            <label for="qrDisplayImage">Product Image URL (optional)</label>
+            <input type="url" id="qrDisplayImage" placeholder="https://…">
+            <div class="field-hint">Customer-facing product photo to show on the scan page.</div>
+          </div>
+          <div class="field" style="display: flex; align-items: center; gap: .75rem;">
+            <input type="checkbox" id="qrRequiresPasscode" style="width: auto;">
+            <label for="qrRequiresPasscode" style="margin: 0; cursor: pointer;">Require a passcode to scan</label>
+          </div>
+          <div class="field">
+            <label for="qrTotalLimit">Total try-on limit (optional)</label>
+            <input type="number" id="qrTotalLimit" min="0" placeholder="Leave blank for unlimited">
+            <div class="field-hint">Cap total try-ons across all customers. Useful for in-store campaigns.</div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="createQrSubmit" style="width:100%; padding: .9rem;">Generate QR →</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Modal: Manage Passcodes ── -->
+    <div class="modal-backdrop" id="passcodeModal" onclick="if(event.target===this)closePasscodeModal()">
+      <div class="modal" style="max-width: 720px;">
+        <button class="modal-close" onclick="closePasscodeModal()">&times;</button>
+        <h3 id="pcModalTitle">Manage Passcodes</h3>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.5rem;" id="pcModalSubtitle">Issue passcodes to customers — each code limits how many try-ons that customer gets.</p>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom: 1.5rem;">
+          <div class="card" style="padding: 1rem;">
+            <h4 style="margin: 0 0 .75rem; font-size: .9rem;">Single Passcode</h4>
+            <div class="alert" id="pcSingleError"></div>
+            <form onsubmit="return submitSinglePasscode(event);">
+              <input type="text" id="pcCode" placeholder="Code (or auto-generate)" style="width:100%; padding:.6rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); margin-bottom: .5rem; font-family: monospace; text-transform: uppercase;">
+              <input type="text" id="pcLabel" placeholder="Customer label (e.g. Sarah K)" style="width:100%; padding:.6rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); margin-bottom: .5rem;">
+              <input type="number" id="pcLimit" placeholder="Try-on limit" min="1" required style="width:100%; padding:.6rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); margin-bottom: .75rem;">
+              <button type="submit" class="btn btn-secondary btn-sm" style="width:100%;">+ Add Passcode</button>
+            </form>
+          </div>
+          <div class="card" style="padding: 1rem;">
+            <h4 style="margin: 0 0 .75rem; font-size: .9rem;">Bulk Generate</h4>
+            <div class="alert" id="pcBulkError"></div>
+            <form onsubmit="return submitBulkPasscodes(event);">
+              <input type="number" id="pcBulkCount" placeholder="How many codes?" min="1" max="1000" required style="width:100%; padding:.6rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); margin-bottom: .5rem;">
+              <input type="number" id="pcBulkLimit" placeholder="Try-on limit per code" min="1" required style="width:100%; padding:.6rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); margin-bottom: .75rem;">
+              <button type="submit" class="btn btn-secondary btn-sm" style="width:100%;">⚡ Bulk Generate</button>
+            </form>
+          </div>
+        </div>
+
+        <h4 style="margin: 0 0 .75rem; font-size: .95rem;">Existing Passcodes</h4>
+        <div id="pcList">
+          <p style="color: var(--muted); font-size: .85rem;">Loading…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Modal: QR Generated Success ── -->
+    <div class="modal-backdrop" id="qrSuccessModal" onclick="if(event.target===this)closeQrSuccessModal()">
+      <div class="modal">
+        <button class="modal-close" onclick="closeQrSuccessModal()">&times;</button>
+        <h3 style="color: #10b981;">✓ QR Generated</h3>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.5rem;">Print this QR or save it. Customers scan it to start a try-on.</p>
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <div style="display: inline-block; padding: 1rem; background: white; border: 1px solid var(--border); border-radius: var(--r-md);">
+            <img id="qrSuccessImage" src="" alt="QR Code" style="width: 240px; height: 240px;">
+          </div>
+        </div>
+        <div class="field">
+          <label>Scan URL</label>
+          <input type="text" id="qrSuccessUrl" readonly style="font-family: monospace; font-size: .85rem;">
+        </div>
+        <div style="display: flex; gap: .5rem;">
+          <a id="qrSuccessDownload" download="" class="btn btn-primary" style="flex:1;">⬇ Download PNG</a>
+          <button class="btn btn-secondary" style="flex:1;" onclick="copyText('qrSuccessUrl')">📋 Copy URL</button>
+        </div>
       </div>
     </div>
 
@@ -656,6 +947,283 @@
       loadDashboard();
     }
   });
+
+  // ── Tab switching ──
+  function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabName));
+    if (tabName === 'scanwear' && activeBrandId) loadQrCodes();
+  }
+
+  // ── Scan & Wear: QR Codes ──
+  function qrImageUrl(scanUrl, size = 200) {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=10&data=${encodeURIComponent(scanUrl)}`;
+  }
+
+  async function loadQrCodes() {
+    if (!activeBrandId) return;
+    const grid = document.getElementById('qrGrid');
+    grid.innerHTML = `<div class="empty-state"><div class="spinner-lg" style="margin: 1rem auto;"></div><p style="margin:0; color:var(--muted);">Loading…</p></div>`;
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/qr-codes`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load');
+      renderQrCodes(data.qr_codes || []);
+    } catch (err) {
+      grid.innerHTML = `<div class="empty-state"><p style="color:#991b1b;">Error: ${escapeHtml(err.message)}</p></div>`;
+    }
+  }
+
+  function renderQrCodes(qrs) {
+    const grid = document.getElementById('qrGrid');
+    if (qrs.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column: 1 / -1;">
+          <div class="icon">📱</div>
+          <p style="margin:0; font-weight:600; color:var(--text);">No QR codes yet</p>
+          <p style="margin:.5rem 0 0; font-size:.85rem;">Generate your first QR to start using Scan & Wear in-store.</p>
+          <button class="btn btn-primary" style="margin-top:1rem;" onclick="openCreateQrModal()">+ Generate Your First QR</button>
+        </div>`;
+      return;
+    }
+    grid.innerHTML = qrs.map(q => {
+      const used = q.total_used || 0;
+      const limit = q.total_limit;
+      const usagePct = limit ? Math.min(100, (used / limit) * 100) : 0;
+      const statusPill = !q.active
+        ? '<span class="status-badge pill-inactive">Inactive</span>'
+        : '<span class="status-badge pill-active">Active</span>';
+      return `
+        <div class="qr-card">
+          <div class="qr-card-head">
+            <div class="qr-image-box">
+              <img src="${qrImageUrl(q.scan_url, 200)}" alt="QR for ${escapeHtml(q.product_name)}">
+            </div>
+            <div class="qr-card-meta">
+              <h4>${escapeHtml(q.product_name)} ${statusPill}</h4>
+              <p>SKU: ${escapeHtml(q.product_id)}</p>
+              <p style="margin-top:.4rem; font-size:.72rem; word-break: break-all;">${escapeHtml(q.scan_url)}</p>
+            </div>
+          </div>
+          <div class="qr-stats">
+            <div>
+              <div class="qr-stat-label">Try-Ons Used</div>
+              <div class="qr-stat-val">${fmt(used)}${limit !== null ? ' / ' + fmt(limit) : ''}</div>
+            </div>
+            <div>
+              <div class="qr-stat-label">Passcodes</div>
+              <div class="qr-stat-val">${q.requires_passcode ? `${fmt(q.active_passcodes || 0)} active` : '<span style="color:var(--muted); font-weight:400;">Not required</span>'}</div>
+            </div>
+          </div>
+          <div class="qr-actions">
+            <button class="btn btn-secondary" onclick="viewQrImage(${JSON.stringify(q.scan_url).replace(/"/g, '&quot;')}, ${JSON.stringify(q.product_name).replace(/"/g, '&quot;')})">View QR</button>
+            ${q.requires_passcode ? `<button class="btn btn-primary" onclick="openPasscodes('${q.id}', ${JSON.stringify(q.product_name).replace(/"/g, '&quot;')})">Manage Codes</button>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Create QR Modal ──
+  function openCreateQrModal() {
+    document.getElementById('createQrError').className = 'alert';
+    document.getElementById('createQrError').textContent = '';
+    ['qrProductId','qrProductName','qrDisplayImage','qrTotalLimit'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('qrRequiresPasscode').checked = false;
+    document.getElementById('createQrModal').classList.add('open');
+  }
+  function closeCreateQrModal() {
+    document.getElementById('createQrModal').classList.remove('open');
+  }
+
+  async function submitCreateQr(e) {
+    e.preventDefault();
+    const btn = document.getElementById('createQrSubmit');
+    const errEl = document.getElementById('createQrError');
+    errEl.className = 'alert';
+
+    const totalLimitVal = document.getElementById('qrTotalLimit').value;
+    const payload = {
+      brand_id: activeBrandId,
+      product_id: document.getElementById('qrProductId').value.trim(),
+      product_name: document.getElementById('qrProductName').value.trim(),
+      display_image_url: document.getElementById('qrDisplayImage').value.trim() || undefined,
+      requires_passcode: document.getElementById('qrRequiresPasscode').checked,
+      total_limit: totalLimitVal ? parseInt(totalLimitVal, 10) : undefined,
+    };
+
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+    try {
+      const res = await fetch(`${API}/api/qr/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Generation failed');
+
+      closeCreateQrModal();
+      showQrSuccess(data.scan_url, data.qr.product_name);
+      loadQrCodes();
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.className = 'alert error';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Generate QR →';
+    }
+    return false;
+  }
+
+  // ── QR Success / View ──
+  function showQrSuccess(scanUrl, productName) {
+    const imgUrl = qrImageUrl(scanUrl, 600);
+    const img = document.getElementById('qrSuccessImage');
+    img.src = imgUrl;
+    document.getElementById('qrSuccessUrl').value = scanUrl;
+    const dl = document.getElementById('qrSuccessDownload');
+    dl.href = imgUrl;
+    dl.download = `qr-${productName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.png`;
+    document.getElementById('qrSuccessModal').classList.add('open');
+  }
+  function closeQrSuccessModal() { document.getElementById('qrSuccessModal').classList.remove('open'); }
+  function viewQrImage(scanUrl, productName) { showQrSuccess(scanUrl, productName); }
+
+  function copyText(elementId) {
+    const el = document.getElementById(elementId);
+    el.select();
+    navigator.clipboard.writeText(el.value).catch(() => document.execCommand('copy'));
+    const originalBg = el.style.background;
+    el.style.background = '#d1fae5';
+    setTimeout(() => el.style.background = originalBg, 600);
+  }
+
+  // ── Passcodes ──
+  let activeQrId = null;
+  let activeQrName = '';
+
+  async function openPasscodes(qrId, productName) {
+    activeQrId = qrId;
+    activeQrName = productName;
+    document.getElementById('pcModalTitle').textContent = `Passcodes — ${productName}`;
+    ['pcCode','pcLabel','pcLimit','pcBulkCount','pcBulkLimit'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('pcSingleError').className = 'alert';
+    document.getElementById('pcBulkError').className = 'alert';
+    document.getElementById('passcodeModal').classList.add('open');
+    await loadPasscodes(qrId);
+  }
+  function closePasscodeModal() {
+    document.getElementById('passcodeModal').classList.remove('open');
+    activeQrId = null;
+    loadQrCodes();
+  }
+
+  async function loadPasscodes(qrId) {
+    const list = document.getElementById('pcList');
+    list.innerHTML = `<p style="color:var(--muted); font-size:.85rem;">Loading…</p>`;
+    try {
+      const res = await fetch(`${API}/api/qr/${qrId}/passcodes`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load');
+      renderPasscodes(data.passcodes || []);
+    } catch (err) {
+      list.innerHTML = `<p style="color:#991b1b; font-size:.85rem;">${escapeHtml(err.message)}</p>`;
+    }
+  }
+
+  function renderPasscodes(passcodes) {
+    const list = document.getElementById('pcList');
+    if (passcodes.length === 0) {
+      list.innerHTML = `<p style="color:var(--muted); font-size:.85rem; text-align:center; padding: 1rem;">No passcodes yet. Add one above.</p>`;
+      return;
+    }
+    list.innerHTML = `
+      <div style="overflow-x: auto;">
+        <table class="pc-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Customer</th>
+              <th>Usage</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${passcodes.map(p => {
+              const usagePct = (p.used_count / p.use_limit) * 100;
+              const fillClass = usagePct >= 100 ? 'danger' : usagePct >= 70 ? 'warning' : '';
+              return `
+                <tr>
+                  <td><span class="pc-code-pill">${escapeHtml(p.code)}</span></td>
+                  <td>${escapeHtml(p.customer_label || '—')}</td>
+                  <td>
+                    <div style="display:flex; align-items:center; gap:.5rem;">
+                      <span style="font-weight:600; font-size:.8rem; min-width: 50px;">${p.used_count}/${p.use_limit}</span>
+                      <div class="pc-progress-bar"><div class="pc-progress-fill ${fillClass}" style="width: ${Math.min(100, usagePct)}%;"></div></div>
+                    </div>
+                  </td>
+                  <td>${p.active ? (p.used_count >= p.use_limit ? '<span class="status-badge pill-inactive">Used Up</span>' : '<span class="status-badge pill-active">Active</span>') : '<span class="status-badge pill-inactive">Disabled</span>'}</td>
+                </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  async function submitSinglePasscode(e) {
+    e.preventDefault();
+    const errEl = document.getElementById('pcSingleError');
+    errEl.className = 'alert';
+    const payload = {
+      code: document.getElementById('pcCode').value.trim() || undefined,
+      customer_label: document.getElementById('pcLabel').value.trim() || undefined,
+      use_limit: parseInt(document.getElementById('pcLimit').value, 10),
+    };
+    try {
+      const res = await fetch(`${API}/api/qr/${activeQrId}/passcodes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      ['pcCode','pcLabel','pcLimit'].forEach(id => document.getElementById(id).value = '');
+      await loadPasscodes(activeQrId);
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.className = 'alert error';
+    }
+    return false;
+  }
+
+  async function submitBulkPasscodes(e) {
+    e.preventDefault();
+    const errEl = document.getElementById('pcBulkError');
+    errEl.className = 'alert';
+    const payload = {
+      count: parseInt(document.getElementById('pcBulkCount').value, 10),
+      use_limit: parseInt(document.getElementById('pcBulkLimit').value, 10),
+    };
+    try {
+      const res = await fetch(`${API}/api/qr/${activeQrId}/passcodes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      ['pcBulkCount','pcBulkLimit'].forEach(id => document.getElementById(id).value = '');
+      await loadPasscodes(activeQrId);
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.className = 'alert error';
+    }
+    return false;
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
 </script>
 </body>
 </html>

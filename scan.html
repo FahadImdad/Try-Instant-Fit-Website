@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Try It On — Try Instant Fit</title>
+  <meta name="description" content="Scan, upload your photo, see how it looks on you in seconds.">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body { background: linear-gradient(180deg, #0f1e3d 0%, #1a2f5a 100%); min-height: 100vh; }
+    .scan-wrap { max-width: 480px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+    .scan-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      padding-top: 1rem;
+    }
+    .scan-logo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: white;
+      margin-bottom: .5rem;
+    }
+    .scan-logo span { background: linear-gradient(90deg, #5a67f2, #00c8e8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .scan-card {
+      background: white;
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      box-shadow: 0 12px 48px rgba(0,0,0,.4);
+      margin-bottom: 1.25rem;
+    }
+
+    /* Loading */
+    .scan-loading {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: white;
+    }
+    .scan-loading .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid rgba(255,255,255,.15);
+      border-top-color: #00c8e8;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error / Expired */
+    .scan-error {
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+    .scan-error .icon { font-size: 3.5rem; margin-bottom: 1rem; }
+    .scan-error h2 { margin: 0 0 .5rem; font-size: 1.4rem; }
+    .scan-error p { color: var(--muted); margin: 0 0 1.5rem; }
+
+    /* Product header */
+    .product-head {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .product-image {
+      width: 80px;
+      height: 80px;
+      border-radius: .75rem;
+      object-fit: cover;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .product-image-placeholder {
+      width: 80px;
+      height: 80px;
+      border-radius: .75rem;
+      background: linear-gradient(135deg, #5a67f2, #00c8e8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+    .product-info h2 { font-size: 1.05rem; margin: 0 0 .15rem; }
+    .product-info p { font-size: .82rem; color: var(--muted); margin: 0; }
+    .brand-pill {
+      display: inline-block;
+      background: var(--surface);
+      padding: .15rem .5rem;
+      border-radius: var(--r-full);
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+      margin-top: .25rem;
+    }
+
+    /* Step header */
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: var(--cyan);
+      color: white;
+      border-radius: 50%;
+      font-size: .75rem;
+      font-weight: 800;
+      margin-right: .5rem;
+    }
+    h3.step-title {
+      font-size: 1rem;
+      margin: 0 0 .75rem;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Passcode */
+    .passcode-input {
+      width: 100%;
+      padding: .9rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: var(--r-md);
+      font-size: 1.15rem;
+      font-family: monospace;
+      text-transform: uppercase;
+      letter-spacing: .15em;
+      text-align: center;
+      font-weight: 700;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .passcode-input:focus { border-color: var(--cyan); }
+
+    /* Photo upload */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--r-lg);
+      padding: 2rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      background: var(--surface);
+    }
+    .upload-zone:hover, .upload-zone.dragging { border-color: var(--cyan); background: rgba(0,200,232,.05); }
+    .upload-zone .icon { font-size: 2.5rem; margin-bottom: .5rem; }
+    .upload-zone p { margin: 0; font-size: .9rem; color: var(--muted); }
+    .upload-zone strong { color: var(--text); }
+    .upload-preview {
+      width: 100%;
+      max-height: 320px;
+      object-fit: contain;
+      border-radius: var(--r-md);
+      margin-bottom: 1rem;
+    }
+
+    /* Result */
+    .result-image {
+      width: 100%;
+      border-radius: var(--r-lg);
+      margin-bottom: 1rem;
+    }
+    .result-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .5rem;
+      margin-bottom: .75rem;
+    }
+
+    /* Btn */
+    .btn-block {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: var(--r-md);
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      transition: all .2s;
+    }
+    .btn-block.primary {
+      background: linear-gradient(135deg, #5a67f2, #00c8e8);
+      color: white;
+    }
+    .btn-block.primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(90,103,242,.35); }
+    .btn-block.primary:disabled { opacity: .6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .alert {
+      padding: .75rem 1rem;
+      border-radius: var(--r-md);
+      font-size: .88rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; display: block; }
+
+    /* Footer */
+    .scan-footer {
+      text-align: center;
+      color: rgba(255,255,255,.45);
+      font-size: .75rem;
+      padding: 1.5rem 1rem;
+    }
+    .scan-footer a { color: rgba(255,255,255,.7); }
+  </style>
+</head>
+<body>
+
+<div class="scan-wrap">
+
+  <div class="scan-header">
+    <div class="scan-logo">Try Instant<span>Fit</span></div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loadingView" class="scan-loading">
+    <div class="spinner"></div>
+    <p>Loading your try-on…</p>
+  </div>
+
+  <!-- Error / not found / expired -->
+  <div id="errorView" class="scan-card scan-error" style="display:none;">
+    <div class="icon" id="errorIcon">⚠️</div>
+    <h2 id="errorTitle">Something went wrong</h2>
+    <p id="errorMessage">We couldn't load this QR code. Please ask the store staff for help.</p>
+  </div>
+
+  <!-- Step 1: Passcode (if required) -->
+  <div id="passcodeView" class="scan-card" style="display:none;">
+    <h3 class="step-title"><span class="step-num">1</span> Enter Your Passcode</h3>
+    <p style="color:var(--muted); font-size:.88rem; margin: 0 0 1rem;">The store gave you a code — type it below to start.</p>
+    <div class="alert" id="passcodeError"></div>
+    <input type="text" class="passcode-input" id="passcodeInput" maxlength="20" autocomplete="off" autocapitalize="characters" placeholder="ABC123">
+    <button class="btn-block primary" id="passcodeBtn" style="margin-top: 1rem;" onclick="validatePasscode()">Continue →</button>
+  </div>
+
+  <!-- Step 2: Product + Upload -->
+  <div id="uploadView" class="scan-card" style="display:none;">
+    <div class="product-head">
+      <img id="productImage" class="product-image" src="" alt="" style="display:none;">
+      <div id="productImagePlaceholder" class="product-image-placeholder">👗</div>
+      <div class="product-info">
+        <h2 id="productName">Product Name</h2>
+        <p id="brandName">Brand Name</p>
+        <span class="brand-pill" id="remainingPill" style="display:none;"></span>
+      </div>
+    </div>
+    <h3 class="step-title"><span class="step-num" id="uploadStepNum">1</span> Upload Your Photo</h3>
+    <p style="color:var(--muted); font-size:.88rem; margin: 0 0 1rem;">Stand against a plain background, full body, facing forward — best results.</p>
+    <div class="alert" id="uploadError"></div>
+    <label class="upload-zone" id="uploadZone">
+      <input type="file" id="photoInput" accept="image/*" capture="user" style="display:none;">
+      <div id="uploadHint">
+        <div class="icon">📸</div>
+        <p><strong>Tap to take a photo</strong></p>
+        <p style="font-size:.75rem; margin-top:.25rem;">or upload from gallery</p>
+      </div>
+      <img id="uploadPreview" class="upload-preview" style="display:none;" alt="Your photo">
+    </label>
+    <button class="btn-block primary" id="tryOnBtn" style="margin-top: 1rem;" onclick="runTryOn()" disabled>Try It On →</button>
+  </div>
+
+  <!-- Step 3: Processing -->
+  <div id="processingView" class="scan-card" style="display:none;">
+    <div class="scan-loading" style="color: var(--text); padding: 2rem 1rem;">
+      <div class="spinner" style="border-color: var(--border); border-top-color: var(--cyan);"></div>
+      <h3 style="margin: 1rem 0 .25rem;">Generating your try-on…</h3>
+      <p style="color: var(--muted); font-size: .85rem;">This usually takes 5–15 seconds.</p>
+    </div>
+  </div>
+
+  <!-- Step 4: Result -->
+  <div id="resultView" class="scan-card" style="display:none;">
+    <h3 class="step-title" style="margin-bottom: 1rem;">✨ Your Try-On</h3>
+    <img id="resultImage" class="result-image" src="" alt="Try-on result">
+    <div class="result-actions">
+      <a id="downloadBtn" class="btn btn-secondary" download="try-on.png">⬇ Download</a>
+      <button class="btn btn-secondary" onclick="shareResult()">↗ Share</button>
+    </div>
+    <button class="btn-block primary" onclick="retryFlow()">Try Another Photo</button>
+  </div>
+
+  <div class="scan-footer">
+    Powered by <a href="https://tryinstantfit.vercel.app" target="_blank">Try Instant Fit</a>
+  </div>
+
+</div>
+
+<script>
+  const API = 'https://backend-tryinstantfit.vercel.app';
+
+  let qrInfo = null;       // { qr_id, product_id, product_name, ..., requires_passcode, brand: {name, ...} }
+  let validatedPasscode = null;  // { code, passcode_id, remaining }
+  let userPhoto = null;    // File
+
+  // ── Init: read token from URL, lookup QR ──
+  (async function init() {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token') || params.get('t');
+    if (!token) return showError('🤔', 'No QR token', "This link doesn't have a QR token. Make sure you scanned a valid QR code.");
+
+    try {
+      const res = await fetch(`${API}/api/qr/lookup?token=${encodeURIComponent(token)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 410) {
+          if (data.error?.includes('expired')) return showError('⏰', 'QR Expired', "This QR code has expired. Please ask the store staff for a new one.");
+          if (data.error?.includes('limit')) return showError('🚫', 'No Tries Left', "This QR has reached its try-on limit. Please ask the store staff for a fresh one.");
+        }
+        return showError('🔍', 'QR Not Found', data.error || "We couldn't find this QR code.");
+      }
+      qrInfo = data;
+      hide('loadingView');
+      renderProductHeader();
+      if (qrInfo.requires_passcode) {
+        show('passcodeView');
+        document.getElementById('passcodeInput').focus();
+      } else {
+        show('uploadView');
+      }
+    } catch (err) {
+      showError('📡', 'Connection error', 'Please check your internet and try again.');
+    }
+  })();
+
+  function renderProductHeader() {
+    document.getElementById('productName').textContent = qrInfo.product_name;
+    document.getElementById('brandName').textContent = qrInfo.brand?.name || '—';
+    if (qrInfo.display_image_url) {
+      const img = document.getElementById('productImage');
+      img.src = qrInfo.display_image_url;
+      img.style.display = 'block';
+      img.onload = () => document.getElementById('productImagePlaceholder').style.display = 'none';
+    }
+    if (qrInfo.remaining !== null && !qrInfo.requires_passcode) {
+      document.getElementById('remainingPill').textContent = `${qrInfo.remaining} tries left`;
+      document.getElementById('remainingPill').style.display = 'inline-block';
+    }
+  }
+
+  // ── Passcode validation ──
+  async function validatePasscode() {
+    const code = document.getElementById('passcodeInput').value.trim().toUpperCase();
+    const errEl = document.getElementById('passcodeError');
+    const btn = document.getElementById('passcodeBtn');
+    errEl.className = 'alert';
+    if (!code) { errEl.textContent = 'Please enter your passcode.'; errEl.className = 'alert error'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+    try {
+      const res = await fetch(`${API}/api/qr/${qrInfo.qr_id}/redeem`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode: code }),
+      });
+      const data = await res.json();
+      if (!data.allowed) {
+        const reasons = {
+          passcode_required: 'Please enter a passcode.',
+          passcode_invalid: 'That passcode is invalid. Double-check the code from the store.',
+          passcode_expired: 'That passcode has expired.',
+          passcode_limit_reached: "You've used up all the try-ons on this passcode.",
+          qr_expired: 'This QR has expired.',
+          qr_limit_reached: 'This QR has run out of tries.',
+        };
+        errEl.textContent = reasons[data.reason] || 'Could not validate passcode.';
+        errEl.className = 'alert error';
+        return;
+      }
+      validatedPasscode = { code, passcode_id: data.passcode_id, remaining: data.remaining };
+      hide('passcodeView');
+      document.getElementById('uploadStepNum').textContent = '2';
+      if (data.remaining !== undefined && data.remaining !== null) {
+        document.getElementById('remainingPill').textContent = `${data.remaining} ${data.remaining === 1 ? 'try' : 'tries'} left on your code`;
+        document.getElementById('remainingPill').style.display = 'inline-block';
+      }
+      show('uploadView');
+    } catch (err) {
+      errEl.textContent = 'Network error. Try again.';
+      errEl.className = 'alert error';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Continue →';
+    }
+  }
+
+  // ── Photo upload ──
+  const photoInput = document.getElementById('photoInput');
+  const uploadZone = document.getElementById('uploadZone');
+  const uploadHint = document.getElementById('uploadHint');
+  const uploadPreview = document.getElementById('uploadPreview');
+
+  photoInput.addEventListener('change', e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showUploadError('Please pick an image file.'); return; }
+    if (file.size > 10 * 1024 * 1024) { showUploadError('Photo must be under 10MB.'); return; }
+    userPhoto = file;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      uploadPreview.src = ev.target.result;
+      uploadPreview.style.display = 'block';
+      uploadHint.style.display = 'none';
+      document.getElementById('tryOnBtn').disabled = false;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function showUploadError(msg) {
+    const errEl = document.getElementById('uploadError');
+    errEl.textContent = msg;
+    errEl.className = 'alert error';
+  }
+
+  // ── Run try-on ──
+  async function runTryOn() {
+    if (!userPhoto || !qrInfo) return;
+    const errEl = document.getElementById('uploadError');
+    errEl.className = 'alert';
+
+    hide('uploadView');
+    show('processingView');
+
+    try {
+      const fd = new FormData();
+      fd.append('user_photo', userPhoto);
+      fd.append('brand_id', qrInfo.brand?.id || '');
+      fd.append('product_id', qrInfo.product_id);
+      fd.append('product_name', qrInfo.product_name);
+      fd.append('product_image_url', qrInfo.display_image_url || '');
+      fd.append('source', 'scan-wear');
+      fd.append('qr_id', qrInfo.qr_id);
+      if (validatedPasscode?.passcode_id) {
+        fd.append('passcode_id', validatedPasscode.passcode_id);
+      }
+      // Use Gemini fallback (cheap, doesn't need a hosted product image — uses cached garment)
+      fd.append('provider', 'fallback');
+      fd.append('gemini_model', 'gemini-2.5-flash-image');
+      fd.append('output_resolution', '1024');
+
+      const res = await fetch(`${API}/api/widget/try-on`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Try-on failed');
+
+      hide('processingView');
+      document.getElementById('resultImage').src = data.result_url;
+      document.getElementById('downloadBtn').href = data.result_url;
+      show('resultView');
+    } catch (err) {
+      hide('processingView');
+      show('uploadView');
+      showUploadError(err.message || 'Try-on failed. Please try again.');
+    }
+  }
+
+  function retryFlow() {
+    userPhoto = null;
+    photoInput.value = '';
+    uploadHint.style.display = 'block';
+    uploadPreview.style.display = 'none';
+    uploadPreview.src = '';
+    document.getElementById('tryOnBtn').disabled = true;
+    document.getElementById('uploadError').className = 'alert';
+    hide('resultView');
+    show('uploadView');
+  }
+
+  async function shareResult() {
+    const url = document.getElementById('resultImage').src;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'My virtual try-on', text: `Check out how ${qrInfo.product_name} looks on me!`, url });
+        return;
+      } catch (err) { /* user cancelled */ }
+    }
+    navigator.clipboard.writeText(url);
+    alert('Link copied! Paste it anywhere to share.');
+  }
+
+  // ── Helpers ──
+  function show(id) { document.getElementById(id).style.display = 'block'; }
+  function hide(id) { document.getElementById(id).style.display = 'none'; }
+  function showError(icon, title, message) {
+    hide('loadingView');
+    document.getElementById('errorIcon').textContent = icon;
+    document.getElementById('errorTitle').textContent = title;
+    document.getElementById('errorMessage').textContent = message;
+    show('errorView');
+  }
+</script>
+
+</body>
+</html>
