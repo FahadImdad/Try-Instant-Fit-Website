@@ -390,6 +390,76 @@
     }
     .product-tile-actions .btn { flex: 1; font-size: .75rem; padding: .4rem; }
 
+    /* Passcode try-ons / sales feedback */
+    .ptc-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: .75rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, rgba(90,103,242,.08), rgba(0,200,232,.08));
+      border-radius: var(--r-md);
+      margin-bottom: 1rem;
+    }
+    .ptc-summary-cell { text-align: center; }
+    .ptc-summary-num { font-size: 1.4rem; font-weight: 800; color: var(--text); line-height: 1; }
+    .ptc-summary-num.sold { color: #10b981; }
+    .ptc-summary-num.revenue { color: var(--indigo); }
+    .ptc-summary-lbl { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-top: .3rem; }
+    .ptc-list { display: flex; flex-direction: column; gap: .65rem; max-height: 50vh; overflow-y: auto; }
+    .ptc-row {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: .85rem;
+      align-items: center;
+      padding: .65rem;
+      background: var(--surface);
+      border-radius: var(--r-md);
+      border: 1px solid var(--border);
+      transition: border-color .2s;
+    }
+    .ptc-row.sold {
+      border-color: #6ee7b7;
+      background: rgba(16,185,129,.05);
+    }
+    .ptc-row-thumb {
+      width: 64px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: var(--r-sm);
+      cursor: zoom-in;
+      background: var(--surface2);
+    }
+    .ptc-row-info { min-width: 0; }
+    .ptc-row-name { font-weight: 600; font-size: .9rem; }
+    .ptc-row-meta { font-size: .75rem; color: var(--muted); margin-top: .15rem; }
+    .ptc-row-price { font-size: .8rem; color: #10b981; font-weight: 700; margin-top: .25rem; }
+    .ptc-sold-toggle {
+      display: flex;
+      gap: .35rem;
+      align-items: center;
+    }
+    .ptc-sold-btn {
+      padding: .4rem .75rem;
+      border-radius: var(--r-md);
+      font-size: .78rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: white;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .ptc-sold-btn:hover { border-color: #10b981; color: #10b981; }
+    .ptc-sold-btn.active { background: #10b981; color: white; border-color: #10b981; }
+    .ptc-sold-edit {
+      width: 90px;
+      padding: .35rem .5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      font-size: .82rem;
+      font-family: inherit;
+    }
+
     /* QR card price/image enhancements */
     .qr-card-product {
       display: flex;
@@ -903,7 +973,7 @@
             </div>
           </div>
           <div class="credits-actions">
-            <a href="https://wa.me/923112011606?text=Hi%2C%20I%27d%20like%20to%20top%20up%20my%20Try%20Instant%20Fit%20credits." target="_blank" rel="noopener" class="btn btn-primary btn-sm">💬 Top Up via WhatsApp</a>
+            <button class="btn btn-primary btn-sm" onclick="openTopupModal()">💳 Top Up Credits</button>
           </div>
         </div>
 
@@ -1191,9 +1261,117 @@
             <label for="apDesc">Description (optional)</label>
             <textarea id="apDesc" rows="2" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
           </div>
-          <button type="submit" class="btn btn-primary" id="apSubmit" style="width:100%; padding:.9rem;">Add Product → (~15s)</button>
-          <p style="font-size:.78rem; color:var(--muted); text-align:center; margin: .75rem 0 0;">We'll process the image with AI for try-ons. Takes about 15 seconds.</p>
+          <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .75rem; background: var(--surface); border-radius: var(--r-md); margin-bottom: .75rem;">
+            <input type="checkbox" id="apQrPasscode" style="width: auto;">
+            <label for="apQrPasscode" style="margin: 0; cursor: pointer; font-size: .9rem;">🔑 Require a passcode for this product's QR</label>
+          </div>
+          <div class="field">
+            <label for="apQrLimit">QR try-on cap (optional)</label>
+            <input type="number" id="apQrLimit" min="0" placeholder="Leave blank for unlimited">
+            <div class="field-hint">Cap total customers who can try this product. Useful for limited campaigns.</div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="apSubmit" style="width:100%; padding:.9rem;">Add Product &amp; Generate QR → (~15s)</button>
+          <p style="font-size:.78rem; color:var(--muted); text-align:center; margin: .75rem 0 0;">We'll process the image with AI and generate a printable QR. Takes about 15 seconds.</p>
         </form>
+      </div>
+    </div>
+
+    <!-- ── Modal: Top Up Credits ── -->
+    <div class="modal-backdrop" id="topupModal" onclick="if(event.target===this)closeTopupModal()">
+      <div class="modal" style="max-width: 560px;">
+        <button class="modal-close" onclick="closeTopupModal()">&times;</button>
+        <h3>Top Up Credits</h3>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.25rem;">Pay via bank transfer / JazzCash / EasyPaisa, then upload the screenshot. We'll review and approve within hours.</p>
+        <div class="alert" id="tuError"></div>
+
+        <form onsubmit="return submitTopup(event);">
+          <!-- Amount picker -->
+          <div class="field">
+            <label>How much would you like to top up?</label>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; margin-bottom: .5rem;">
+              <button type="button" class="topup-preset" data-usd="10" onclick="setTopupAmount(10)">$10</button>
+              <button type="button" class="topup-preset" data-usd="25" onclick="setTopupAmount(25)">$25</button>
+              <button type="button" class="topup-preset" data-usd="50" onclick="setTopupAmount(50)">$50</button>
+              <button type="button" class="topup-preset" data-usd="100" onclick="setTopupAmount(100)">$100</button>
+            </div>
+            <input type="number" id="tuAmountUsd" min="1" step="1" required placeholder="Or enter custom USD amount" oninput="recalcTopup()">
+          </div>
+
+          <div id="tuConversion" style="display:none; padding: 1rem; background: linear-gradient(135deg, rgba(90,103,242,.08), rgba(0,200,232,.08)); border-radius: var(--r-md); margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem;">
+              <span style="font-size:.85rem; color:var(--muted);">You'll get</span>
+              <span style="font-size: 1.4rem; font-weight: 800; color: var(--indigo);" id="tuCredits">— credits</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size:.85rem; color:var(--muted);">Local equivalent (~)</span>
+              <span style="font-weight: 700;" id="tuLocal">— PKR</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="tuMethod">Payment Method *</label>
+            <select id="tuMethod" required style="width:100%; padding:.7rem .9rem; border:1px solid var(--border); border-radius: var(--r-md); font-size: .95rem; font-family: inherit; background: white;">
+              <option value="">— Select method —</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="jazzcash">JazzCash</option>
+              <option value="easypaisa">EasyPaisa</option>
+              <option value="card">Credit/Debit Card</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="tuRef">Transaction Reference / ID (optional)</label>
+            <input type="text" id="tuRef" placeholder="e.g. TXN-1234567">
+          </div>
+
+          <div class="field">
+            <label>Payment Screenshot *</label>
+            <label class="logo-zone" for="tuScreenshotFile" id="tuScreenshotZone" style="display:block; border: 2px dashed var(--border); border-radius: var(--r-md); padding: 1.25rem; text-align: center; cursor: pointer; background: var(--surface);">
+              <input type="file" id="tuScreenshotFile" accept="image/jpeg,image/png,image/webp" style="display: none;">
+              <div id="tuScreenshotHint">
+                <div style="font-size: 1.6rem;">📸</div>
+                <p style="margin: .25rem 0 0; font-size: .9rem;"><strong>Click to upload</strong> payment screenshot</p>
+                <p style="margin: .15rem 0 0; font-size: .72rem; color: var(--muted);">JPG/PNG/WebP up to 10MB</p>
+              </div>
+              <img id="tuScreenshotPreview" style="display: none; max-height: 180px; max-width: 100%; border-radius: var(--r-sm); margin: 0 auto;">
+            </label>
+          </div>
+
+          <div class="field">
+            <label for="tuNotes">Notes (optional)</label>
+            <input type="text" id="tuNotes" placeholder="Anything we should know?">
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="tuSubmit" style="width:100%; padding:.9rem; font-size: 1rem;">Submit Top-Up Request →</button>
+          <p style="font-size:.78rem; color:var(--muted); text-align:center; margin: .75rem 0 0;">After we approve, credits land in your account within minutes.</p>
+        </form>
+      </div>
+    </div>
+
+    <style>
+      .topup-preset {
+        padding: .65rem;
+        border: 1.5px solid var(--border);
+        background: white;
+        border-radius: var(--r-md);
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: .9rem;
+        transition: all .15s;
+      }
+      .topup-preset:hover, .topup-preset.active { border-color: var(--indigo); background: rgba(90,103,242,.08); color: var(--indigo); }
+    </style>
+
+    <!-- ── Modal: Passcode Try-Ons (sales feedback) ── -->
+    <div class="modal-backdrop" id="passcodeTryonsModal" onclick="if(event.target===this)closePasscodeTryons()">
+      <div class="modal" style="max-width: 760px;">
+        <button class="modal-close" onclick="closePasscodeTryons()">&times;</button>
+        <h3 id="ptcTitle">Try-Ons</h3>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1rem;" id="ptcSubtitle">Mark which products this customer actually bought.</p>
+        <div id="ptcSummary" class="ptc-summary"></div>
+        <div id="ptcList" class="ptc-list"></div>
       </div>
     </div>
 
@@ -1507,9 +1685,9 @@
         <div class="source-stat-sub">per try-on</div>
       </div>
       <div class="source-stat">
-        <div class="source-stat-label">AI Cost</div>
-        <div class="source-stat-val">$${(gl.cost_usd_total || 0).toFixed(2)}</div>
-        <div class="source-stat-sub">total spend</div>
+        <div class="source-stat-label">Cost</div>
+        <div class="source-stat-val">$${((gl.total || 0) * (Number(brand.price_per_tryon_usd) || 0.125)).toFixed(2)}</div>
+        <div class="source-stat-sub">at $${(Number(brand.price_per_tryon_usd) || 0.125).toFixed(3)}/try-on</div>
       </div>
     `;
 
@@ -1618,9 +1796,9 @@
         <div class="source-stat-sub">issued</div>
       </div>
       <div class="source-stat">
-        <div class="source-stat-label">AI Cost</div>
-        <div class="source-stat-val">$${(sw.cost_usd_total || 0).toFixed(2)}</div>
-        <div class="source-stat-sub">total spend</div>
+        <div class="source-stat-label">Cost</div>
+        <div class="source-stat-val">$${((sw.total || 0) * (Number(brand.price_per_tryon_usd) || 0.125)).toFixed(2)}</div>
+        <div class="source-stat-sub">at $${(Number(brand.price_per_tryon_usd) || 0.125).toFixed(3)}/try-on</div>
       </div>
     `;
 
@@ -1780,14 +1958,122 @@
     } catch (err) { alert('Error: ' + err.message); }
   }
 
+  let activePasscodeTryons = [];
+  let activePasscodeId = null;
+  let activePasscodeCurrency = 'PKR';
+
   async function viewPasscodeTryons(id, code) {
-    // Phase 3 will add a proper modal with sales feedback. For now, alert summary.
+    activePasscodeId = id;
+    document.getElementById('ptcTitle').textContent = `Try-Ons — ${code}`;
+    document.getElementById('passcodeTryonsModal').classList.add('open');
+    document.getElementById('ptcList').innerHTML = '<div class="empty-state-mini">Loading…</div>';
+    document.getElementById('ptcSummary').innerHTML = '';
+
     try {
       const res = await fetch(`${API}/api/passcodes/${id}`);
       const data = await res.json();
-      const tryons = data.tryons || [];
-      const sold = tryons.filter(t => t.sold).length;
-      alert(`Passcode "${code}"\n\n${tryons.length} try-ons run\n${sold} marked as sold\n\n(Sales feedback view coming soon)`);
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      activePasscodeTryons = data.tryons || [];
+      // Default currency from first try-on, or fall back to brand default
+      const firstWithCur = activePasscodeTryons.find(t => t.sold_currency);
+      activePasscodeCurrency = firstWithCur?.sold_currency || 'PKR';
+      renderPasscodeTryons();
+    } catch (err) {
+      document.getElementById('ptcList').innerHTML = `<div class="empty-state-mini">⚠ ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  function closePasscodeTryons() {
+    document.getElementById('passcodeTryonsModal').classList.remove('open');
+    // Refresh passcode counts in case anything changed
+    loadBrandPasscodes();
+  }
+
+  function renderPasscodeTryons() {
+    const list = document.getElementById('ptcList');
+    const sumEl = document.getElementById('ptcSummary');
+    const total = activePasscodeTryons.length;
+    const sold = activePasscodeTryons.filter(t => t.sold);
+    const revenue = sold.reduce((s, t) => s + Number(t.sold_price || 0), 0);
+    const conv = total > 0 ? Math.round((sold.length / total) * 100) : 0;
+
+    sumEl.innerHTML = `
+      <div class="ptc-summary-cell"><div class="ptc-summary-num">${fmt(total)}</div><div class="ptc-summary-lbl">Try-Ons</div></div>
+      <div class="ptc-summary-cell"><div class="ptc-summary-num sold">${fmt(sold.length)}</div><div class="ptc-summary-lbl">Sold</div></div>
+      <div class="ptc-summary-cell"><div class="ptc-summary-num">${conv}%</div><div class="ptc-summary-lbl">Conversion</div></div>
+      <div class="ptc-summary-cell"><div class="ptc-summary-num revenue">${revenue > 0 ? formatPrice(revenue, activePasscodeCurrency) : '—'}</div><div class="ptc-summary-lbl">Revenue</div></div>
+    `;
+
+    if (total === 0) {
+      list.innerHTML = '<div class="empty-state-mini">No try-ons with this passcode yet.</div>';
+      return;
+    }
+
+    list.innerHTML = activePasscodeTryons.map(t => `
+      <div class="ptc-row ${t.sold ? 'sold' : ''}" id="ptc-row-${t.id}">
+        ${t.result_image_url
+          ? `<img class="ptc-row-thumb" src="${escapeHtml(t.result_image_url)}" alt="" onclick="openLightbox('${escapeHtml(t.result_image_url)}')" loading="lazy">`
+          : '<div class="ptc-row-thumb" style="display:flex; align-items:center; justify-content:center;">🧥</div>'}
+        <div class="ptc-row-info">
+          <div class="ptc-row-name">${escapeHtml(t.product_name || t.product_id || '—')}</div>
+          <div class="ptc-row-meta">${fmtDate(t.created_at)}</div>
+          ${t.sold && t.sold_price ? `<div class="ptc-row-price">✓ Sold · ${formatPrice(t.sold_price, t.sold_currency || activePasscodeCurrency)}${t.sold_notes ? ' · ' + escapeHtml(t.sold_notes) : ''}</div>` : ''}
+        </div>
+        <div class="ptc-sold-toggle">
+          ${t.sold
+            ? `<input type="number" class="ptc-sold-edit" id="price-${t.id}" placeholder="Sale price" value="${t.sold_price ?? ''}" onchange="updateSoldPrice('${t.id}', this.value)">
+               <button class="ptc-sold-btn active" onclick="toggleSold('${t.id}', false)">✓ Sold</button>`
+            : `<button class="ptc-sold-btn" onclick="toggleSold('${t.id}', true)">Mark Sold</button>`}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function toggleSold(tryonId, sold) {
+    let priceInput = null;
+    if (sold) {
+      const priceStr = prompt('Sale price (number only, no currency symbol):');
+      if (priceStr === null) return;
+      priceInput = priceStr.trim() === '' ? null : parseFloat(priceStr);
+      if (priceInput !== null && isNaN(priceInput)) { alert('Invalid price'); return; }
+    }
+    try {
+      const res = await fetch(`${API}/api/tryons/${tryonId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sold,
+          sold_price: priceInput,
+          sold_currency: activePasscodeCurrency,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      // Update local state
+      const t = activePasscodeTryons.find(x => x.id === tryonId);
+      if (t) {
+        t.sold = data.tryon.sold;
+        t.sold_price = data.tryon.sold_price;
+        t.sold_currency = data.tryon.sold_currency;
+        t.sold_at = data.tryon.sold_at;
+      }
+      renderPasscodeTryons();
+    } catch (err) { alert('Error: ' + err.message); }
+  }
+
+  async function updateSoldPrice(tryonId, value) {
+    const price = value.trim() === '' ? null : parseFloat(value);
+    if (price !== null && isNaN(price)) { alert('Invalid price'); return; }
+    try {
+      const res = await fetch(`${API}/api/tryons/${tryonId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sold_price: price }),
+      });
+      if (!res.ok) throw new Error('Update failed');
+      const t = activePasscodeTryons.find(x => x.id === tryonId);
+      if (t) t.sold_price = price;
+      renderPasscodeTryons();
     } catch (err) { alert('Error: ' + err.message); }
   }
 
@@ -1853,8 +2139,9 @@
 
   function openAddProduct() {
     document.getElementById('apError').className = 'alert';
-    ['apSku','apName','apPrice','apDesc'].forEach(id => document.getElementById(id).value = '');
+    ['apSku','apName','apPrice','apDesc','apQrLimit'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('apCurrency').value = 'PKR';
+    document.getElementById('apQrPasscode').checked = false;
     apImageFile = null;
     document.getElementById('apImageFile').value = '';
     document.getElementById('apImagePreview').style.display = 'none';
@@ -1897,7 +2184,7 @@
     const btn = document.getElementById('apSubmit');
     errEl.className = 'alert';
     if (!apImageFile) { errEl.textContent = 'Please upload a product image.'; errEl.className = 'alert error'; return false; }
-    btn.disabled = true; btn.textContent = 'Processing image (~15s)…';
+    btn.disabled = true; btn.textContent = 'Step 1/2: processing image…';
     const fd = new FormData();
     fd.append('sku', document.getElementById('apSku').value.trim());
     fd.append('name', document.getElementById('apName').value.trim());
@@ -1905,16 +2192,51 @@
     fd.append('currency', document.getElementById('apCurrency').value);
     if (document.getElementById('apDesc').value.trim()) fd.append('description', document.getElementById('apDesc').value.trim());
     fd.append('image', apImageFile);
+
+    const requirePasscode = document.getElementById('apQrPasscode').checked;
+    const qrLimit = document.getElementById('apQrLimit').value;
+
     try {
+      // Step 1: create the product (charges 1 credit for AI processing)
       const res = await fetch(`${API}/api/brands/${activeBrandId}/products`, { method: 'POST', body: fd });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed');
+      if (!res.ok) throw new Error(data.error || 'Product creation failed');
+
+      // Step 2: auto-generate QR for the product
+      btn.textContent = 'Step 2/2: generating QR…';
+      const qrRes = await fetch(`${API}/api/qr/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brand_id: activeBrandId,
+          product_uuid: data.product.id,
+          requires_passcode: requirePasscode,
+          total_limit: qrLimit ? parseInt(qrLimit, 10) : undefined,
+        }),
+      });
+      const qrData = await qrRes.json();
+      if (!qrRes.ok) {
+        // Product created but QR failed — show warning instead of error
+        closeAddProduct();
+        await loadProducts();
+        alert(`Product saved, but QR generation failed: ${qrData.error || 'Unknown error'}\n\nYou can still create the QR manually from the QR Codes section.`);
+        return false;
+      }
+
       closeAddProduct();
       await loadProducts();
+      await loadQrCodes();
+      // Show the QR success modal so the brand can immediately download/print
+      showQrSuccess(qrData.scan_url, qrData.qr.product_name, qrData.garment_isolated, {
+        uploaded: data.product.image_url,
+        isolated: qrData.isolated_garment_url || data.product.isolated_garment_url,
+      });
+      // Refresh brand info so credits widget reflects the deduction
+      if (typeof refreshDashboard === 'function') refreshDashboard();
     } catch (err) {
       errEl.textContent = err.message; errEl.className = 'alert error';
     } finally {
-      btn.disabled = false; btn.textContent = 'Add Product → (~15s)';
+      btn.disabled = false; btn.textContent = 'Add Product & Generate QR → (~15s)';
     }
     return false;
   }
@@ -2317,6 +2639,113 @@
     } catch (err) {
       errEl.textContent = err.message;
       errEl.className = 'alert error';
+    }
+    return false;
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // CREDIT TOP-UP
+  // ════════════════════════════════════════════════════════════════
+  const USD_TO_PKR = 280;  // hardcoded conversion rate; update as needed
+  let tuScreenshotFile = null;
+
+  function openTopupModal() {
+    document.getElementById('tuError').className = 'alert';
+    ['tuAmountUsd','tuRef','tuNotes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('tuMethod').value = '';
+    document.querySelectorAll('.topup-preset').forEach(p => p.classList.remove('active'));
+    tuScreenshotFile = null;
+    document.getElementById('tuScreenshotFile').value = '';
+    document.getElementById('tuScreenshotPreview').style.display = 'none';
+    document.getElementById('tuScreenshotPreview').src = '';
+    document.getElementById('tuScreenshotHint').style.display = 'block';
+    document.getElementById('tuConversion').style.display = 'none';
+    document.getElementById('topupModal').classList.add('open');
+  }
+  function closeTopupModal() { document.getElementById('topupModal').classList.remove('open'); }
+
+  function setTopupAmount(usd) {
+    document.getElementById('tuAmountUsd').value = usd;
+    document.querySelectorAll('.topup-preset').forEach(p => {
+      p.classList.toggle('active', Number(p.dataset.usd) === usd);
+    });
+    recalcTopup();
+  }
+
+  function recalcTopup() {
+    const usd = parseFloat(document.getElementById('tuAmountUsd').value) || 0;
+    if (usd <= 0) {
+      document.getElementById('tuConversion').style.display = 'none';
+      return;
+    }
+    const rate = (lastDashboardData?.brand?.price_per_tryon_usd) ? Number(lastDashboardData.brand.price_per_tryon_usd) : 0.125;
+    const credits = Math.floor(usd / rate);
+    const pkr = Math.round(usd * USD_TO_PKR);
+    document.getElementById('tuCredits').textContent = `${fmt(credits)} credits`;
+    document.getElementById('tuLocal').textContent = `Rs ${fmt(pkr)}`;
+    document.getElementById('tuConversion').style.display = 'block';
+  }
+
+  // Wire screenshot upload
+  (function wireTuScreenshot() {
+    const fi = document.getElementById('tuScreenshotFile');
+    const pv = document.getElementById('tuScreenshotPreview');
+    const hint = document.getElementById('tuScreenshotHint');
+    if (!fi) return;
+    fi.addEventListener('change', e => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      if (!['image/jpeg','image/png','image/webp'].includes(f.type)) { alert('JPG/PNG/WebP only'); return; }
+      if (f.size > 10*1024*1024) { alert('Max 10MB'); return; }
+      tuScreenshotFile = f;
+      const r = new FileReader();
+      r.onload = e => { pv.src = e.target.result; pv.style.display = 'block'; hint.style.display = 'none'; };
+      r.readAsDataURL(f);
+    });
+  })();
+
+  async function submitTopup(e) {
+    e.preventDefault();
+    const errEl = document.getElementById('tuError');
+    const btn = document.getElementById('tuSubmit');
+    errEl.className = 'alert';
+
+    const usd = parseFloat(document.getElementById('tuAmountUsd').value);
+    if (!usd || usd <= 0) { errEl.textContent = 'Enter a valid USD amount.'; errEl.className = 'alert error'; return false; }
+    if (!document.getElementById('tuMethod').value) { errEl.textContent = 'Select a payment method.'; errEl.className = 'alert error'; return false; }
+    if (!tuScreenshotFile) { errEl.textContent = 'Please upload your payment screenshot.'; errEl.className = 'alert error'; return false; }
+
+    const rate = (lastDashboardData?.brand?.price_per_tryon_usd) ? Number(lastDashboardData.brand.price_per_tryon_usd) : 0.125;
+    const credits = Math.floor(usd / rate);
+    const pkr = Math.round(usd * USD_TO_PKR);
+
+    const fd = new FormData();
+    fd.append('amount_usd', String(usd));
+    fd.append('amount_local', String(pkr));
+    fd.append('local_currency', 'PKR');
+    fd.append('credits_requested', String(credits));
+    fd.append('payment_method', document.getElementById('tuMethod').value);
+    if (document.getElementById('tuRef').value.trim()) fd.append('payment_ref', document.getElementById('tuRef').value.trim());
+    if (document.getElementById('tuNotes').value.trim()) fd.append('notes', document.getElementById('tuNotes').value.trim());
+    fd.append('screenshot', tuScreenshotFile);
+
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/topup-requests`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit');
+
+      closeTopupModal();
+      // Notify success + WhatsApp the team
+      const waMsg = `New top-up request from ${lastDashboardData?.brand?.name || 'a brand'}: $${usd} for ${credits} credits via ${document.getElementById('tuMethod').value}. Please review in admin panel.`;
+      const waUrl = `https://wa.me/923112011606?text=${encodeURIComponent(waMsg)}`;
+      if (confirm(`✓ Request submitted!\n\n$${usd} → ${credits} credits\n\nClick OK to also send a WhatsApp note to speed up approval.`)) {
+        window.open(waUrl, '_blank');
+      }
+    } catch (err) {
+      errEl.textContent = err.message; errEl.className = 'alert error';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Submit Top-Up Request →';
     }
     return false;
   }

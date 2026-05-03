@@ -283,7 +283,8 @@
     </div>
 
     <div class="admin-tabs">
-      <button class="admin-tab active" data-tab="submissions" onclick="switchAdminTab('submissions')">📥 Contact Submissions <span class="count" id="cntSubs">0</span></button>
+      <button class="admin-tab active" data-tab="submissions" onclick="switchAdminTab('submissions')">📥 Submissions <span class="count" id="cntSubs">0</span></button>
+      <button class="admin-tab" data-tab="topups" onclick="switchAdminTab('topups')">💳 Top-Up Requests <span class="count" id="cntTopups" style="background:#fef3c7; color:#92400e;">0</span></button>
       <button class="admin-tab" data-tab="brands" onclick="switchAdminTab('brands')">🏢 Brands <span class="count" id="cntBrands">0</span></button>
     </div>
 
@@ -298,6 +299,17 @@
         <button class="filter-pill" data-filter="rejected" onclick="filterSubs('rejected')">Rejected</button>
       </div>
       <div id="subsList"></div>
+    </div>
+
+    <!-- ── TOPUPS PANE ── -->
+    <div id="pane-topups" class="admin-pane">
+      <div class="filter-row" id="topupFilters">
+        <button class="filter-pill active" data-filter="" onclick="filterTopups('')">All</button>
+        <button class="filter-pill" data-filter="pending" onclick="filterTopups('pending')">Pending</button>
+        <button class="filter-pill" data-filter="approved" onclick="filterTopups('approved')">Approved</button>
+        <button class="filter-pill" data-filter="rejected" onclick="filterTopups('rejected')">Rejected</button>
+      </div>
+      <div id="topupsList"></div>
     </div>
 
     <!-- ── BRANDS PANE ── -->
@@ -493,7 +505,7 @@ function switchAdminTab(name) {
 }
 
 async function refreshAll() {
-  await Promise.all([loadSubs(), loadBrands()]);
+  await Promise.all([loadSubs(), loadBrands(), loadTopups()]);
 }
 
 // ── SUBMISSIONS ──
@@ -782,6 +794,101 @@ async function submitAddCredits(e) {
     btn.textContent = 'Add Credits →';
   }
   return false;
+}
+
+// ── TOP-UP REQUESTS ──
+let allTopups = [];
+let currentTopupFilter = '';
+
+async function loadTopups() {
+  try {
+    const res = await fetchAdmin('/api/admin/topup-requests');
+    const data = await res.json();
+    allTopups = data.topups || [];
+    const pending = allTopups.filter(t => t.status === 'pending').length;
+    document.getElementById('cntTopups').textContent = pending;
+    renderTopups();
+  } catch (err) {
+    document.getElementById('topupsList').innerHTML = `<div class="empty"><p>Error: ${escapeHtml(err.message)}</p></div>`;
+  }
+}
+
+function filterTopups(status) {
+  currentTopupFilter = status;
+  document.querySelectorAll('#topupFilters .filter-pill').forEach(p => p.classList.toggle('active', p.dataset.filter === status));
+  renderTopups();
+}
+
+function renderTopups() {
+  const filtered = currentTopupFilter ? allTopups.filter(t => t.status === currentTopupFilter) : allTopups;
+  const container = document.getElementById('topupsList');
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="icon">💳</div><p>No top-up requests${currentTopupFilter ? ' with status "' + currentTopupFilter + '"' : ''}.</p></div>`;
+    return;
+  }
+  container.innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>Brand</th><th>Amount</th><th>Credits</th><th>Method</th><th>Screenshot</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${filtered.map(t => {
+          const localStr = t.amount_local ? ` (~${t.local_currency} ${Number(t.amount_local).toLocaleString()})` : '';
+          return `
+            <tr>
+              <td data-label="Brand">
+                <strong>${escapeHtml(t.brand?.name || '—')}</strong>
+                <div style="color:var(--muted); font-size:.78rem;">${escapeHtml(t.brand?.email || '')}</div>
+                <div style="font-size:.7rem; color:var(--muted); font-family: monospace;">${t.brand_id}</div>
+              </td>
+              <td data-label="Amount"><strong>$${Number(t.amount_usd).toFixed(2)}</strong>${localStr ? `<div style="font-size:.75rem; color:var(--muted);">${escapeHtml(localStr)}</div>` : ''}</td>
+              <td data-label="Credits"><strong>${t.credits_requested}</strong></td>
+              <td data-label="Method">${escapeHtml(t.payment_method)}${t.payment_ref ? `<div style="font-size:.7rem; color:var(--muted); font-family:monospace;">${escapeHtml(t.payment_ref)}</div>` : ''}</td>
+              <td data-label="Screenshot">${t.payment_screenshot_url ? `<a href="${escapeHtml(t.payment_screenshot_url)}" target="_blank"><img src="${escapeHtml(t.payment_screenshot_url)}" style="width:64px; height:64px; object-fit:cover; border-radius: var(--r-sm); cursor:zoom-in;" loading="lazy"></a>` : '—'}</td>
+              <td data-label="Status"><span class="status-pill pill-${t.status === 'pending' ? 'new' : t.status === 'approved' ? 'converted' : 'rejected'}">${t.status}</span>${t.rejection_reason ? `<div style="font-size:.72rem; color:#991b1b; margin-top:.25rem;">${escapeHtml(t.rejection_reason)}</div>` : ''}</td>
+              <td data-label="Date" style="color:var(--muted); font-size:.78rem;">${fmtDate(t.created_at)}</td>
+              <td data-label="Actions">
+                ${t.status === 'pending'
+                  ? `<div class="row-actions">
+                      <button class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #14b8a6); border-color: transparent;" onclick="approveTopup('${t.id}', ${Number(t.amount_usd)}, ${t.credits_requested}, '${escapeHtml(t.brand?.name || '').replace(/'/g, "\\'")}')">✓ Approve</button>
+                      <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="rejectTopup('${t.id}')">Reject</button>
+                    </div>`
+                  : t.notes ? `<div style="font-size:.78rem; color:var(--muted);">${escapeHtml(t.notes)}</div>` : ''}
+                ${t.brand?.name ? `<a class="btn btn-secondary" style="margin-top:.35rem; font-size:.7rem;" href="https://wa.me/?text=${encodeURIComponent(`Hi, your Try Instant Fit top-up of $${Number(t.amount_usd).toFixed(2)} (${t.credits_requested} credits) has been ${t.status === 'pending' ? 'received and is being reviewed' : t.status}.`)}" target="_blank">WhatsApp</a>` : ''}
+              </td>
+            </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function approveTopup(id, amount, credits, brandName) {
+  if (!confirm(`Approve $${amount.toFixed(2)} top-up for ${brandName} → adds ${credits} credits?`)) return;
+  try {
+    const res = await fetchAdmin(`/api/admin/topup-requests/${id}`, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'approve' }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    await loadTopups();
+    await loadBrands();
+    if (confirm(`✓ Approved! ${credits} credits added.\n\nClick OK to send a WhatsApp confirmation to ${brandName}.`)) {
+      const wa = `https://wa.me/?text=${encodeURIComponent(`✓ Your Try Instant Fit top-up of $${amount.toFixed(2)} has been approved. ${credits} credits added to your account. Open your dashboard to start using try-on.`)}`;
+      window.open(wa, '_blank');
+    }
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+async function rejectTopup(id) {
+  const reason = prompt('Reason for rejection (visible to brand):');
+  if (reason === null) return;
+  try {
+    const res = await fetchAdmin(`/api/admin/topup-requests/${id}`, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'reject', rejection_reason: reason }),
+    });
+    if (!res.ok) throw new Error('Failed');
+    await loadTopups();
+  } catch (err) { alert('Error: ' + err.message); }
 }
 
 // ── Helpers ──

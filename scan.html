@@ -239,11 +239,17 @@
 
 <div class="scan-wrap">
 
-  <div class="scan-header">
+  <div class="scan-header" id="scanHeader">
+    <!-- Default header (shown until brand logo is fetched) -->
     <a href="/" class="scan-logo" aria-label="Try Instant Fit">
       <img src="/assets/favicon.jpg" alt="">
       <span>Try Instant<span class="fit-mark">Fit</span></span>
     </a>
+  </div>
+  <!-- Brand logo header (shown if QR's brand has uploaded a logo) -->
+  <div id="brandHeader" style="display:none; text-align: center; margin-bottom: 1.5rem; padding: 1rem 0;">
+    <img id="brandLogoImg" src="" alt="" style="max-width: 200px; max-height: 80px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0,0,0,.25));">
+    <p style="color: rgba(255,255,255,.6); font-size: .72rem; margin: .75rem 0 0; letter-spacing: .05em;">POWERED BY <a href="/" target="_blank" style="color: rgba(255,255,255,.85); text-decoration: none; font-weight: 700;">Try Instant<span style="color: var(--cyan);">Fit</span></a></p>
   </div>
 
   <!-- Loading -->
@@ -359,6 +365,15 @@
   })();
 
   function renderProductHeader() {
+    // Swap to brand-logo header if available
+    if (qrInfo.brand?.logo_url) {
+      document.getElementById('scanHeader').style.display = 'none';
+      const bh = document.getElementById('brandHeader');
+      document.getElementById('brandLogoImg').src = qrInfo.brand.logo_url;
+      document.getElementById('brandLogoImg').alt = qrInfo.brand.name || '';
+      bh.style.display = 'block';
+    }
+
     document.getElementById('productName').textContent = qrInfo.product_name;
     document.getElementById('brandName').textContent = qrInfo.brand?.name || '—';
     if (qrInfo.display_image_url) {
