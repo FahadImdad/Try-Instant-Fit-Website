@@ -679,7 +679,8 @@
       <div class="modal">
         <button class="modal-close" onclick="closeQrSuccessModal()">&times;</button>
         <h3 style="color: #10b981;">✓ QR Generated</h3>
-        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.5rem;">Print this QR or save it. Customers scan it to start a try-on.</p>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1rem;">Print this QR or save it. Customers scan it to start a try-on.</p>
+        <div id="qrSuccessStatus" style="display:none; padding: .75rem 1rem; border-radius: var(--r-md); border: 1px solid; font-size: .85rem; margin-bottom: 1.5rem;"></div>
         <div style="text-align: center; margin-bottom: 1.5rem;">
           <div style="display: inline-block; padding: 1rem; background: white; border: 1px solid var(--border); border-radius: var(--r-md);">
             <img id="qrSuccessImage" src="" alt="QR Code" style="width: 240px; height: 240px;">
@@ -1120,7 +1121,7 @@
     if (totalLimitVal) fd.append('total_limit', totalLimitVal);
 
     btn.disabled = true;
-    btn.textContent = 'Uploading & generating…';
+    btn.textContent = 'Processing image (~15s)…';
     try {
       const res = await fetch(`${API}/api/qr/generate`, {
         method: 'POST',
@@ -1130,7 +1131,7 @@
       if (!res.ok) throw new Error(data.error || 'Generation failed');
 
       closeCreateQrModal();
-      showQrSuccess(data.scan_url, data.qr.product_name);
+      showQrSuccess(data.scan_url, data.qr.product_name, data.garment_isolated);
       loadQrCodes();
     } catch (err) {
       errEl.textContent = err.message;
@@ -1143,7 +1144,7 @@
   }
 
   // ── QR Success / View ──
-  function showQrSuccess(scanUrl, productName) {
+  function showQrSuccess(scanUrl, productName, garmentIsolated) {
     const imgUrl = qrImageUrl(scanUrl, 600);
     const img = document.getElementById('qrSuccessImage');
     img.src = imgUrl;
@@ -1151,10 +1152,29 @@
     const dl = document.getElementById('qrSuccessDownload');
     dl.href = imgUrl;
     dl.download = `qr-${productName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.png`;
+    // Status banner about garment processing
+    const statusEl = document.getElementById('qrSuccessStatus');
+    if (statusEl) {
+      if (garmentIsolated === true) {
+        statusEl.style.display = 'block';
+        statusEl.style.background = '#d1fae5';
+        statusEl.style.color = '#065f46';
+        statusEl.style.borderColor = '#6ee7b7';
+        statusEl.innerHTML = '✓ Product image pre-processed. Every customer try-on will be fast (1 AI call).';
+      } else if (garmentIsolated === false) {
+        statusEl.style.display = 'block';
+        statusEl.style.background = '#fef3c7';
+        statusEl.style.color = '#92400e';
+        statusEl.style.borderColor = '#fcd34d';
+        statusEl.innerHTML = '⚠ Pre-processing skipped — first customer scan will take ~15s extra (it processes then caches).';
+      } else {
+        statusEl.style.display = 'none';
+      }
+    }
     document.getElementById('qrSuccessModal').classList.add('open');
   }
   function closeQrSuccessModal() { document.getElementById('qrSuccessModal').classList.remove('open'); }
-  function viewQrImage(scanUrl, productName) { showQrSuccess(scanUrl, productName); }
+  function viewQrImage(scanUrl, productName) { showQrSuccess(scanUrl, productName, undefined); }
 
   function copyText(elementId) {
     const el = document.getElementById(elementId);
