@@ -686,6 +686,25 @@
             <img id="qrSuccessImage" src="" alt="QR Code" style="width: 240px; height: 240px;">
           </div>
         </div>
+
+        <!-- Product image previews -->
+        <div id="qrSuccessImagesBlock" style="display: none; margin-bottom: 1.5rem;">
+          <h4 style="font-size: .85rem; margin: 0 0 .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em;">Product Images</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: .75rem;">
+            <div style="text-align: center;">
+              <div style="aspect-ratio: 1/1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                <img id="qrSuccessUploaded" src="" alt="Uploaded image" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+              </div>
+              <p style="font-size: .72rem; color: var(--muted); margin: .4rem 0 0; font-weight: 600;">You uploaded</p>
+            </div>
+            <div style="text-align: center;">
+              <div style="aspect-ratio: 1/1; background: white; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                <img id="qrSuccessIsolated" src="" alt="Processed garment" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+              </div>
+              <p style="font-size: .72rem; color: var(--muted); margin: .4rem 0 0; font-weight: 600;">Processed for try-on</p>
+            </div>
+          </div>
+        </div>
         <div class="field">
           <label>Scan URL</label>
           <input type="text" id="qrSuccessUrl" readonly style="font-family: monospace; font-size: .85rem;">
@@ -1172,7 +1191,10 @@
       if (!res.ok) throw new Error(data.error || 'Generation failed');
 
       closeCreateQrModal();
-      showQrSuccess(data.scan_url, data.qr.product_name, data.garment_isolated);
+      showQrSuccess(data.scan_url, data.qr.product_name, data.garment_isolated, {
+        uploaded: data.uploaded_image_url,
+        isolated: data.isolated_garment_url,
+      });
       loadQrCodes();
     } catch (err) {
       errEl.textContent = err.message;
@@ -1185,7 +1207,7 @@
   }
 
   // ── QR Success / View ──
-  function showQrSuccess(scanUrl, productName, garmentIsolated) {
+  function showQrSuccess(scanUrl, productName, garmentIsolated, images) {
     const imgUrl = qrImageUrl(scanUrl, 600);
     const img = document.getElementById('qrSuccessImage');
     img.src = imgUrl;
@@ -1193,6 +1215,7 @@
     const dl = document.getElementById('qrSuccessDownload');
     dl.href = imgUrl;
     dl.download = `qr-${productName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.png`;
+
     // Status banner about garment processing
     const statusEl = document.getElementById('qrSuccessStatus');
     if (statusEl) {
@@ -1212,10 +1235,26 @@
         statusEl.style.display = 'none';
       }
     }
+
+    // Show uploaded + processed image previews
+    const imagesBlock = document.getElementById('qrSuccessImagesBlock');
+    const uploadedImg = document.getElementById('qrSuccessUploaded');
+    const isolatedImg = document.getElementById('qrSuccessIsolated');
+    if (images && (images.uploaded || images.isolated)) {
+      imagesBlock.style.display = 'block';
+      uploadedImg.src = images.uploaded || '';
+      isolatedImg.src = images.isolated || '';
+      // If isolation failed, hide the isolated panel parent
+      const isolatedPanel = isolatedImg.closest('div[style*="text-align: center"]');
+      if (isolatedPanel) isolatedPanel.style.display = images.isolated ? 'block' : 'none';
+    } else {
+      imagesBlock.style.display = 'none';
+    }
+
     document.getElementById('qrSuccessModal').classList.add('open');
   }
   function closeQrSuccessModal() { document.getElementById('qrSuccessModal').classList.remove('open'); }
-  function viewQrImage(scanUrl, productName) { showQrSuccess(scanUrl, productName, undefined); }
+  function viewQrImage(scanUrl, productName) { showQrSuccess(scanUrl, productName, undefined, null); }
 
   function copyText(elementId) {
     const el = document.getElementById(elementId);
