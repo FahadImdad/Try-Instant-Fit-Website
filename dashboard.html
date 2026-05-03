@@ -1721,21 +1721,23 @@
   initGoogleSignIn();
 
   // ── Auto-load from URL param OR localStorage ──
+  // All auto-load paths are silent — failures drop to the login view without
+  // a scary error banner. Errors only show when the user actively signs in.
   (function() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     const email = params.get('email');
     if (id) {
       document.getElementById('loginBrandId').value = id;
-      loadDashboard();
+      loadDashboard({ silent: true });
       return;
     }
     if (email) {
       document.getElementById('loginEmail').value = email;
-      loadDashboard();
+      loadDashboard({ silent: true });
       return;
     }
-    // Fallback to localStorage (remembered session) — silent on failure
+    // Fallback to localStorage (remembered session)
     const remembered = localStorage.getItem('tif_brand_id');
     const rememberedEmail = localStorage.getItem('tif_brand_email');
     if (remembered) {
@@ -1812,11 +1814,12 @@
     hide('loginView');
     hide('dashView');
 
+    let data;
     try {
       // Renamed from /analytics → /overview because adblockers (Adblock Plus etc.)
       // block URLs containing the word "analytics", causing fetch to throw.
       const res = await fetch(`${API}/api/brands/${brandId}/overview`);
-      const data = await res.json().catch(() => ({}));
+      data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         show('loginView');
@@ -1825,13 +1828,25 @@
         showLoginError(data.error || 'Brand not found. Check your Brand ID.');
         return;
       }
-
-      renderDashboard(data);
     } catch (err) {
       show('loginView');
       hide('loadingView');
       if (silent) { clearSavedSession(); return; }
+      console.error('[dashboard] network error fetching overview:', err);
       showLoginError('Could not reach the server. Check your connection and try again.');
+      return;
+    }
+
+    // Network call succeeded — render. If render itself throws, surface a
+    // distinct error so we don't blame the network for a frontend bug.
+    try {
+      renderDashboard(data);
+    } catch (err) {
+      show('loginView');
+      hide('loadingView');
+      console.error('[dashboard] renderDashboard threw:', err);
+      if (silent) { clearSavedSession(); return; }
+      showLoginError('Dashboard error: ' + (err && err.message ? err.message : 'render failed') + '. Open DevTools console for details.');
     }
   }
 
