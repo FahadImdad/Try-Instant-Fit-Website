@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/scan/:token", "destination": "/scan.html?token=:token" }
+  ]
+}
