@@ -1169,7 +1169,7 @@
         <!-- Tab Navigation -->
         <div class="tab-nav">
           <button class="tab-btn active" data-tab="scanwear" onclick="switchTab('scanwear')">📱 Scan &amp; Wear<span class="tab-count" id="tabCountScanWear"></span></button>
-          <button class="tab-btn" data-tab="ghost-layer" onclick="switchTab('ghost-layer')">🌐 Website Try-on<span class="soon-badge">Soon</span></button>
+          <button class="tab-btn" data-tab="ghost-layer" onclick="switchTab('ghost-layer')">🌐 Website Try-on<span class="soon-badge">Soon</span><span id="tabCountGhostLayer" style="display:none;"></span></button>
           <button class="tab-btn" data-tab="mirror" onclick="switchTab('mirror')">🪞 Digital Mirror<span class="soon-badge">Soon</span></button>
         </div>
 
@@ -1649,6 +1649,13 @@
   // so adblockers/extensions can't intercept what looks like a third-party host.
   const API = '';
   let activeBrandId = null;
+
+  // Defensive setters — silently no-op if the element was removed/renamed
+  // (e.g. when a tab is hidden behind a Coming Soon CTA). Prevents the entire
+  // render from crashing on a single missing DOM node.
+  const $set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+  const $setHTML = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  const $style = (id, prop, value) => { const el = document.getElementById(id); if (el) el.style[prop] = value; };
 
   // ── Google Sign-In setup (only auth method) ──
   let googleClientId = null;
