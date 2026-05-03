@@ -1733,20 +1733,30 @@
       loadDashboard();
       return;
     }
-    // Fallback to localStorage (remembered session)
+    // Fallback to localStorage (remembered session) — silent on failure
     const remembered = localStorage.getItem('tif_brand_id');
     const rememberedEmail = localStorage.getItem('tif_brand_email');
     if (remembered) {
       document.getElementById('loginBrandId').value = remembered;
-      loadDashboard();
+      loadDashboard({ silent: true });
     } else if (rememberedEmail) {
       document.getElementById('loginEmail').value = rememberedEmail;
-      loadDashboard();
+      loadDashboard({ silent: true });
     }
   })();
 
+  // Drop any saved session (used when remembered creds are stale)
+  function clearSavedSession() {
+    try {
+      localStorage.removeItem('tif_brand_id');
+      localStorage.removeItem('tif_brand_email');
+    } catch { /* ignore */ }
+  }
+
   // ── Login / Load ──
-  async function loadDashboard() {
+  // opts.silent = true → coming from auto-load; failures clear stale session and quietly drop to login
+  async function loadDashboard(opts) {
+    const silent = !!(opts && opts.silent);
     const emailInput = document.getElementById('loginEmail').value.trim();
     const brandIdInput = document.getElementById('loginBrandId').value.trim();
     const errEl = document.getElementById('loginError');
@@ -1762,12 +1772,18 @@
       // Resolve email → brand_id if needed
       if (!brandId && emailInput) {
         const res = await fetch(`${API}/api/brands/lookup?email=${encodeURIComponent(emailInput)}`);
-        const data = await res.json();
-        if (!res.ok) { showLoginError(data.error || 'No brand found for that email.'); return; }
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          if (silent) { clearSavedSession(); show('loginView'); hide('loadingView'); return; }
+          showLoginError(data.error || 'No brand found for that email.'); return;
+        }
         brandId = data.brand_id;
       }
 
-      if (!brandId) { showLoginError('Please enter your email or Brand ID.'); return; }
+      if (!brandId) {
+        if (silent) { clearSavedSession(); show('loginView'); hide('loadingView'); return; }
+        showLoginError('Please enter your email or Brand ID.'); return;
+      }
 
       // Persist for next visit if remember-me is checked
       const rememberMe = document.getElementById('rememberMe')?.checked;
@@ -1776,9 +1792,10 @@
         if (emailInput) localStorage.setItem('tif_brand_email', emailInput);
       }
 
-      await fetchAndRender(brandId);
+      await fetchAndRender(brandId, { silent });
 
     } catch (err) {
+      if (silent) { clearSavedSession(); show('loginView'); hide('loadingView'); return; }
       showLoginError('Network error. Please try again.');
     } finally {
       btn.disabled = false;
@@ -1786,7 +1803,8 @@
     }
   }
 
-  async function fetchAndRender(brandId) {
+  async function fetchAndRender(brandId, opts) {
+    const silent = !!(opts && opts.silent);
     activeBrandId = brandId;
     show('loadingView');
     hide('loginView');
@@ -1794,11 +1812,12 @@
 
     try {
       const res = await fetch(`${API}/api/brands/${brandId}/analytics`);
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         show('loginView');
         hide('loadingView');
+        if (silent) { clearSavedSession(); return; }
         showLoginError(data.error || 'Brand not found. Check your Brand ID.');
         return;
       }
@@ -1807,7 +1826,8 @@
     } catch (err) {
       show('loginView');
       hide('loadingView');
-      showLoginError('Failed to load analytics. Try again.');
+      if (silent) { clearSavedSession(); return; }
+      showLoginError('Could not reach the server. Check your connection and try again.');
     }
   }
 
