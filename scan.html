@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Try It On — Try Instant Fit</title>
   <meta name="description" content="Scan, upload your photo, see how it looks on you in seconds.">
-  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
-  <link rel="apple-touch-icon" href="/assets/favicon.svg">
+  <link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
+  <link rel="apple-touch-icon" href="/assets/favicon.jpg">
   <link rel="stylesheet" href="css/styles.css">
   <style>
     body { background: linear-gradient(180deg, #0f1e3d 0%, #1a2f5a 100%); min-height: 100vh; }
@@ -22,8 +22,13 @@
       font-weight: 800;
       color: white;
       margin-bottom: .5rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: .55rem;
     }
-    .scan-logo span { background: linear-gradient(90deg, #5a67f2, #00c8e8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .scan-logo img { height: 44px; width: 44px; border-radius: 11px; display: block; }
+    .scan-logo .fit-mark { background: linear-gradient(90deg, #5a67f2, #00c8e8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 
     .scan-card {
       background: white;
@@ -235,7 +240,10 @@
 <div class="scan-wrap">
 
   <div class="scan-header">
-    <div class="scan-logo">Try Instant<span>Fit</span></div>
+    <a href="/" class="scan-logo" aria-label="Try Instant Fit">
+      <img src="/assets/favicon.jpg" alt="">
+      <span>Try Instant<span class="fit-mark">Fit</span></span>
+    </a>
   </div>
 
   <!-- Loading -->
