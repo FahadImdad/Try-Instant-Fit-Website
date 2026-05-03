@@ -674,6 +674,40 @@
       </div>
     </div>
 
+    <!-- ── Modal: View Product Images (uploaded + processed) ── -->
+    <div class="modal-backdrop" id="viewImagesModal" onclick="if(event.target===this)closeViewImagesModal()">
+      <div class="modal" style="max-width: 720px;">
+        <button class="modal-close" onclick="closeViewImagesModal()">&times;</button>
+        <h3 id="viewImagesTitle">Product Images</h3>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.5rem;">The original image you uploaded and the AI-processed garment used for try-ons.</p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div style="text-align: center;">
+            <div style="aspect-ratio: 1/1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: zoom-in;" onclick="openLightbox(document.getElementById('viewImagesUploaded').src)">
+              <img id="viewImagesUploaded" src="" alt="Uploaded image" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+            </div>
+            <p style="font-size: .8rem; color: var(--muted); margin: .5rem 0 0; font-weight: 600;">📷 You uploaded</p>
+            <p id="viewImagesUploadedHint" style="font-size: .72rem; color: var(--muted); margin: .25rem 0 0; display: none;">No image on file</p>
+          </div>
+          <div style="text-align: center;">
+            <div style="aspect-ratio: 1/1; background: white; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: zoom-in;" onclick="openLightbox(document.getElementById('viewImagesIsolated').src)">
+              <img id="viewImagesIsolated" src="" alt="Processed garment" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+            </div>
+            <p style="font-size: .8rem; color: var(--muted); margin: .5rem 0 0; font-weight: 600;">✨ Processed (try-on ready)</p>
+            <p id="viewImagesIsolatedHint" style="font-size: .72rem; color: var(--muted); margin: .25rem 0 0; display: none;">Not yet processed — the first customer scan will trigger it.</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; padding: .75rem 1rem; background: var(--surface); border-radius: var(--r-md); font-size: .82rem; color: var(--muted);">
+          💡 Tip: If the processed garment looks wrong (parts of body visible, wrong colour), delete this QR and re-upload with a cleaner product photo (e.g. flat-lay or against a plain background).
+        </div>
+
+        <div style="display: flex; gap: .5rem; margin-top: 1rem;">
+          <button class="btn btn-secondary" style="flex: 1;" onclick="closeViewImagesModal()">Close</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Modal: QR Generated Success ── -->
     <div class="modal-backdrop" id="qrSuccessModal" onclick="if(event.target===this)closeQrSuccessModal()">
       <div class="modal">
@@ -1045,6 +1079,9 @@
           </div>
           <div class="qr-actions">
             <button class="btn btn-secondary" onclick="viewQrImage(${JSON.stringify(q.scan_url).replace(/"/g, '&quot;')}, ${JSON.stringify(q.product_name).replace(/"/g, '&quot;')})">View QR</button>
+            ${q.display_image_url || q.isolated_garment_url
+              ? `<button class="btn btn-secondary" onclick="viewProductImages(${JSON.stringify(q.product_name).replace(/"/g, '&quot;')}, ${JSON.stringify(q.display_image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(q.isolated_garment_url || '').replace(/"/g, '&quot;')})">View Processed</button>`
+              : ''}
             ${q.requires_passcode ? `<button class="btn btn-primary" onclick="openPasscodes('${q.id}', ${JSON.stringify(q.product_name).replace(/"/g, '&quot;')})">Manage Codes</button>` : ''}
           </div>
           <div style="display: flex; gap: .5rem; margin-top: .5rem; padding-top: .5rem; border-top: 1px solid var(--border);">
@@ -1255,6 +1292,37 @@
   }
   function closeQrSuccessModal() { document.getElementById('qrSuccessModal').classList.remove('open'); }
   function viewQrImage(scanUrl, productName) { showQrSuccess(scanUrl, productName, undefined, null); }
+
+  function viewProductImages(productName, uploadedUrl, isolatedUrl) {
+    document.getElementById('viewImagesTitle').textContent = `Product Images — ${productName}`;
+    const uploaded = document.getElementById('viewImagesUploaded');
+    const uploadedHint = document.getElementById('viewImagesUploadedHint');
+    const isolated = document.getElementById('viewImagesIsolated');
+    const isolatedHint = document.getElementById('viewImagesIsolatedHint');
+
+    if (uploadedUrl) {
+      uploaded.src = uploadedUrl;
+      uploaded.style.display = '';
+      uploadedHint.style.display = 'none';
+    } else {
+      uploaded.src = '';
+      uploaded.style.display = 'none';
+      uploadedHint.style.display = 'block';
+    }
+
+    if (isolatedUrl) {
+      isolated.src = isolatedUrl;
+      isolated.style.display = '';
+      isolatedHint.style.display = 'none';
+    } else {
+      isolated.src = '';
+      isolated.style.display = 'none';
+      isolatedHint.style.display = 'block';
+    }
+
+    document.getElementById('viewImagesModal').classList.add('open');
+  }
+  function closeViewImagesModal() { document.getElementById('viewImagesModal').classList.remove('open'); }
 
   function copyText(elementId) {
     const el = document.getElementById(elementId);
