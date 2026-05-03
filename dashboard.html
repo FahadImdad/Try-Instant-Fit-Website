@@ -1028,8 +1028,49 @@
             <button class="btn btn-secondary" onclick="viewQrImage(${JSON.stringify(q.scan_url).replace(/"/g, '&quot;')}, ${JSON.stringify(q.product_name).replace(/"/g, '&quot;')})">View QR</button>
             ${q.requires_passcode ? `<button class="btn btn-primary" onclick="openPasscodes('${q.id}', ${JSON.stringify(q.product_name).replace(/"/g, '&quot;')})">Manage Codes</button>` : ''}
           </div>
+          <div style="display: flex; gap: .5rem; margin-top: .5rem; padding-top: .5rem; border-top: 1px solid var(--border);">
+            ${q.active
+              ? `<button class="btn btn-secondary" style="flex:1; font-size:.78rem; padding:.5rem; color:#92400e; border-color:#fcd34d;" onclick="toggleQrActive('${q.id}', false, ${JSON.stringify(q.product_name).replace(/"/g, '&quot;')})">Disable</button>`
+              : `<button class="btn btn-primary" style="flex:1; font-size:.78rem; padding:.5rem;" onclick="toggleQrActive('${q.id}', true, ${JSON.stringify(q.product_name).replace(/"/g, '&quot;')})">Re-enable</button>`}
+            <button class="btn btn-secondary" style="flex:1; font-size:.78rem; padding:.5rem; color:#991b1b; border-color:#fca5a5;" onclick="deleteQr('${q.id}', ${JSON.stringify(q.product_name).replace(/"/g, '&quot;')})">Delete</button>
+          </div>
         </div>`;
     }).join('');
+  }
+
+  async function toggleQrActive(qrId, makeActive, productName) {
+    const action = makeActive ? 're-enable' : 'disable';
+    if (!confirm(`${makeActive ? 'Re-enable' : 'Disable'} the QR for "${productName}"?\n\n${makeActive ? 'Customers will be able to scan it again.' : 'Customers will get a "QR not found" error if they scan it.'}`)) return;
+    try {
+      const res = await fetch(`${API}/api/qr/${qrId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: makeActive }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Failed to ${action}`);
+      loadQrCodes();
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
+  }
+
+  async function deleteQr(qrId, productName) {
+    const confirm1 = confirm(`Delete the QR for "${productName}" permanently?\n\nThis can't be undone. All passcodes and scan history for this QR will also be deleted.\n\nIf you just want to stop customers from scanning, use "Disable" instead.`);
+    if (!confirm1) return;
+    const confirm2 = prompt(`To confirm permanent deletion, type the product name exactly:\n\n${productName}`);
+    if (confirm2 !== productName) {
+      if (confirm2 !== null) alert('Product name didn\'t match — delete cancelled.');
+      return;
+    }
+    try {
+      const res = await fetch(`${API}/api/qr/${qrId}?hard=true`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete');
+      loadQrCodes();
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
   }
 
   // ── Create QR Modal ──
