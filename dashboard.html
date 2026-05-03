@@ -1115,11 +1115,6 @@
             <div class="stat-sub">All time</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Button Clicks</div>
-            <div class="stat-value" id="statClicks">—</div>
-            <div class="stat-sub">All time</div>
-          </div>
-          <div class="stat-card">
             <div class="stat-label">Today</div>
             <div class="stat-value" id="statToday">—</div>
             <div class="stat-sub">Try-ons so far</div>
@@ -1804,7 +1799,7 @@
 
     // Top overall stats (across all sources)
     document.getElementById('statTotal').textContent = fmt(stats.total_tryons);
-    document.getElementById('statClicks').textContent = fmt(stats.button_clicks);
+    // Button Clicks removed from overall stats per product decision
     document.getElementById('statToday').textContent = fmt(stats.today);
     document.getElementById('statWeek').textContent = fmt(stats.this_week);
     document.getElementById('statMonth').textContent = fmt(stats.this_month);
