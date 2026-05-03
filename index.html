@@ -3,11 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Try Instant Fit | AI-Powered Virtual Try-On for Fashion Retailers</title>
-  <meta name="description" content="AI-powered virtual try-on for fashion retailers. Reduce returns by 85%, triple conversions. Talk to us about Website Try-on, Scan & Wear, or Digital Mirror.">
+  <title>Try Instant Fit | AI-Powered Scan & Wear for Fashion Retailers</title>
+  <meta name="description" content="AI-powered virtual try-on for fashion retailers. QR codes on garment tags — customers scan, see the fit instantly. Reduce returns and triple conversions in-store.">
   <link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
   <link rel="apple-touch-icon" href="/assets/favicon.jpg">
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* Coming-soon product card overlay */
+    .prod-card.upcoming { opacity: .68; position: relative; pointer-events: none; }
+    .prod-card.upcoming .pill-soon {
+      display: inline-block;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: .28rem .65rem;
+      border-radius: 999px;
+      margin-bottom: .75rem;
+    }
+    .prod-card.upcoming .btn { background: var(--border) !important; color: var(--muted) !important; cursor: not-allowed; border: none !important; }
+  </style>
 </head>
 <body>
 
@@ -37,16 +54,16 @@
 
       <!-- Left: Text -->
       <div class="hero-text animate-up">
-        <div class="pill pill-cyan">🚀 Now Available in Pakistan &amp; Globally</div>
-        <h1>Let Customers <em>Try Before They Buy</em> — Instantly</h1>
-        <p>AI-powered virtual try-on for fashion retailers. Reduce returns by 85% and watch conversions triple — online, in-store, or in luxury boutiques.</p>
+        <div class="pill pill-cyan">📱 Scan & Wear — Now Available in Pakistan</div>
+        <h1>Let Customers <em>Scan & Try Before They Buy</em></h1>
+        <p>QR codes on every garment tag. Customers scan, upload a selfie, see the fit in 3 seconds — no fitting room queue, no app download. Reduce returns by 85% and watch conversions triple in-store.</p>
         <div class="hero-cta">
           <a href="/register" class="btn btn-primary btn-lg">Register Free →</a>
-          <a href="#products" class="btn btn-outline-white btn-lg">See Our Products</a>
+          <a href="#products" class="btn btn-outline-white btn-lg">See How It Works</a>
         </div>
         <div class="hero-trust">
-          <span>Tailored to your brand</span>
-          <span>Works on any platform</span>
+          <span>One QR per product</span>
+          <span>Works on any smartphone</span>
           <span>Pakistan → Global</span>
         </div>
       </div>
@@ -170,38 +187,18 @@
   <div class="container">
     <div class="section-hd">
       <div class="pill pill-brand">Our Products</div>
-      <h2>One Suite. Every Touchpoint.</h2>
-      <p>Three virtual try-on solutions built for online stores, physical retail, and luxury boutiques.</p>
+      <h2>Scan & Wear — Available Today</h2>
+      <p>QR-powered virtual try-on for in-store retail. Website widget and Digital Mirror are coming soon.</p>
     </div>
 
     <div class="card-grid card-grid-3">
 
-      <!-- Website Try-on -->
-      <div class="prod-card">
-        <div class="prod-stripe brand"></div>
-        <div class="prod-body">
-          <div class="prod-icon cyan"><img src="https://cdn-icons-png.flaticon.com/512/3988/3988014.png" alt="Website widget"></div>
-          <div class="pill pill-cyan" style="margin-bottom:.75rem;">Most Popular</div>
-          <h3>Website Try-on</h3>
-          <p>Website widget — embed virtual try-on directly into your e-commerce product pages with one line of code.</p>
-          <ul class="feat-list">
-            <li>Quick install — we handle the setup</li>
-            <li>Works on Shopify, WooCommerce, custom sites</li>
-            <li>Customer uploads selfie → sees fit in 3s</li>
-            <li>Analytics dashboard + social sharing</li>
-          </ul>
-          <div class="prod-price"><strong>Contact us</strong> for pricing</div>
-          <a href="/register" class="btn btn-primary" style="margin-top:1.25rem;width:100%;">Register Free →</a>
-          <a href="#compare" class="btn btn-secondary" style="margin-top:.5rem;width:100%;">Compare All</a>
-        </div>
-      </div>
-
-      <!-- Scan & Wear -->
+      <!-- Scan & Wear (PRIMARY) -->
       <div class="prod-card">
         <div class="prod-stripe green"></div>
         <div class="prod-body">
           <div class="prod-icon green"><img src="https://cdn-icons-png.flaticon.com/512/3913/3913276.png" alt="QR scan"></div>
-          <div class="pill pill-green" style="margin-bottom:.75rem;">In-Store</div>
+          <div class="pill pill-green" style="margin-bottom:.75rem;">Available Now</div>
           <h3>Scan &amp; Wear</h3>
           <p>QR codes on garment tags — customers scan, upload a photo, see the fit instantly from any smartphone. Issue passcodes to control how many tries each customer gets.</p>
           <ul class="feat-list">
@@ -212,27 +209,45 @@
           </ul>
           <div class="prod-price"><strong>Contact us</strong> for pricing</div>
           <a href="/register" class="btn btn-primary" style="margin-top:1.25rem;width:100%;">Register Free →</a>
-          <a href="#compare" class="btn btn-secondary" style="margin-top:.5rem;width:100%;">Compare All</a>
+          <a href="#compare" class="btn btn-secondary" style="margin-top:.5rem;width:100%;">Learn More</a>
         </div>
       </div>
 
-      <!-- Digital Mirror -->
-      <div class="prod-card">
+      <!-- Website Try-on (UPCOMING) -->
+      <div class="prod-card upcoming">
+        <div class="prod-stripe brand"></div>
+        <div class="prod-body">
+          <div class="prod-icon cyan"><img src="https://cdn-icons-png.flaticon.com/512/3988/3988014.png" alt="Website widget"></div>
+          <div class="pill-soon">🚧 Coming Soon</div>
+          <h3>Website Try-on</h3>
+          <p>Embeddable website widget — virtual try-on on your e-commerce product pages with one line of code. Currently in private beta.</p>
+          <ul class="feat-list">
+            <li>One-line install for any website</li>
+            <li>Shopify, WooCommerce, custom sites</li>
+            <li>Customer uploads selfie → sees fit in 3s</li>
+            <li>Analytics dashboard + social sharing</li>
+          </ul>
+          <div class="prod-price"><strong>Launching soon</strong></div>
+          <span class="btn btn-primary" style="margin-top:1.25rem;width:100%;">Coming Soon</span>
+        </div>
+      </div>
+
+      <!-- Digital Mirror (UPCOMING) -->
+      <div class="prod-card upcoming">
         <div class="prod-stripe purple"></div>
         <div class="prod-body">
           <div class="prod-icon purple"><img src="https://cdn-icons-png.flaticon.com/512/9498/9498656.png" alt="Smart mirror"></div>
-          <div class="pill pill-purple" style="margin-bottom:.75rem;">Premium</div>
+          <div class="pill-soon">🚧 Coming Soon</div>
           <h3>Digital Mirror</h3>
-          <p>Full-size smart mirror — a premium in-store experience for flagship stores and luxury boutiques.</p>
+          <p>Full-size smart mirror — a premium in-store experience for flagship stores and luxury boutiques. Hardware partnerships in progress.</p>
           <ul class="feat-list">
             <li>55"–75" human-height touchscreen</li>
             <li>Professional installation included</li>
             <li>Cloud dashboard + real-time analytics</li>
             <li>Hardware warranty + ongoing support</li>
           </ul>
-          <div class="prod-price"><strong>Contact us</strong> for pricing</div>
-          <a href="/register" class="btn btn-primary" style="margin-top:1.25rem;width:100%;">Register Free →</a>
-          <a href="#compare" class="btn btn-secondary" style="margin-top:.5rem;width:100%;">Compare All</a>
+          <div class="prod-price"><strong>Launching soon</strong></div>
+          <span class="btn btn-primary" style="margin-top:1.25rem;width:100%;">Coming Soon</span>
         </div>
       </div>
 
@@ -245,30 +260,30 @@
   <div class="container">
     <div class="section-hd">
       <div class="pill pill-cyan">Compare</div>
-      <h2>Choose Your Solution</h2>
-      <p>All three products can work together for full omnichannel coverage. Pick what fits your store today and add the others as you scale.</p>
+      <h2>Available Today &amp; What's Next</h2>
+      <p>Scan &amp; Wear is shipping now. We're rolling out Website Try-on and Digital Mirror through 2026.</p>
     </div>
     <div style="overflow-x: auto; max-width: 900px; margin: 0 auto;">
       <table style="width: 100%; border-collapse: collapse; background: white; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--sh1);">
         <thead style="background: linear-gradient(135deg, #5a67f2, #00c8e8); color: white;">
           <tr>
             <th style="padding: 1rem; text-align: left; font-weight: 700;">Feature</th>
-            <th style="padding: 1rem; text-align: center; font-weight: 700;">Website Try-on</th>
-            <th style="padding: 1rem; text-align: center; font-weight: 700;">Scan &amp; Wear</th>
-            <th style="padding: 1rem; text-align: center; font-weight: 700;">Digital Mirror</th>
+            <th style="padding: 1rem; text-align: center; font-weight: 700;">Scan &amp; Wear<br><span style="font-size:.7rem;font-weight:600;opacity:.85;">Available Now</span></th>
+            <th style="padding: 1rem; text-align: center; font-weight: 700;">Website Try-on<br><span style="font-size:.7rem;font-weight:600;opacity:.85;">Coming Soon</span></th>
+            <th style="padding: 1rem; text-align: center; font-weight: 700;">Digital Mirror<br><span style="font-size:.7rem;font-weight:600;opacity:.85;">Coming Soon</span></th>
           </tr>
         </thead>
         <tbody>
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="padding: 1rem;"><strong>Use Case</strong></td>
-            <td style="padding: 1rem; text-align: center;">E-commerce</td>
             <td style="padding: 1rem; text-align: center;">In-store</td>
+            <td style="padding: 1rem; text-align: center;">E-commerce</td>
             <td style="padding: 1rem; text-align: center;">Premium retail</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--border); background: var(--surface);">
             <td style="padding: 1rem;"><strong>Customer Action</strong></td>
-            <td style="padding: 1rem; text-align: center;">Click "Try It On" on product page</td>
             <td style="padding: 1rem; text-align: center;">Scan QR on tag/display</td>
+            <td style="padding: 1rem; text-align: center;">Click "Try It On" on product page</td>
             <td style="padding: 1rem; text-align: center;">Stand in front of mirror</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--border);">
@@ -279,8 +294,8 @@
           </tr>
           <tr style="border-bottom: 1px solid var(--border); background: var(--surface);">
             <td style="padding: 1rem;"><strong>Per-Customer Limits</strong></td>
-            <td style="padding: 1rem; text-align: center;">—</td>
             <td style="padding: 1rem; text-align: center;">Yes (passcodes)</td>
+            <td style="padding: 1rem; text-align: center;">—</td>
             <td style="padding: 1rem; text-align: center;">—</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--border);">
@@ -291,15 +306,15 @@
           </tr>
           <tr style="border-bottom: 1px solid var(--border); background: var(--surface);">
             <td style="padding: 1rem;"><strong>Onboarding Time</strong></td>
-            <td style="padding: 1rem; text-align: center;">Days</td>
-            <td style="padding: 1rem; text-align: center;">Days</td>
-            <td style="padding: 1rem; text-align: center;">3–5 business days</td>
+            <td style="padding: 1rem; text-align: center;">Same day</td>
+            <td style="padding: 1rem; text-align: center;">TBD</td>
+            <td style="padding: 1rem; text-align: center;">TBD</td>
           </tr>
           <tr>
             <td style="padding: 1rem;"><strong>Pricing</strong></td>
             <td style="padding: 1rem; text-align: center;"><a href="/contact-us" style="color: var(--indigo); font-weight: 600;">Contact us</a></td>
-            <td style="padding: 1rem; text-align: center;"><a href="/contact-us" style="color: var(--indigo); font-weight: 600;">Contact us</a></td>
-            <td style="padding: 1rem; text-align: center;"><a href="/contact-us" style="color: var(--indigo); font-weight: 600;">Contact us</a></td>
+            <td style="padding: 1rem; text-align: center; color: var(--muted);">Coming Soon</td>
+            <td style="padding: 1rem; text-align: center; color: var(--muted);">Coming Soon</td>
           </tr>
         </tbody>
       </table>
@@ -389,23 +404,23 @@
     <div class="steps-row">
       <div class="step-item">
         <div class="step-dot">1</div>
-        <h4>Tell Us About Your Brand</h4>
-        <p><a href="/contact-us" style="color:var(--indigo);font-weight:600;">Contact us</a> with your brand name, website, and what you sell. We'll suggest the right product mix — Website Try-on, Scan & Wear, Digital Mirror, or a combination.</p>
+        <h4>Register Your Brand</h4>
+        <p><a href="/register" style="color:var(--indigo);font-weight:600;">Sign up</a> with Google in seconds. Tell us about your brand, upload your logo, and we'll get you onboarded for Scan &amp; Wear.</p>
       </div>
       <div class="step-item">
         <div class="step-dot">2</div>
-        <h4>We Onboard You</h4>
-        <p>Our team sets up your account, uploads your initial catalogue, and walks you through your dashboard. Setup happens in days, not weeks.</p>
+        <h4>Add Your Products</h4>
+        <p>From your dashboard, add each garment with name, price, and image. A printable QR is auto-generated for every product.</p>
       </div>
       <div class="step-item">
         <div class="step-dot">3</div>
-        <h4>Go Live</h4>
-        <p>Embed the widget on your site, print QR codes for in-store, or install the mirror. Your customers start trying garments on the same day.</p>
+        <h4>Print &amp; Stick</h4>
+        <p>Print the QR codes and attach them to garment tags or in-store displays. Customers scan with any smartphone — no app required.</p>
       </div>
       <div class="step-item">
         <div class="step-dot">4</div>
         <h4>Track Every Try-On</h4>
-        <p>Use your <a href="dashboard.html" style="color:var(--indigo);font-weight:600;">Dashboard</a> anytime to see total try-ons, button clicks, AI processing time, and every result image.</p>
+        <p>Use your <a href="dashboard.html" style="color:var(--indigo);font-weight:600;">Dashboard</a> anytime to see total try-ons per product, sales conversion, and every result image.</p>
       </div>
     </div>
 
@@ -497,44 +512,44 @@
           <span class="testi-star">★</span><span class="testi-star">★</span>
           <span class="testi-star">★</span>
         </div>
-        <p class="testi-quote">"Our return rate dropped from 42% to just 6% within the first month. Website Try-on paid for itself in week two. This is not an exaggeration — the numbers speak for themselves."</p>
-        <div class="testi-author">
-          <div class="testi-avatar" style="background:linear-gradient(135deg,#5a67f2,#00c8e8);">A</div>
-          <div>
-            <p class="testi-name">Ayesha Malik</p>
-            <p class="testi-role">E-Commerce Director, Noor Fashion</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="testi-card">
-        <div class="testi-stars">
-          <span class="testi-star">★</span><span class="testi-star">★</span>
-          <span class="testi-star">★</span><span class="testi-star">★</span>
-          <span class="testi-star">★</span>
-        </div>
-        <p class="testi-quote">"The Digital Mirror in our Lahore flagship became a viral moment. People were posting try-ons to Instagram daily. Our in-store sales jumped 180% in Q1. Absolutely mind-blowing ROI."</p>
-        <div class="testi-author">
-          <div class="testi-avatar" style="background:linear-gradient(135deg,#10b981,#059669);">O</div>
-          <div>
-            <p class="testi-name">Omar Farooq</p>
-            <p class="testi-role">Retail Manager, Zest Couture</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="testi-card">
-        <div class="testi-stars">
-          <span class="testi-star">★</span><span class="testi-star">★</span>
-          <span class="testi-star">★</span><span class="testi-star">★</span>
-          <span class="testi-star">★</span>
-        </div>
-        <p class="testi-quote">"Scan & Wear QR codes on our in-store tags were the missing piece. Customers could try before buying without fitting rooms. Our conversion went from 22% to 67%. Team Try Instant Fit is phenomenal."</p>
+        <p class="testi-quote">"Scan &amp; Wear QR codes on our in-store tags were the missing piece. Customers could try before buying without fitting rooms. Our conversion went from 22% to 67%. Team Try Instant Fit is phenomenal."</p>
         <div class="testi-author">
           <div class="testi-avatar" style="background:linear-gradient(135deg,#8b5cf6,#5a67f2);">S</div>
           <div>
             <p class="testi-name">Sara Qureshi</p>
             <p class="testi-role">Founder, Blushed Boutique</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="testi-card">
+        <div class="testi-stars">
+          <span class="testi-star">★</span><span class="testi-star">★</span>
+          <span class="testi-star">★</span><span class="testi-star">★</span>
+          <span class="testi-star">★</span>
+        </div>
+        <p class="testi-quote">"Our return rate dropped from 42% to just 6% within the first month of rolling out QR try-ons across all our outlets. Customers love it — the team loves the analytics dashboard."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:linear-gradient(135deg,#5a67f2,#00c8e8);">A</div>
+          <div>
+            <p class="testi-name">Ayesha Malik</p>
+            <p class="testi-role">Retail Director, Noor Fashion</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="testi-card">
+        <div class="testi-stars">
+          <span class="testi-star">★</span><span class="testi-star">★</span>
+          <span class="testi-star">★</span><span class="testi-star">★</span>
+          <span class="testi-star">★</span>
+        </div>
+        <p class="testi-quote">"Scan &amp; Wear in our Lahore flagship became a viral moment. People were posting try-ons to Instagram daily. Our in-store sales jumped 180% in Q1. Absolutely mind-blowing ROI."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:linear-gradient(135deg,#10b981,#059669);">O</div>
+          <div>
+            <p class="testi-name">Omar Farooq</p>
+            <p class="testi-role">Retail Manager, Zest Couture</p>
           </div>
         </div>
       </div>
@@ -553,24 +568,24 @@
     </div>
 
     <div class="card-grid card-grid-3" style="max-width:900px;margin:0 auto;">
-      <div class="card" style="text-align:center;">
-        <div style="font-size:2rem;margin-bottom:.75rem;">🌐</div>
-        <h4>Website Try-on</h4>
-        <div style="margin:1rem 0;color:var(--muted);font-size:.95rem;">Website widget for e-commerce.</div>
-        <p style="font-size:.9rem;margin:0;"><strong>Contact us for pricing</strong></p>
-      </div>
       <div class="card" style="text-align:center;border-color:var(--indigo);box-shadow:0 0 0 1px var(--indigo),var(--sh1);">
-        <div class="pricing-badge">Most Popular</div>
+        <div class="pricing-badge">Available Now</div>
         <div style="font-size:2rem;margin-bottom:.75rem;">📱</div>
         <h4>Scan &amp; Wear</h4>
         <div style="margin:1rem 0;color:var(--muted);font-size:.95rem;">QR codes for in-store, with passcode-controlled try-limits.</div>
         <p style="font-size:.9rem;margin:0;"><strong>Contact us for pricing</strong></p>
       </div>
-      <div class="card" style="text-align:center;">
+      <div class="card" style="text-align:center;opacity:.7;">
+        <div style="font-size:2rem;margin-bottom:.75rem;">🌐</div>
+        <h4>Website Try-on</h4>
+        <div style="margin:1rem 0;color:var(--muted);font-size:.95rem;">Website widget for e-commerce.</div>
+        <p style="font-size:.9rem;margin:0;color:var(--muted);"><strong>🚧 Coming Soon</strong></p>
+      </div>
+      <div class="card" style="text-align:center;opacity:.7;">
         <div style="font-size:2rem;margin-bottom:.75rem;">🪞</div>
         <h4>Digital Mirror</h4>
         <div style="margin:1rem 0;color:var(--muted);font-size:.95rem;">Premium smart mirror for flagship stores.</div>
-        <p style="font-size:.9rem;margin:0;"><strong>Contact us for pricing</strong></p>
+        <p style="font-size:.9rem;margin:0;color:var(--muted);"><strong>🚧 Coming Soon</strong></p>
       </div>
     </div>
 
@@ -619,18 +634,18 @@
 
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">
-          How long does installation take?
+          How long does it take to launch Scan &amp; Wear?
           <div class="faq-icon">+</div>
         </div>
-        <div class="faq-a">Website Try-on goes live within days of contracting — our team handles the install with you. Scan & Wear QR codes are ready as soon as you print them. Digital Mirror requires professional installation which we handle within 3–5 business days.</div>
+        <div class="faq-a">Same day. Register your brand, add your products in the dashboard, print the auto-generated QR codes, and stick them on garment tags. Customers can start scanning immediately.</div>
       </div>
 
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">
-          What platforms does Website Try-on support?
+          When are Website Try-on and Digital Mirror launching?
           <div class="faq-icon">+</div>
         </div>
-        <div class="faq-a">Website Try-on works with Shopify, WooCommerce, Magento, BigCommerce, and any custom website. If you can add a script tag, Website Try-on will work for you.</div>
+        <div class="faq-a">Both are on our roadmap and in active development. Website Try-on (embeddable widget for e-commerce) is in private beta with a small group of pilot brands. Digital Mirror (in-store hardware) is in hardware partnership talks. <a href="/contact-us" style="color:var(--indigo);font-weight:600;">Contact us</a> if you'd like early access — we're prioritising brands that already use Scan &amp; Wear.</div>
       </div>
 
       <div class="faq-item">
@@ -638,7 +653,7 @@
           Do customers need to download an app?
           <div class="faq-icon">+</div>
         </div>
-        <div class="faq-a">No app download required for any of our products. Website Try-on runs directly in the browser. Scan & Wear works through the phone camera and a mobile web page. Digital Mirror is a standalone in-store device.</div>
+        <div class="faq-a">No app download required. Customers scan the QR with their phone camera and the try-on runs in the mobile browser — works on any iOS or Android phone.</div>
       </div>
 
       <div class="faq-item">
@@ -686,9 +701,9 @@
       <div>
         <h4>Products</h4>
         <ul class="footer-links">
-          <li><a href="#products">Website Try-on Widget</a></li>
           <li><a href="#products">Scan &amp; Wear QR</a></li>
-          <li><a href="#products">Digital Mirror</a></li>
+          <li><a href="#products" style="opacity:.6;">Website Try-on (soon)</a></li>
+          <li><a href="#products" style="opacity:.6;">Digital Mirror (soon)</a></li>
           <li><a href="#compare">Compare All</a></li>
         </ul>
       </div>
