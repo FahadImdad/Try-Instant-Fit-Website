@@ -1811,7 +1811,9 @@
     hide('dashView');
 
     try {
-      const res = await fetch(`${API}/api/brands/${brandId}/analytics`);
+      // Renamed from /analytics → /overview because adblockers (Adblock Plus etc.)
+      // block URLs containing the word "analytics", causing fetch to throw.
+      const res = await fetch(`${API}/api/brands/${brandId}/overview`);
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
