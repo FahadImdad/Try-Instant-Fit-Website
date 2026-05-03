@@ -728,7 +728,7 @@
             View My Analytics →
           </button>
           <p style="text-align: center; margin-top: 1.25rem; font-size: .85rem; color: var(--muted);">
-            Don't have a Brand ID? <a href="install.html" style="color: var(--cyan); font-weight: 700;">Get your install code →</a>
+            Don't have a Brand ID? <a href="/contact-us" style="color: var(--cyan); font-weight: 700;">Contact us to register →</a>
           </p>
         </div>
       </div>
@@ -752,7 +752,6 @@
           </div>
           <div style="display: flex; gap: .75rem; align-items: center; flex-wrap: wrap;">
             <button class="refresh-btn" onclick="refreshDashboard()">↻ Refresh</button>
-            <a href="install.html" class="btn btn-outline-dark btn-sm">Get Install Code</a>
             <button class="btn btn-outline-dark btn-sm" onclick="logout()">Switch Account</button>
           </div>
         </div>
@@ -783,8 +782,8 @@
         <div class="install-hint" id="installHint" style="display: none;">
           <div class="icon">🚀</div>
           <div>
-            <h4>Widget not yet active</h4>
-            <p>Your brand account is ready. <a href="install.html">Grab your install code</a> and paste it on your store — or <a href="/contact-us">contact us</a> and we'll handle the install with you.</p>
+            <h4>No try-ons yet</h4>
+            <p>Your brand account is ready. <a href="/contact-us">Contact us</a> and we'll handle setup so customers can start trying on.</p>
           </div>
         </div>
 
@@ -824,12 +823,12 @@
 
         <!-- Tab Navigation -->
         <div class="tab-nav">
-          <button class="tab-btn active" data-tab="ghost-layer" onclick="switchTab('ghost-layer')">🌐 Ghost Layer<span class="tab-count" id="tabCountGhostLayer"></span></button>
+          <button class="tab-btn active" data-tab="ghost-layer" onclick="switchTab('ghost-layer')">🌐 Website Try-on<span class="tab-count" id="tabCountGhostLayer"></span></button>
           <button class="tab-btn" data-tab="scanwear" onclick="switchTab('scanwear')">📱 Scan &amp; Wear<span class="tab-count" id="tabCountScanWear"></span></button>
           <button class="tab-btn" data-tab="mirror" onclick="switchTab('mirror')">🪞 Digital Mirror</button>
         </div>
 
-        <!-- Tab: Ghost Layer (website widget analytics) -->
+        <!-- Tab: Website Try-on (website widget analytics) -->
         <div id="tab-ghost-layer" class="tab-content active">
           <!-- Per-source stat strip -->
           <div class="source-stats" id="ghostLayerStats"></div>
@@ -980,26 +979,19 @@
         <h3 id="pcModalTitle">Manage Passcodes</h3>
         <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.5rem;" id="pcModalSubtitle">Issue passcodes to customers — each code limits how many try-ons that customer gets.</p>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom: 1.5rem;">
-          <div class="card" style="padding: 1rem;">
-            <h4 style="margin: 0 0 .75rem; font-size: .9rem;">Single Passcode</h4>
-            <div class="alert" id="pcSingleError"></div>
-            <form onsubmit="return submitSinglePasscode(event);">
-              <input type="text" id="pcCode" placeholder="Code (or auto-generate)" style="width:100%; padding:.6rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); margin-bottom: .5rem; font-family: monospace; text-transform: uppercase;">
-              <input type="text" id="pcLabel" placeholder="Customer label (e.g. Sarah K)" style="width:100%; padding:.6rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); margin-bottom: .5rem;">
-              <input type="number" id="pcLimit" placeholder="Try-on limit" min="1" required style="width:100%; padding:.6rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); margin-bottom: .75rem;">
-              <button type="submit" class="btn btn-secondary btn-sm" style="width:100%;">+ Add Passcode</button>
-            </form>
-          </div>
-          <div class="card" style="padding: 1rem;">
-            <h4 style="margin: 0 0 .75rem; font-size: .9rem;">Bulk Generate</h4>
-            <div class="alert" id="pcBulkError"></div>
-            <form onsubmit="return submitBulkPasscodes(event);">
-              <input type="number" id="pcBulkCount" placeholder="How many codes?" min="1" max="1000" required style="width:100%; padding:.6rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); margin-bottom: .5rem;">
-              <input type="number" id="pcBulkLimit" placeholder="Try-on limit per code" min="1" required style="width:100%; padding:.6rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); margin-bottom: .75rem;">
-              <button type="submit" class="btn btn-secondary btn-sm" style="width:100%;">⚡ Bulk Generate</button>
-            </form>
-          </div>
+        <div class="card" style="padding: 1rem; margin-bottom: 1.5rem;">
+          <h4 style="margin: 0 0 .75rem; font-size: .9rem;">Add a Passcode</h4>
+          <div class="alert" id="pcSingleError"></div>
+          <form onsubmit="return submitSinglePasscode(event);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-bottom: .5rem;">
+              <input type="text" id="pcCode" placeholder="Code (or auto-generate)" style="padding:.6rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: monospace; text-transform: uppercase;">
+              <input type="text" id="pcLabel" placeholder="Customer name (e.g. Sarah K)" style="padding:.6rem .8rem; border:1px solid var(--border); border-radius: var(--r-md);">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr auto; gap: .5rem; align-items: stretch;">
+              <input type="number" id="pcLimit" placeholder="Try-on limit" min="1" required style="padding:.6rem .8rem; border:1px solid var(--border); border-radius: var(--r-md);">
+              <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap;">+ Add Passcode</button>
+            </div>
+          </form>
         </div>
 
         <h4 style="margin: 0 0 .75rem; font-size: .95rem;">Existing Passcodes</h4>
@@ -1099,7 +1091,7 @@
       <div>
         <h4>Quick Links</h4>
         <ul class="footer-links">
-          <li><a href="install.html">Get Install Code</a></li>
+          <li><a href="/contact-us">Contact Us</a></li>
           <li><a href="dashboard.html">Analytics</a></li>
           <li><a href="index.html#pricing">Pricing</a></li>
         </ul>
@@ -1261,7 +1253,7 @@
     document.getElementById('installHint').style.display =
       (gl.total || 0) === 0 ? 'flex' : 'none';
 
-    // ── Ghost Layer per-source stat strip ──
+    // ── Website Try-on per-source stat strip ──
     const glStats = document.getElementById('ghostLayerStats');
     glStats.innerHTML = `
       <div class="source-stat">
@@ -1296,7 +1288,7 @@
       </div>
     `;
 
-    // ── Ghost Layer recent try-ons table ──
+    // ── Website Try-on recent try-ons table ──
     const glRecent = gl.recent || [];
     const tableBody = document.getElementById('tableBody');
     if (!glRecent.length) {
@@ -1304,8 +1296,8 @@
         <div class="empty-state">
           <div class="icon">🌐</div>
           <p style="margin:0; font-weight:600; color: var(--text);">No widget try-ons yet</p>
-          <p style="margin:.5rem 0 0; font-size:.85rem;">Install Ghost Layer on your e-commerce site to start capturing try-ons.</p>
-          <a href="install.html" class="btn btn-primary" style="margin-top:1rem; display:inline-block;">Get Install Code →</a>
+          <p style="margin:.5rem 0 0; font-size:.85rem;">Install Website Try-on on your e-commerce site to start capturing try-ons.</p>
+          <a href="/contact-us" class="btn btn-primary" style="margin-top:1rem; display:inline-block;">Contact Us →</a>
         </div>`;
     } else {
       tableBody.innerHTML = `
@@ -1338,7 +1330,7 @@
         </table>`;
     }
 
-    // ── Ghost Layer products section ──
+    // ── Website Try-on products section ──
     const glProducts = gl.products || [];
     if (glProducts.length > 0) {
       const totalClicks = gl.button_clicks || 0;
@@ -1797,9 +1789,8 @@
     activeQrId = qrId;
     activeQrName = productName;
     document.getElementById('pcModalTitle').textContent = `Passcodes — ${productName}`;
-    ['pcCode','pcLabel','pcLimit','pcBulkCount','pcBulkLimit'].forEach(id => document.getElementById(id).value = '');
+    ['pcCode','pcLabel','pcLimit'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('pcSingleError').className = 'alert';
-    document.getElementById('pcBulkError').className = 'alert';
     document.getElementById('passcodeModal').classList.add('open');
     await loadPasscodes(qrId);
   }
@@ -1879,31 +1870,6 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
       ['pcCode','pcLabel','pcLimit'].forEach(id => document.getElementById(id).value = '');
-      await loadPasscodes(activeQrId);
-    } catch (err) {
-      errEl.textContent = err.message;
-      errEl.className = 'alert error';
-    }
-    return false;
-  }
-
-  async function submitBulkPasscodes(e) {
-    e.preventDefault();
-    const errEl = document.getElementById('pcBulkError');
-    errEl.className = 'alert';
-    const payload = {
-      count: parseInt(document.getElementById('pcBulkCount').value, 10),
-      use_limit: parseInt(document.getElementById('pcBulkLimit').value, 10),
-    };
-    try {
-      const res = await fetch(`${API}/api/qr/${activeQrId}/passcodes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed');
-      ['pcBulkCount','pcBulkLimit'].forEach(id => document.getElementById(id).value = '');
       await loadPasscodes(activeQrId);
     } catch (err) {
       errEl.textContent = err.message;
