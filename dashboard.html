@@ -1009,45 +1009,27 @@
         <div style="text-align: center; margin-bottom: 2rem;">
           <img src="/assets/favicon.jpg" alt="" style="width: 64px; height: 64px; border-radius: 16px; margin: 0 auto 1rem; display: block;">
           <h1 style="font-size: clamp(1.5rem,3vw,2rem); margin-bottom: .5rem;">Sign In</h1>
-          <p style="color: var(--muted);">Welcome back. Enter your email to continue.</p>
+          <p style="color: var(--muted);">Welcome back. Sign in with the Google account you registered with.</p>
         </div>
-        <div class="card" style="box-shadow: var(--sh2); padding: 2.25rem;">
-          <div class="alert" id="loginError"></div>
+        <div class="card" style="box-shadow: var(--sh2); padding: 2.25rem; text-align: center;">
+          <div class="alert" id="loginError" style="text-align: left;"></div>
 
-          <!-- Google Sign-In button (primary) -->
-          <div id="googleSignInWrap" style="display: none; margin-bottom: 1.5rem;">
-            <div id="googleSignInBtn" style="display: flex; justify-content: center;"></div>
-            <div style="display: flex; align-items: center; gap: .75rem; margin: 1.25rem 0; color: var(--muted); font-size: .8rem;">
-              <div style="flex: 1; height: 1px; background: var(--border);"></div>
-              <span>OR</span>
-              <div style="flex: 1; height: 1px; background: var(--border);"></div>
-            </div>
+          <!-- Google Sign-In button (only auth method) -->
+          <div id="googleSignInWrap">
+            <div id="googleSignInBtn" style="display: flex; justify-content: center; margin-bottom: 1rem;"></div>
+            <p id="googleSignInLoading" style="font-size: .82rem; color: var(--muted); margin: 0;">Loading sign-in…</p>
           </div>
 
-          <div class="field">
-            <label for="loginEmail">Brand Email</label>
-            <input type="email" id="loginEmail" placeholder="you@yourbrand.com" autocomplete="email">
-            <div class="field-hint">The email you registered with.</div>
-          </div>
-          <details style="margin-bottom: 1rem;">
-            <summary style="cursor: pointer; font-size: .85rem; color: var(--muted); user-select: none;">Or sign in with Brand ID instead</summary>
-            <div class="field" style="margin-top: 1rem;">
-              <label for="loginBrandId">Brand ID</label>
-              <input type="text" id="loginBrandId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family: monospace; font-size: .85rem;">
-              <div class="field-hint">From your registration confirmation.</div>
-            </div>
-          </details>
-          <button class="btn btn-primary" style="width:100%; font-size:1rem; padding:.9rem;" id="loginBtn" onclick="loadDashboard()">
-            Sign In →
-          </button>
-          <label style="display: flex; align-items: center; gap: .5rem; margin-top: 1rem; font-size: .85rem; cursor: pointer; color: var(--muted);">
-            <input type="checkbox" id="rememberMe" checked style="width: auto;">
-            Remember me on this device
-          </label>
-          <p style="text-align: center; margin-top: 1.25rem; font-size: .85rem; color: var(--muted);">
+          <!-- Hidden fallback inputs (used by autoload-from-URL flow only) -->
+          <input type="hidden" id="loginEmail">
+          <input type="hidden" id="loginBrandId">
+          <input type="hidden" id="rememberMe" checked>
+          <button id="loginBtn" style="display:none;" onclick="loadDashboard()"></button>
+
+          <p style="margin-top: 1.5rem; font-size: .85rem; color: var(--muted);">
             New brand? <a href="/register" style="color: var(--cyan); font-weight: 700;">Register free →</a>
           </p>
-          <p style="text-align: center; margin-top: .5rem; font-size: .82rem; color: var(--muted);">
+          <p style="margin-top: .5rem; font-size: .82rem; color: var(--muted);">
             <a href="/contact-us" style="color: var(--muted);">Need help signing in?</a>
           </p>
         </div>
@@ -1623,16 +1605,19 @@
   const API = 'https://api.tryinstantfit.com';
   let activeBrandId = null;
 
-  // ── Google Sign-In setup ──
+  // ── Google Sign-In setup (only auth method) ──
   let googleClientId = null;
   async function initGoogleSignIn() {
+    const loadingEl = document.getElementById('googleSignInLoading');
     try {
       const res = await fetch(`${API}/api/auth/config`);
       const cfg = await res.json();
-      if (!cfg.google_enabled || !cfg.google_client_id) return;
+      if (!cfg.google_enabled || !cfg.google_client_id) {
+        if (loadingEl) loadingEl.innerHTML = '⚠ Google sign-in is not configured.<br><a href="/contact-us" style="color: var(--cyan); font-weight: 700;">Contact us for access</a>.';
+        return;
+      }
       googleClientId = cfg.google_client_id;
 
-      // Wait for GSI script to load
       const tryInit = () => {
         if (typeof google === 'undefined' || !google.accounts) {
           setTimeout(tryInit, 200);
@@ -1647,11 +1632,11 @@
           document.getElementById('googleSignInBtn'),
           { theme: 'outline', size: 'large', text: 'signin_with', shape: 'rectangular', width: 320 }
         );
-        document.getElementById('googleSignInWrap').style.display = 'block';
+        if (loadingEl) loadingEl.style.display = 'none';
       };
       tryInit();
     } catch (e) {
-      // Silent fail — fallback to email login
+      if (loadingEl) loadingEl.innerHTML = '⚠ Sign-in temporarily unavailable. <a href="/contact-us" style="color: var(--cyan);">Contact support</a>.';
     }
   }
 

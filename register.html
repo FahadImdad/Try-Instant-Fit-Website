@@ -87,21 +87,27 @@
   <!-- Registration form -->
   <div class="reg-card" id="formCard">
     <h1>Create Your Brand Account</h1>
-    <p class="sub">Get full access to the dashboard immediately. Add credits when you're ready to launch — no card required up front, no trial expiration.</p>
-
-    <!-- Google Sign-Up button -->
-    <div id="googleSignUpWrap" style="display: none; margin-bottom: 1.5rem;">
-      <div id="googleSignUpBtn" style="display: flex; justify-content: center;"></div>
-      <div style="display: flex; align-items: center; gap: .75rem; margin: 1.25rem 0; color: var(--muted); font-size: .8rem;">
-        <div style="flex: 1; height: 1px; background: var(--border);"></div>
-        <span>OR fill the form manually</span>
-        <div style="flex: 1; height: 1px; background: var(--border);"></div>
-      </div>
-    </div>
+    <p class="sub">Sign in with Google to get started — we'll use that as your dashboard login. Then add a few details about your brand.</p>
 
     <div class="alert" id="regError"></div>
 
-    <form onsubmit="return submitRegister(event);">
+    <!-- Stage 1: Google Sign-Up (mandatory first step) -->
+    <div id="googleStage" style="text-align: center; padding: 1rem 0 2rem;">
+      <div id="googleSignUpBtn" style="display: flex; justify-content: center; margin-bottom: 1rem;"></div>
+      <p id="googleStageHint" style="font-size: .85rem; color: var(--muted); margin: 0;">Loading Google Sign-In…</p>
+      <p style="font-size: .82rem; color: var(--muted); margin-top: 1.5rem;">Already registered? <a href="/dashboard" style="color: var(--cyan); font-weight: 700;">Sign in →</a></p>
+    </div>
+
+    <!-- Stage 2: Brand details form (shown after Google verified) -->
+    <form id="detailsForm" onsubmit="return submitRegister(event);" style="display: none;">
+      <div id="verifiedBanner" style="background: linear-gradient(135deg, #d1fae5, #ecfdf5); border: 1px solid #6ee7b7; border-radius: var(--r-md); padding: .85rem 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: .85rem;">
+        <img id="verifiedAvatar" src="" alt="" style="width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: none;">
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-weight: 700; color: #065f46; font-size: .9rem;">✓ Verified with Google</div>
+          <div id="verifiedEmail" style="font-size: .85rem; color: #047857;"></div>
+        </div>
+      </div>
+
       <div class="field">
         <label>Brand Logo <span style="color: var(--muted); font-weight: 400;">(optional)</span></label>
         <label class="logo-zone" for="logoFile" id="logoDropZone">
@@ -119,12 +125,6 @@
       <div class="field">
         <label for="regName">Brand Name <span class="req">*</span></label>
         <input type="text" id="regName" required placeholder="e.g. Khaadi, Sana Safinaz">
-      </div>
-
-      <div class="field">
-        <label for="regEmail">Email <span class="req">*</span></label>
-        <input type="email" id="regEmail" required placeholder="contact@yourbrand.com">
-        <div class="field-hint">Your dashboard login. Use a real address — we'll send setup instructions here.</div>
       </div>
 
       <div class="field-row">
@@ -192,13 +192,19 @@
 <script>
 const API = 'https://api.tryinstantfit.com';
 let logoFileSelected = null;
+let googleIdToken = null;        // captured after user signs in with Google
+let googleVerifiedEmail = null;  // for display only — backend re-verifies the token
 
-// ── Google Sign-Up ──
+// ── Google Sign-Up (mandatory first step) ──
 async function initGoogleSignUp() {
+  const hint = document.getElementById('googleStageHint');
   try {
     const res = await fetch(`${API}/api/auth/config`);
     const cfg = await res.json();
-    if (!cfg.google_enabled || !cfg.google_client_id) return;
+    if (!cfg.google_enabled || !cfg.google_client_id) {
+      hint.innerHTML = '⚠ Sign-up is not yet configured. <a href="/contact-us" style="color: var(--cyan); font-weight: 700;">Contact us</a> to register your brand.';
+      return;
+    }
 
     const tryInit = () => {
       if (typeof google === 'undefined' || !google.accounts) {
@@ -214,10 +220,12 @@ async function initGoogleSignUp() {
         document.getElementById('googleSignUpBtn'),
         { theme: 'outline', size: 'large', text: 'signup_with', shape: 'rectangular', width: 320 }
       );
-      document.getElementById('googleSignUpWrap').style.display = 'block';
+      hint.textContent = 'Use the Google account that will be your brand login.';
     };
     tryInit();
-  } catch (e) { /* silent fallback */ }
+  } catch (e) {
+    hint.innerHTML = '⚠ Couldn\'t reach our sign-up service. Try again, or <a href="/contact-us" style="color: var(--cyan);">contact us</a>.';
+  }
 }
 
 async function handleGoogleSignUp(response) {
@@ -232,23 +240,27 @@ async function handleGoogleSignUp(response) {
     const data = await res.json();
 
     if (res.ok) {
-      // Already registered — sign in directly
+      // Already registered → sign in directly
       window.location.href = `/dashboard?id=${data.brand_id}`;
       return;
     }
 
     if (res.status === 404) {
-      // Not registered yet — pre-fill the form
+      // Not registered yet → store token, show details form
+      googleIdToken = response.credential;
+      googleVerifiedEmail = data.email;
+      // Pre-fill brand name from Google profile (user can edit)
       document.getElementById('regName').value = data.name || '';
-      document.getElementById('regEmail').value = data.email || '';
-      document.getElementById('regEmail').readOnly = true;
-      document.getElementById('regEmail').style.background = 'var(--surface)';
-      // Hide the Google button now that we've populated
-      document.getElementById('googleSignUpWrap').style.display = 'none';
-      // Show success message
-      errEl.textContent = `✓ Verified ${data.email} via Google. Complete the form below to finish registration.`;
-      errEl.className = 'alert success';
-      // Scroll to brand name
+      // Show verified banner
+      document.getElementById('verifiedEmail').textContent = data.email;
+      if (data.picture) {
+        const av = document.getElementById('verifiedAvatar');
+        av.src = data.picture;
+        av.style.display = 'block';
+      }
+      // Switch stages
+      document.getElementById('googleStage').style.display = 'none';
+      document.getElementById('detailsForm').style.display = 'block';
       document.getElementById('regName').focus();
       return;
     }
@@ -290,9 +302,15 @@ async function submitRegister(e) {
   const btn = document.getElementById('regSubmit');
   errEl.className = 'alert';
 
+  if (!googleIdToken) {
+    errEl.textContent = 'Please verify with Google first.';
+    errEl.className = 'alert error';
+    return false;
+  }
+
   const fd = new FormData();
+  fd.append('google_id_token', googleIdToken);
   fd.append('name', document.getElementById('regName').value.trim());
-  fd.append('email', document.getElementById('regEmail').value.trim());
   if (document.getElementById('regPhone').value.trim()) fd.append('contact_phone', document.getElementById('regPhone').value.trim());
   fd.append('country', document.getElementById('regCountry').value);
   if (document.getElementById('regWebsite').value.trim()) fd.append('website_url', document.getElementById('regWebsite').value.trim());
