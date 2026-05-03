@@ -420,6 +420,99 @@
     .pc-progress-fill.warning { background: linear-gradient(90deg, #f59e0b, #f97316); }
     .pc-progress-fill.danger { background: linear-gradient(90deg, #ef4444, #dc2626); }
 
+    /* Credits widget */
+    .credits-widget {
+      background: linear-gradient(135deg, #5a67f2 0%, #00c8e8 100%);
+      color: white;
+      border-radius: var(--r-xl);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 2rem;
+      align-items: center;
+      box-shadow: 0 12px 32px rgba(90,103,242,.25);
+      position: relative;
+      overflow: hidden;
+    }
+    .credits-widget::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255,255,255,.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .credits-widget.low {
+      background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+      box-shadow: 0 12px 32px rgba(239,68,68,.3);
+    }
+    .credits-widget.warn {
+      background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+      box-shadow: 0 12px 32px rgba(245,158,11,.25);
+    }
+    .credits-widget.unlimited {
+      background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+      box-shadow: 0 12px 32px rgba(139,92,246,.25);
+    }
+    .credits-left { z-index: 1; }
+    .credits-label {
+      font-size: .72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: rgba(255,255,255,.85);
+      margin-bottom: .3rem;
+    }
+    .credits-balance {
+      font-size: 2.5rem;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -.03em;
+    }
+    .credits-of {
+      font-size: 1rem;
+      font-weight: 500;
+      color: rgba(255,255,255,.6);
+      margin-left: .5rem;
+    }
+    .credits-meta {
+      margin-top: .5rem;
+      font-size: .82rem;
+      color: rgba(255,255,255,.75);
+    }
+    .credits-bar-wrap { z-index: 1; min-width: 0; }
+    .credits-bar {
+      height: 8px;
+      background: rgba(255,255,255,.2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .credits-bar-fill {
+      height: 100%;
+      background: rgba(255,255,255,.85);
+      transition: width .4s;
+    }
+    .credits-bar-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: .4rem;
+      font-size: .78rem;
+      color: rgba(255,255,255,.7);
+    }
+    .credits-actions { z-index: 1; }
+    .credits-actions .btn {
+      background: white !important;
+      color: var(--text) !important;
+      border: none !important;
+    }
+
+    @media (max-width: 700px) {
+      .credits-widget { grid-template-columns: 1fr; gap: 1rem; }
+    }
+
     /* Tab counts */
     .tab-count {
       display: inline-block;
@@ -659,6 +752,28 @@
             <button class="refresh-btn" onclick="refreshDashboard()">↻ Refresh</button>
             <a href="install.html" class="btn btn-outline-dark btn-sm">Get Install Code</a>
             <button class="btn btn-outline-dark btn-sm" onclick="logout()">Switch Account</button>
+          </div>
+        </div>
+
+        <!-- Credits widget (always visible) -->
+        <div id="creditsWidget" class="credits-widget" style="display: none;">
+          <div class="credits-left">
+            <div class="credits-label">Try-On Credits</div>
+            <div class="credits-balance">
+              <span id="creditsRemaining">—</span>
+              <span class="credits-of" id="creditsOf"></span>
+            </div>
+            <div class="credits-meta" id="creditsMeta"></div>
+          </div>
+          <div class="credits-bar-wrap">
+            <div class="credits-bar"><div class="credits-bar-fill" id="creditsBarFill" style="width: 0;"></div></div>
+            <div class="credits-bar-labels">
+              <span id="creditsUsedLbl">0 used</span>
+              <span id="creditsRateLbl"></span>
+            </div>
+          </div>
+          <div class="credits-actions">
+            <a href="https://wa.me/923112011606?text=Hi%2C%20I%27d%20like%20to%20top%20up%20my%20Try%20Instant%20Fit%20credits." target="_blank" rel="noopener" class="btn btn-primary btn-sm">💬 Top Up via WhatsApp</a>
           </div>
         </div>
 
@@ -1100,6 +1215,45 @@
     // Tab counts
     document.getElementById('tabCountGhostLayer').textContent = fmt(gl.total || 0);
     document.getElementById('tabCountScanWear').textContent = fmt(sw.total || 0);
+
+    // Credits widget
+    const widget = document.getElementById('creditsWidget');
+    const credits = brand.tryon_credits || 0;
+    const used = brand.tryon_credits_used || 0;
+    const remaining = Math.max(0, credits - used);
+    const rate = Number(brand.price_per_tryon_usd || 0);
+    if (brand.unlimited) {
+      widget.style.display = 'grid';
+      widget.className = 'credits-widget unlimited';
+      document.getElementById('creditsRemaining').textContent = '∞';
+      document.getElementById('creditsOf').textContent = 'unlimited';
+      document.getElementById('creditsMeta').textContent = `${fmt(used)} try-on${used !== 1 ? 's' : ''} run on this account.`;
+      document.getElementById('creditsBarFill').style.width = '100%';
+      document.getElementById('creditsUsedLbl').textContent = `${fmt(used)} used`;
+      document.getElementById('creditsRateLbl').textContent = 'Partner / demo brand';
+    } else {
+      widget.style.display = 'grid';
+      const usagePct = credits > 0 ? Math.min(100, (used / credits) * 100) : 0;
+      const cls = remaining === 0 ? 'low' : usagePct >= 80 ? 'warn' : '';
+      widget.className = 'credits-widget' + (cls ? ' ' + cls : '');
+      document.getElementById('creditsRemaining').textContent = fmt(remaining);
+      document.getElementById('creditsOf').textContent = `of ${fmt(credits)}`;
+      // Forecast: based on this week's burn rate
+      const dailyBurn = (gl.this_week + sw.this_week) / 7;
+      let metaTxt = remaining === 0
+        ? '⚠ Out of credits — top up to keep customers trying on.'
+        : usagePct >= 80
+          ? `⚠ ${Math.round(100 - usagePct)}% remaining — consider topping up.`
+          : `${fmt(used)} try-on${used !== 1 ? 's' : ''} used so far.`;
+      if (dailyBurn > 0 && remaining > 0) {
+        const days = Math.floor(remaining / dailyBurn);
+        if (days < 30) metaTxt += ` ~${days} day${days !== 1 ? 's' : ''} at current rate.`;
+      }
+      document.getElementById('creditsMeta').textContent = metaTxt;
+      document.getElementById('creditsBarFill').style.width = `${usagePct}%`;
+      document.getElementById('creditsUsedLbl').textContent = `${fmt(used)} used (${Math.round(usagePct)}%)`;
+      document.getElementById('creditsRateLbl').textContent = `$${rate.toFixed(3)} / try-on`;
+    }
 
     // Install hint (only if zero ghost-layer try-ons specifically)
     document.getElementById('installHint').style.display =

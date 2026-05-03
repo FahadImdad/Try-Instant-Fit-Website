@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin · Try Instant Fit</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body { background: #f6f7fb; }
+
+    .admin-shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .admin-header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .admin-header .badge-admin {
+      background: linear-gradient(135deg, #5a67f2, #ec4899);
+      color: white;
+      padding: .25rem .65rem;
+      border-radius: var(--r-full);
+      font-size: .68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    /* Login */
+    .login-box {
+      max-width: 400px;
+      margin: 6rem auto;
+      background: white;
+      border-radius: var(--r-xl);
+      padding: 2.5rem 2rem;
+      box-shadow: var(--sh2);
+      text-align: center;
+    }
+    .login-box h2 { margin: 0 0 .5rem; }
+    .login-box .field { text-align: left; margin-bottom: 1rem; }
+    .login-box label { display: block; font-weight: 600; font-size: .85rem; margin-bottom: .35rem; }
+    .login-box input {
+      width: 100%;
+      padding: .75rem .9rem;
+      border: 2px solid var(--border);
+      border-radius: var(--r-md);
+      font-size: 1rem;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .login-box input:focus { border-color: var(--cyan); outline: none; }
+
+    /* Tabs */
+    .admin-tabs {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--border);
+    }
+    .admin-tab {
+      background: none;
+      border: none;
+      padding: .85rem 1.25rem;
+      font-size: .95rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .admin-tab:hover { color: var(--text); }
+    .admin-tab.active { color: var(--indigo); border-bottom-color: var(--indigo); }
+    .admin-tab .count {
+      background: var(--surface);
+      color: var(--muted);
+      padding: .15rem .5rem;
+      border-radius: var(--r-full);
+      font-size: .68rem;
+      font-weight: 700;
+    }
+    .admin-tab.active .count { background: rgba(90,103,242,.15); color: var(--indigo); }
+    .admin-pane { display: none; }
+    .admin-pane.active { display: block; }
+
+    /* Filters */
+    .filter-row {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-pill {
+      padding: .4rem .9rem;
+      border-radius: var(--r-full);
+      border: 1px solid var(--border);
+      background: white;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--muted);
+      transition: all .2s;
+    }
+    .filter-pill:hover { border-color: var(--indigo); color: var(--indigo); }
+    .filter-pill.active { background: var(--indigo); border-color: var(--indigo); color: white; }
+
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      box-shadow: var(--sh1);
+    }
+    .data-table th {
+      text-align: left;
+      padding: .85rem 1rem;
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: .88rem;
+      vertical-align: middle;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: var(--surface); }
+
+    .status-pill {
+      display: inline-block;
+      padding: .15rem .6rem;
+      border-radius: var(--r-full);
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .pill-new       { background: #dbeafe; color: #1e40af; }
+    .pill-contacted { background: #fef3c7; color: #92400e; }
+    .pill-qualified { background: #ede9fe; color: #5b21b6; }
+    .pill-converted { background: #d1fae5; color: #065f46; }
+    .pill-rejected  { background: #fee2e2; color: #991b1b; }
+    .pill-trial     { background: #fef3c7; color: #92400e; }
+    .pill-active    { background: #d1fae5; color: #065f46; }
+
+    .row-actions { display: flex; gap: .35rem; flex-wrap: wrap; }
+    .row-actions .btn { font-size: .75rem; padding: .35rem .65rem; }
+
+    /* Credits cell */
+    .credits-cell {
+      display: flex;
+      flex-direction: column;
+      gap: .2rem;
+    }
+    .credits-num {
+      font-weight: 800;
+      font-size: .95rem;
+    }
+    .credits-num.low { color: #dc2626; }
+    .credits-num.warn { color: #d97706; }
+    .credits-num.ok { color: #059669; }
+    .credits-num.unlimited { color: #5a67f2; }
+
+    .alert { padding: .75rem 1rem; border-radius: var(--r-md); font-size: .85rem; margin-bottom: 1rem; display: none; }
+    .alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; display: block; }
+    .alert.success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; display: block; }
+
+    .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); background: white; border-radius: var(--r-xl); }
+    .empty .icon { font-size: 2.5rem; margin-bottom: .75rem; }
+
+    /* Modal */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-bg.open { display: flex; }
+    .modal-box {
+      background: white;
+      border-radius: var(--r-xl);
+      padding: 2rem;
+      max-width: 560px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: var(--sh3);
+    }
+    .modal-box h3 { margin: 0 0 .5rem; font-size: 1.2rem; }
+    .modal-box .close-x {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--muted);
+      margin-top: -.5rem;
+    }
+    .modal-box .field { margin-bottom: 1rem; }
+    .modal-box label { display: block; font-weight: 600; font-size: .85rem; margin-bottom: .35rem; }
+    .modal-box input, .modal-box select, .modal-box textarea {
+      width: 100%;
+      padding: .65rem .8rem;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      font-size: .95rem;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .modal-box input:focus, .modal-box select:focus { border-color: var(--indigo); outline: none; }
+
+    @media (max-width: 600px) {
+      .data-table thead { display: none; }
+      .data-table tr { display: block; padding: .75rem; border-bottom: 1px solid var(--border); }
+      .data-table td { display: block; padding: .35rem 0; border: none; font-size: .85rem; }
+      .data-table td:before { content: attr(data-label) ': '; font-weight: 700; color: var(--muted); }
+      .data-table { border-radius: var(--r-md); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN VIEW ── -->
+<div id="loginView">
+  <div class="login-box">
+    <h2>Admin Login</h2>
+    <p style="color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem;">Try Instant Fit · Internal</p>
+    <div class="alert" id="loginError"></div>
+    <form onsubmit="return doLogin(event);">
+      <div class="field">
+        <label for="loginUser">Username</label>
+        <input type="text" id="loginUser" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="loginPass">Password</label>
+        <input type="password" id="loginPass" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: .8rem; font-size: 1rem;" id="loginBtn">Sign In →</button>
+    </form>
+  </div>
+</div>
+
+<!-- ── ADMIN VIEW ── -->
+<div id="adminView" style="display: none;">
+  <div class="admin-shell">
+    <div class="admin-header">
+      <h1>🛠️ Admin <span class="badge-admin">TIF</span></h1>
+      <div style="display: flex; gap: .5rem; align-items: center;">
+        <button class="btn btn-secondary btn-sm" onclick="refreshAll()">↻ Refresh</button>
+        <button class="btn btn-secondary btn-sm" onclick="logout()">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="submissions" onclick="switchAdminTab('submissions')">📥 Contact Submissions <span class="count" id="cntSubs">0</span></button>
+      <button class="admin-tab" data-tab="brands" onclick="switchAdminTab('brands')">🏢 Brands <span class="count" id="cntBrands">0</span></button>
+    </div>
+
+    <!-- ── SUBMISSIONS PANE ── -->
+    <div id="pane-submissions" class="admin-pane active">
+      <div class="filter-row" id="subFilters">
+        <button class="filter-pill active" data-filter="" onclick="filterSubs('')">All</button>
+        <button class="filter-pill" data-filter="new" onclick="filterSubs('new')">New</button>
+        <button class="filter-pill" data-filter="contacted" onclick="filterSubs('contacted')">Contacted</button>
+        <button class="filter-pill" data-filter="qualified" onclick="filterSubs('qualified')">Qualified</button>
+        <button class="filter-pill" data-filter="converted" onclick="filterSubs('converted')">Converted</button>
+        <button class="filter-pill" data-filter="rejected" onclick="filterSubs('rejected')">Rejected</button>
+      </div>
+      <div id="subsList"></div>
+    </div>
+
+    <!-- ── BRANDS PANE ── -->
+    <div id="pane-brands" class="admin-pane">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: .5rem;">
+        <p style="color: var(--muted); font-size: .85rem; margin: 0;">All registered brands with credit balance and usage.</p>
+        <button class="btn btn-primary btn-sm" onclick="openCreateBrandModal()">+ Create Brand</button>
+      </div>
+      <div id="brandsList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: Convert Submission to Brand / Create Brand ── -->
+<div class="modal-bg" id="createBrandModal" onclick="if(event.target===this)closeCreateBrandModal()">
+  <div class="modal-box">
+    <button class="close-x" onclick="closeCreateBrandModal()">&times;</button>
+    <h3 id="cbTitle">Create Brand</h3>
+    <p style="color: var(--muted); font-size: .85rem; margin: 0 0 1.25rem;">Register a new brand and seed initial try-on credits.</p>
+    <div class="alert" id="cbError"></div>
+    <form onsubmit="return submitCreateBrand(event);">
+      <div class="field">
+        <label>Brand Name *</label>
+        <input type="text" id="cbName" required>
+      </div>
+      <div class="field">
+        <label>Email *</label>
+        <input type="email" id="cbEmail" required>
+      </div>
+      <div class="field">
+        <label>Website URL</label>
+        <input type="url" id="cbWebsite" placeholder="https://…">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="field">
+          <label>Initial Credits</label>
+          <input type="number" id="cbCredits" min="0" value="50">
+        </div>
+        <div class="field">
+          <label>Price per Try-On (USD)</label>
+          <input type="number" id="cbPrice" step="0.001" min="0" value="0.125">
+        </div>
+      </div>
+      <div class="field">
+        <label>Amount Paid (USD)</label>
+        <input type="number" id="cbAmount" step="0.01" min="0" placeholder="e.g. 6.25">
+      </div>
+      <div class="field">
+        <label>Payment Reference</label>
+        <input type="text" id="cbRef" placeholder="bank ref / invoice no.">
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="cbNotes" rows="2"></textarea>
+      </div>
+      <div class="field" style="display: flex; gap: .5rem; align-items: center;">
+        <input type="checkbox" id="cbUnlimited" style="width: auto;">
+        <label for="cbUnlimited" style="margin: 0; cursor: pointer;">Unlimited (no quota — for partner/demo brands)</label>
+      </div>
+      <button type="submit" class="btn btn-primary" id="cbSubmit" style="width: 100%; padding: .8rem;">Create Brand →</button>
+    </form>
+  </div>
+</div>
+
+<!-- ── MODAL: Add Credits ── -->
+<div class="modal-bg" id="addCreditsModal" onclick="if(event.target===this)closeAddCreditsModal()">
+  <div class="modal-box">
+    <button class="close-x" onclick="closeAddCreditsModal()">&times;</button>
+    <h3 id="acTitle">Add Credits</h3>
+    <p style="color: var(--muted); font-size: .85rem; margin: 0 0 1.25rem;" id="acSubtitle"></p>
+    <div class="alert" id="acError"></div>
+    <form onsubmit="return submitAddCredits(event);">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="field">
+          <label>Credits to Add</label>
+          <input type="number" id="acCredits" min="1" required>
+        </div>
+        <div class="field">
+          <label>Amount Paid (USD)</label>
+          <input type="number" id="acAmount" step="0.01" min="0">
+        </div>
+      </div>
+      <p style="color: var(--muted); font-size: .8rem; margin: -.5rem 0 1rem;" id="acHint"></p>
+      <div class="field">
+        <label>Payment Reference</label>
+        <input type="text" id="acRef" placeholder="bank ref / invoice no.">
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="acNotes" rows="2"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" id="acSubmit" style="width: 100%; padding: .8rem;">Add Credits →</button>
+    </form>
+  </div>
+</div>
+
+<script>
+const API = 'https://backend-tryinstantfit.vercel.app';
+
+let authHeader = sessionStorage.getItem('admin_auth') || '';
+let allSubs = [];
+let allBrands = [];
+let currentSubFilter = '';
+let pendingConvert = null; // submission being converted
+
+// Auto-login if we have a stored auth header
+(function autoLogin() {
+  if (authHeader) verifyAuthAndShow();
+})();
+
+async function doLogin(e) {
+  e.preventDefault();
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  errEl.className = 'alert';
+
+  const candidate = 'Basic ' + btoa(user + ':' + pass);
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+
+  try {
+    const res = await fetch(`${API}/api/admin/login`, {
+      method: 'POST',
+      headers: { 'Authorization': candidate, 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) {
+      errEl.textContent = 'Invalid username or password.';
+      errEl.className = 'alert error';
+      return false;
+    }
+    authHeader = candidate;
+    sessionStorage.setItem('admin_auth', authHeader);
+    showAdmin();
+  } catch (err) {
+    errEl.textContent = 'Network error. Try again.';
+    errEl.className = 'alert error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sign In →';
+  }
+  return false;
+}
+
+async function verifyAuthAndShow() {
+  try {
+    const res = await fetch(`${API}/api/admin/login`, {
+      method: 'POST',
+      headers: { 'Authorization': authHeader, 'Content-Type': 'application/json' },
+    });
+    if (res.ok) showAdmin();
+    else logout();
+  } catch (err) {
+    // Allow login screen to be shown
+  }
+}
+
+function showAdmin() {
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('adminView').style.display = 'block';
+  refreshAll();
+}
+
+function logout() {
+  authHeader = '';
+  sessionStorage.removeItem('admin_auth');
+  document.getElementById('adminView').style.display = 'none';
+  document.getElementById('loginView').style.display = 'block';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+async function fetchAdmin(path, opts = {}) {
+  const res = await fetch(`${API}${path}`, {
+    ...opts,
+    headers: {
+      'Authorization': authHeader,
+      'Content-Type': 'application/json',
+      ...(opts.headers || {}),
+    },
+  });
+  if (res.status === 401) {
+    logout();
+    throw new Error('Session expired. Please sign in again.');
+  }
+  return res;
+}
+
+function switchAdminTab(name) {
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.admin-pane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + name));
+}
+
+async function refreshAll() {
+  await Promise.all([loadSubs(), loadBrands()]);
+}
+
+// ── SUBMISSIONS ──
+async function loadSubs() {
+  try {
+    const res = await fetchAdmin('/api/admin/contact-submissions');
+    const data = await res.json();
+    allSubs = data.submissions || [];
+    document.getElementById('cntSubs').textContent = allSubs.length;
+    renderSubs();
+  } catch (err) {
+    document.getElementById('subsList').innerHTML = `<div class="empty"><p>Error: ${escapeHtml(err.message)}</p></div>`;
+  }
+}
+
+function filterSubs(status) {
+  currentSubFilter = status;
+  document.querySelectorAll('#subFilters .filter-pill').forEach(p => p.classList.toggle('active', p.dataset.filter === status));
+  renderSubs();
+}
+
+function renderSubs() {
+  const filtered = currentSubFilter ? allSubs.filter(s => s.status === currentSubFilter) : allSubs;
+  const container = document.getElementById('subsList');
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="icon">📭</div><p>No submissions${currentSubFilter ? ` with status "${currentSubFilter}"` : ''} yet.</p></div>`;
+    return;
+  }
+  container.innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Brand / Email</th><th>Product Interest</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${filtered.map(s => `
+          <tr>
+            <td data-label="Name"><strong>${escapeHtml(s.name)}</strong></td>
+            <td data-label="Brand">
+              <div>${escapeHtml(s.brand_name)}</div>
+              <div style="color:var(--muted); font-size:.78rem;">${escapeHtml(s.email)}</div>
+              ${s.website_url ? `<div style="font-size:.75rem;"><a href="${escapeHtml(s.website_url)}" target="_blank" style="color:var(--indigo);">${escapeHtml(s.website_url)}</a></div>` : ''}
+            </td>
+            <td data-label="Interest">${escapeHtml(s.product_interest || '—')}</td>
+            <td data-label="Status"><span class="status-pill pill-${s.status}">${s.status}</span></td>
+            <td data-label="Date" style="color:var(--muted); font-size:.78rem;">${fmtDate(s.created_at)}</td>
+            <td data-label="Actions">
+              <div class="row-actions">
+                ${s.status !== 'converted' && s.status !== 'rejected'
+                  ? `<button class="btn btn-primary" onclick="openConvertModal(${JSON.stringify(s).replace(/"/g, '&quot;')})">Convert</button>`
+                  : ''}
+                ${s.status === 'new' ? `<button class="btn btn-secondary" onclick="updateSubStatus('${s.id}','contacted')">Mark Contacted</button>` : ''}
+                ${s.status === 'contacted' ? `<button class="btn btn-secondary" onclick="updateSubStatus('${s.id}','qualified')">Qualified</button>` : ''}
+                ${s.status !== 'rejected' && s.status !== 'converted' ? `<button class="btn btn-secondary" style="color:#991b1b;" onclick="updateSubStatus('${s.id}','rejected')">Reject</button>` : ''}
+                <a class="btn btn-secondary" target="_blank" href="https://wa.me/?text=${encodeURIComponent(`Hi ${s.name}, this is Try Instant Fit — thanks for reaching out about ${s.brand_name}. When's a good time for a quick demo call?`)}">WhatsApp</a>
+              </div>
+              ${s.message ? `<details style="margin-top:.4rem;"><summary style="cursor:pointer; font-size:.78rem; color:var(--muted);">Message</summary><p style="font-size:.85rem; margin:.5rem 0 0;">${escapeHtml(s.message)}</p></details>` : ''}
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function updateSubStatus(id, status) {
+  try {
+    const res = await fetchAdmin(`/api/admin/contact-submissions/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Failed');
+    }
+    await loadSubs();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// ── CONVERT MODAL ──
+function openConvertModal(sub) {
+  pendingConvert = sub;
+  document.getElementById('cbTitle').textContent = `Convert "${sub.brand_name}" to Brand`;
+  document.getElementById('cbName').value = sub.brand_name;
+  document.getElementById('cbEmail').value = sub.email;
+  document.getElementById('cbWebsite').value = sub.website_url || '';
+  document.getElementById('cbCredits').value = '50';
+  document.getElementById('cbPrice').value = '0.125';
+  document.getElementById('cbAmount').value = '';
+  document.getElementById('cbRef').value = '';
+  document.getElementById('cbNotes').value = `Converted from contact submission (${sub.name})`;
+  document.getElementById('cbUnlimited').checked = false;
+  document.getElementById('cbError').className = 'alert';
+  document.getElementById('createBrandModal').classList.add('open');
+}
+
+function openCreateBrandModal() {
+  pendingConvert = null;
+  document.getElementById('cbTitle').textContent = 'Create Brand';
+  ['cbName','cbEmail','cbWebsite','cbAmount','cbRef','cbNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cbCredits').value = '50';
+  document.getElementById('cbPrice').value = '0.125';
+  document.getElementById('cbUnlimited').checked = false;
+  document.getElementById('cbError').className = 'alert';
+  document.getElementById('createBrandModal').classList.add('open');
+}
+
+function closeCreateBrandModal() {
+  document.getElementById('createBrandModal').classList.remove('open');
+  pendingConvert = null;
+}
+
+async function submitCreateBrand(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('cbError');
+  const btn = document.getElementById('cbSubmit');
+  errEl.className = 'alert';
+  btn.disabled = true;
+  btn.textContent = 'Creating…';
+
+  const payload = {
+    name: document.getElementById('cbName').value.trim(),
+    email: document.getElementById('cbEmail').value.trim(),
+    website_url: document.getElementById('cbWebsite').value.trim() || undefined,
+    initial_credits: parseInt(document.getElementById('cbCredits').value, 10) || 0,
+    price_per_tryon_usd: parseFloat(document.getElementById('cbPrice').value) || 0.125,
+    unlimited: document.getElementById('cbUnlimited').checked,
+    payment_amount_usd: parseFloat(document.getElementById('cbAmount').value) || undefined,
+    payment_ref: document.getElementById('cbRef').value.trim() || undefined,
+    notes: document.getElementById('cbNotes').value.trim() || undefined,
+    contact_submission_id: pendingConvert?.id,
+  };
+
+  try {
+    const res = await fetchAdmin('/api/admin/brands', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to create');
+
+    closeCreateBrandModal();
+    await refreshAll();
+
+    // Show WhatsApp share prompt with dashboard URL
+    const dashUrl = `https://tryinstantfit.vercel.app/dashboard.html?id=${data.brand.id}`;
+    const wa = pendingConvert
+      ? `https://wa.me/?text=${encodeURIComponent(`Hi ${pendingConvert.name}!\n\nWelcome to Try Instant Fit. Your brand "${data.brand.name}" is ready.\n\nYour dashboard: ${dashUrl}\n\nYou have ${payload.initial_credits} try-on credits to start with. Let me know once you've had a look!\n\n— Fahad`)}`
+      : `https://wa.me/?text=${encodeURIComponent(`Welcome to Try Instant Fit. Your brand "${data.brand.name}" is ready.\n\nDashboard: ${dashUrl}\n\nStarting credits: ${payload.initial_credits}`)}`;
+
+    if (confirm(`Brand created!\n\nDashboard URL:\n${dashUrl}\n\nClick OK to send a WhatsApp welcome message.`)) {
+      window.open(wa, '_blank');
+    }
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.className = 'alert error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create Brand →';
+  }
+  return false;
+}
+
+// ── BRANDS ──
+async function loadBrands() {
+  try {
+    const res = await fetchAdmin('/api/admin/brands');
+    const data = await res.json();
+    allBrands = data.brands || [];
+    document.getElementById('cntBrands').textContent = allBrands.length;
+    renderBrands();
+  } catch (err) {
+    document.getElementById('brandsList').innerHTML = `<div class="empty"><p>Error: ${escapeHtml(err.message)}</p></div>`;
+  }
+}
+
+function renderBrands() {
+  const container = document.getElementById('brandsList');
+  if (allBrands.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="icon">🏢</div><p>No brands yet. Create one from a submission.</p></div>`;
+    return;
+  }
+  container.innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>Brand</th><th>Status</th><th>Credits</th><th>Used</th><th>Rate</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${allBrands.map(b => {
+          const remaining = (b.tryon_credits || 0) - (b.tryon_credits_used || 0);
+          const usagePct = b.tryon_credits > 0 ? (b.tryon_credits_used / b.tryon_credits) * 100 : 0;
+          let creditClass = 'ok';
+          if (b.unlimited) creditClass = 'unlimited';
+          else if (remaining === 0) creditClass = 'low';
+          else if (usagePct >= 80) creditClass = 'warn';
+          return `
+            <tr>
+              <td data-label="Brand">
+                <strong>${escapeHtml(b.name)}</strong>
+                <div style="color:var(--muted); font-size:.78rem;">${escapeHtml(b.email)}</div>
+                <div style="font-size:.7rem; color:var(--muted); font-family: monospace; margin-top:.15rem;">${b.id}</div>
+              </td>
+              <td data-label="Status"><span class="status-pill pill-${b.status}">${b.status}</span></td>
+              <td data-label="Credits">
+                <div class="credits-cell">
+                  ${b.unlimited
+                    ? '<div class="credits-num unlimited">∞ unlimited</div>'
+                    : `<div class="credits-num ${creditClass}">${remaining} left</div>
+                       <div style="font-size:.72rem; color:var(--muted);">of ${b.tryon_credits}</div>`}
+                </div>
+              </td>
+              <td data-label="Used">
+                <div style="font-weight:700;">${b.tryon_credits_used || 0}</div>
+                <div style="font-size:.72rem; color:var(--muted);">try-ons run</div>
+              </td>
+              <td data-label="Rate">$${Number(b.price_per_tryon_usd).toFixed(3)}</td>
+              <td data-label="Actions">
+                <div class="row-actions">
+                  ${!b.unlimited ? `<button class="btn btn-primary" onclick="openAddCredits('${b.id}', ${JSON.stringify(b.name).replace(/"/g, '&quot;')}, ${b.price_per_tryon_usd})">+ Credits</button>` : ''}
+                  <a class="btn btn-secondary" href="dashboard.html?id=${b.id}" target="_blank">Dashboard ↗</a>
+                </div>
+              </td>
+            </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+let acBrandId = null;
+let acBrandPrice = 0.125;
+
+function openAddCredits(brandId, brandName, price) {
+  acBrandId = brandId;
+  acBrandPrice = price;
+  document.getElementById('acTitle').textContent = `Add Credits — ${brandName}`;
+  document.getElementById('acSubtitle').textContent = `Rate: $${Number(price).toFixed(3)} per try-on`;
+  ['acCredits','acAmount','acRef','acNotes'].forEach(id => document.getElementById(id).value = '');
+  updateAcHint();
+  document.getElementById('acError').className = 'alert';
+  document.getElementById('addCreditsModal').classList.add('open');
+}
+
+document.getElementById('acCredits').addEventListener('input', () => updateAcHint());
+document.getElementById('acAmount').addEventListener('input', () => {
+  const amt = parseFloat(document.getElementById('acAmount').value);
+  if (!isNaN(amt) && acBrandPrice > 0) {
+    document.getElementById('acCredits').value = Math.floor(amt / acBrandPrice);
+  }
+  updateAcHint();
+});
+
+function updateAcHint() {
+  const credits = parseInt(document.getElementById('acCredits').value, 10) || 0;
+  const cost = credits * acBrandPrice;
+  document.getElementById('acHint').textContent = credits > 0 ? `≈ $${cost.toFixed(2)} at this rate` : '';
+}
+
+function closeAddCreditsModal() {
+  document.getElementById('addCreditsModal').classList.remove('open');
+}
+
+async function submitAddCredits(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('acError');
+  const btn = document.getElementById('acSubmit');
+  errEl.className = 'alert';
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+
+  const payload = {
+    credits_added: parseInt(document.getElementById('acCredits').value, 10),
+    amount_usd: parseFloat(document.getElementById('acAmount').value) || undefined,
+    payment_ref: document.getElementById('acRef').value.trim() || undefined,
+    notes: document.getElementById('acNotes').value.trim() || undefined,
+  };
+
+  try {
+    const res = await fetchAdmin(`/api/admin/brands/${acBrandId}/credits`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    closeAddCreditsModal();
+    await loadBrands();
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.className = 'alert error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Add Credits →';
+  }
+  return false;
+}
+
+// ── Helpers ──
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-PK', { day: '2-digit', month: 'short' }) + ' · ' + d.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' });
+}
+</script>
+
+</body>
+</html>
