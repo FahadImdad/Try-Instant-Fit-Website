@@ -109,7 +109,7 @@
       </div>
 
       <div class="field">
-        <label>Brand Logo <span style="color: var(--muted); font-weight: 400;">(optional)</span></label>
+        <label>Brand Logo <span class="req">*</span></label>
         <label class="logo-zone" for="logoFile" id="logoDropZone">
           <input type="file" id="logoFile" accept="image/jpeg,image/png,image/webp,image/svg+xml" style="display: none;">
           <div id="logoHint">
@@ -135,21 +135,21 @@
           <div class="field-hint">Person we'll contact about this account.</div>
         </div>
         <div class="field">
-          <label for="regContactPosition">Your Position</label>
-          <input type="text" id="regContactPosition" maxlength="60" placeholder="e.g. Founder, Marketing Manager">
+          <label for="regContactPosition">Your Position <span class="req">*</span></label>
+          <input type="text" id="regContactPosition" required minlength="2" maxlength="60" placeholder="e.g. Founder, Marketing Manager">
           <div class="field-hint">Your role at the brand.</div>
         </div>
       </div>
 
       <div class="field-row">
         <div class="field">
-          <label for="regPhone">WhatsApp Number</label>
-          <input type="tel" id="regPhone" pattern="^\+?[\d\s\-()]{7,25}$" placeholder="+92 300 1234567">
+          <label for="regPhone">WhatsApp Number <span class="req">*</span></label>
+          <input type="tel" id="regPhone" required pattern="^\+?[\d\s\-()]{7,25}$" placeholder="+92 300 1234567">
           <div class="field-hint">7–15 digits. Used for payment confirmations.</div>
         </div>
         <div class="field">
-          <label for="regCountry">Country</label>
-          <select id="regCountry">
+          <label for="regCountry">Country <span class="req">*</span></label>
+          <select id="regCountry" required>
             <option value="PK" selected>🇵🇰 Pakistan</option>
             <option value="AE">🇦🇪 UAE</option>
             <option value="GB">🇬🇧 UK</option>
@@ -160,9 +160,9 @@
       </div>
 
       <div class="field">
-        <label for="regWebsite">Website URL</label>
-        <input type="url" id="regWebsite" pattern="https?://.+" placeholder="https://yourbrand.com">
-        <div class="field-hint">Must start with http:// or https://. Optional, but useful if you'll use the website widget too.</div>
+        <label for="regWebsite">Website URL <span class="req">*</span></label>
+        <input type="url" id="regWebsite" required pattern="https?://.+" placeholder="https://yourbrand.com">
+        <div class="field-hint">Must start with http:// or https://. Where customers will find your products.</div>
       </div>
 
       <div class="field-row">
@@ -322,38 +322,58 @@ async function submitRegister(e) {
     return false;
   }
 
-  // Client-side validation (browsers also enforce HTML5 patterns, but double-check)
-  const phoneVal = document.getElementById('regPhone').value.trim();
-  if (phoneVal) {
-    const digits = phoneVal.replace(/\D/g, '');
-    if (digits.length < 7 || digits.length > 15 || !/^\+?[\d\s\-()]+$/.test(phoneVal)) {
-      errEl.textContent = 'Phone number must be 7–15 digits. Use international format (e.g. +92 300 1234567).';
-      errEl.className = 'alert error';
-      return false;
-    }
+  if (!logoFileSelected) {
+    errEl.textContent = 'Brand logo is required.';
+    errEl.className = 'alert error';
+    return false;
   }
+
+  // All fields required — pull and validate
+  const positionVal = document.getElementById('regContactPosition').value.trim();
+  if (!positionVal) {
+    errEl.textContent = 'Your position is required.';
+    errEl.className = 'alert error';
+    return false;
+  }
+
+  const phoneVal = document.getElementById('regPhone').value.trim();
+  if (!phoneVal) {
+    errEl.textContent = 'WhatsApp number is required.';
+    errEl.className = 'alert error';
+    return false;
+  }
+  const digits = phoneVal.replace(/\D/g, '');
+  if (digits.length < 7 || digits.length > 15 || !/^\+?[\d\s\-()]+$/.test(phoneVal)) {
+    errEl.textContent = 'Phone number must be 7–15 digits. Use international format (e.g. +92 300 1234567).';
+    errEl.className = 'alert error';
+    return false;
+  }
+
   const websiteVal = document.getElementById('regWebsite').value.trim();
-  if (websiteVal) {
-    try {
-      const u = new URL(websiteVal);
-      if (!['http:', 'https:'].includes(u.protocol)) throw new Error();
-    } catch {
-      errEl.textContent = 'Website URL must start with http:// or https:// (e.g. https://yourbrand.com).';
-      errEl.className = 'alert error';
-      return false;
-    }
+  if (!websiteVal) {
+    errEl.textContent = 'Website URL is required.';
+    errEl.className = 'alert error';
+    return false;
+  }
+  try {
+    const u = new URL(websiteVal);
+    if (!['http:', 'https:'].includes(u.protocol)) throw new Error();
+  } catch {
+    errEl.textContent = 'Website URL must start with http:// or https:// (e.g. https://yourbrand.com).';
+    errEl.className = 'alert error';
+    return false;
   }
 
   const fd = new FormData();
   fd.append('google_id_token', googleIdToken);
   fd.append('name', document.getElementById('regName').value.trim());
   fd.append('contact_name', document.getElementById('regContactName').value.trim());
-  if (document.getElementById('regContactPosition').value.trim()) fd.append('contact_position', document.getElementById('regContactPosition').value.trim());
-  if (phoneVal) fd.append('contact_phone', phoneVal);
+  fd.append('contact_position', positionVal);
+  fd.append('contact_phone', phoneVal);
   fd.append('country', document.getElementById('regCountry').value);
-  if (websiteVal) fd.append('website_url', websiteVal);
+  fd.append('website_url', websiteVal);
   fd.append('primary_color', document.getElementById('regColor').value);
-  if (logoFileSelected) fd.append('logo', logoFileSelected);
+  fd.append('logo', logoFileSelected);
 
   btn.disabled = true; btn.textContent = 'Creating account…';
   try {
