@@ -441,9 +441,11 @@
       if (validatedPasscode?.passcode_id) {
         fd.append('passcode_id', validatedPasscode.passcode_id);
       }
-      // Use Vertex AI Virtual Try-On (primary) — same model as Ghost Layer widget,
-      // purpose-built for fashion. $0.04 flat, best quality.
-      fd.append('provider', 'primary');
+      // Scan & Wear uses Gemini Flash 3.1 @ 512px exclusively.
+      // Garment is pre-isolated at QR creation, so each try-on = 1 AI call (~$0.045).
+      fd.append('provider', 'fallback');
+      fd.append('gemini_model', 'gemini-3.1-flash-image-preview');
+      fd.append('output_resolution', '512');
 
       const res = await fetch(`${API}/api/widget/try-on`, { method: 'POST', body: fd });
       const data = await res.json();
