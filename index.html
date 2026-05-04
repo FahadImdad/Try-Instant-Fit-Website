@@ -56,7 +56,7 @@
       <div class="hero-text animate-up">
         <div class="pill pill-cyan">📱 Scan & Wear — Now Available in Pakistan</div>
         <h1>Let Customers <em>Scan & Try Before They Buy</em></h1>
-        <p>QR codes on every garment tag. Customers scan, upload a selfie, see the fit in 3 seconds — no fitting room queue, no app download. Reduce returns by 85% and watch conversions triple in-store.</p>
+        <p>QR codes on every garment tag. Customers scan, upload a selfie, and see the fit on their own phone — no fitting room queue, no app download. Reduce returns by 85% and watch conversions triple in-store.</p>
         <div class="hero-cta">
           <a href="/register" class="btn btn-primary btn-lg">Register Free →</a>
           <a href="#products" class="btn btn-outline-white btn-lg">See How It Works</a>
@@ -68,7 +68,7 @@
         </div>
       </div>
 
-      <!-- Right: Browser Mockup -->
+      <!-- Right: Phone Mockup -->
       <div class="hero-visual animate-up d2">
         <!-- Floating badge top-left -->
         <div class="hero-badge badge-top-left">
@@ -76,42 +76,83 @@
           <span>Live Try-On Active</span>
         </div>
 
-        <div class="browser-mockup">
-          <div class="browser-bar">
-            <div class="browser-dots">
-              <span></span><span></span><span></span>
-            </div>
-            <div class="browser-url-bar">yourbrand.com/products/summer-dress</div>
-          </div>
-          <div class="browser-body">
-            <div class="tryon-ui">
-              <div class="tryon-panel tryon-before">
-                <span class="tryon-label">Your Photo</span>
-                <div class="tryon-img">🧍</div>
+        <div class="phone-mockup">
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <div class="phone-notch"></div>
+              <div class="phone-statusbar">
+                <span class="phone-time">9:41</span>
+                <span class="phone-icons">
+                  <svg width="16" height="10" viewBox="0 0 18 11" fill="#fff" aria-hidden="true"><rect x="0" y="7" width="3" height="4" rx=".5"/><rect x="5" y="5" width="3" height="6" rx=".5"/><rect x="10" y="2" width="3" height="9" rx=".5"/><rect x="15" y="0" width="3" height="11" rx=".5"/></svg>
+                  <svg width="14" height="10" viewBox="0 0 16 12" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><path d="M1 5 Q8 -1 15 5"/><path d="M3.5 8 Q8 4 12.5 8"/><circle cx="8" cy="10.5" r=".8" fill="#fff"/></svg>
+                  <svg width="22" height="10" viewBox="0 0 24 11" fill="none" aria-hidden="true"><rect x=".5" y=".5" width="20" height="10" rx="2.5" stroke="#fff" stroke-opacity=".55"/><rect x="2" y="2" width="15" height="7" rx="1" fill="#fff"/><rect x="21" y="3.5" width="1.5" height="4" rx=".5" fill="#fff" fill-opacity=".55"/></svg>
+                </span>
               </div>
-              <div class="tryon-panel tryon-after">
-                <span class="tryon-label">Virtual Try-On</span>
-                <div class="tryon-img">👗</div>
-                <div class="tryon-result-badge">✓ Perfect Fit</div>
+
+              <div class="phone-app-header">
+                <span class="phone-app-title">Try It On ✨</span>
+                <span class="phone-app-close">×</span>
               </div>
-              <div class="tryon-actions">
-                <button class="tryon-btn tryon-btn-primary">🛒 Add to Cart</button>
-                <button class="tryon-btn tryon-btn-secondary">↗ Share Look</button>
+
+              <div class="phone-screen-body">
+                <div class="tryon-ui">
+                  <div class="tryon-panel tryon-before">
+                    <span class="tryon-label">Your Photo</span>
+                    <svg class="tryon-pic" viewBox="0 0 80 110" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                      <defs>
+                        <linearGradient id="personGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+                          <stop offset="0%" stop-color="#5063a0"/>
+                          <stop offset="100%" stop-color="#1e2d4a"/>
+                        </linearGradient>
+                      </defs>
+                      <ellipse cx="40" cy="30" rx="14" ry="15" fill="url(#personGrad)"/>
+                      <path d="M 40 45 Q 31 47 27 54 L 16 80 L 16 110 L 64 110 L 64 80 L 53 54 Q 49 47 40 45 Z" fill="url(#personGrad)"/>
+                    </svg>
+                  </div>
+                  <div class="tryon-panel tryon-after">
+                    <span class="tryon-label">Virtual Try-On</span>
+                    <svg class="tryon-pic" viewBox="0 0 80 110" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                      <defs>
+                        <linearGradient id="dressGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+                          <stop offset="0%" stop-color="#7a89ff"/>
+                          <stop offset="100%" stop-color="#00c8e8"/>
+                        </linearGradient>
+                        <linearGradient id="dressShine" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stop-color="rgba(255,255,255,0)"/>
+                          <stop offset="50%" stop-color="rgba(255,255,255,.22)"/>
+                          <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+                        </linearGradient>
+                      </defs>
+                      <ellipse cx="40" cy="22" rx="10" ry="11" fill="rgba(255,255,255,.2)"/>
+                      <path d="M 30 34 Q 32 32 40 32 Q 48 32 50 34 L 53 52 L 27 52 Z" fill="url(#dressGrad)"/>
+                      <rect x="28" y="50" width="24" height="6" fill="url(#dressGrad)"/>
+                      <path d="M 26 56 L 54 56 L 72 110 L 8 110 Z" fill="url(#dressGrad)"/>
+                      <path d="M 26 56 L 54 56 L 72 110 L 8 110 Z" fill="url(#dressShine)"/>
+                    </svg>
+                    <div class="tryon-result-badge">✓ Perfect Fit</div>
+                  </div>
+                  <div class="tryon-actions">
+                    <button class="tryon-btn tryon-btn-primary">🛒 Add to Cart</button>
+                    <button class="tryon-btn tryon-btn-secondary">↗ Share</button>
+                  </div>
+                </div>
+                <div class="tryon-stat-row">
+                  <div class="tryon-stat">
+                    <div class="tryon-stat-num">⚡</div>
+                    <p class="tryon-stat-lbl">Lightning Fast</p>
+                  </div>
+                  <div class="tryon-stat">
+                    <div class="tryon-stat-num">3×</div>
+                    <p class="tryon-stat-lbl">More Conversions</p>
+                  </div>
+                  <div class="tryon-stat">
+                    <div class="tryon-stat-num">85%</div>
+                    <p class="tryon-stat-lbl">Fewer Returns</p>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="tryon-stat-row">
-              <div class="tryon-stat">
-                <div class="tryon-stat-num">3s</div>
-                <p class="tryon-stat-lbl">Try-On Speed</p>
-              </div>
-              <div class="tryon-stat">
-                <div class="tryon-stat-num">3×</div>
-                <p class="tryon-stat-lbl">More Conversions</p>
-              </div>
-              <div class="tryon-stat">
-                <div class="tryon-stat-num">85%</div>
-                <p class="tryon-stat-lbl">Fewer Returns</p>
-              </div>
+
+              <div class="phone-home-indicator"></div>
             </div>
           </div>
         </div>
@@ -182,18 +223,16 @@
   </div>
 </section>
 
-<!-- ── Products ── -->
+<!-- ── Product ── -->
 <section class="section bg-surface" id="products">
   <div class="container">
     <div class="section-hd">
-      <div class="pill pill-brand">Our Products</div>
-      <h2>Scan & Wear — Available Today</h2>
-      <p>QR-powered virtual try-on for in-store retail. Website widget and Digital Mirror are coming soon.</p>
+      <div class="pill pill-brand">Our Product</div>
+      <h2>Scan &amp; Wear — In-Store Virtual Try-On</h2>
+      <p>QR codes on every garment tag. Customers scan, upload a selfie, and see the fit on their own phone — instantly.</p>
     </div>
 
-    <div class="card-grid card-grid-3">
-
-      <!-- Scan & Wear (PRIMARY) -->
+    <div style="max-width:480px;margin:0 auto;">
       <div class="prod-card">
         <div class="prod-stripe green"></div>
         <div class="prod-body">
@@ -209,118 +248,9 @@
           </ul>
           <div class="prod-price"><strong>Contact us</strong> for pricing</div>
           <a href="/register" class="btn btn-primary" style="margin-top:1.25rem;width:100%;">Register Free →</a>
-          <a href="#compare" class="btn btn-secondary" style="margin-top:.5rem;width:100%;">Learn More</a>
+          <a href="#how-it-works" class="btn btn-secondary" style="margin-top:.5rem;width:100%;">See How It Works</a>
         </div>
       </div>
-
-      <!-- Website Try-on (UPCOMING) -->
-      <div class="prod-card upcoming">
-        <div class="prod-stripe brand"></div>
-        <div class="prod-body">
-          <div class="prod-icon cyan"><img src="https://cdn-icons-png.flaticon.com/512/3988/3988014.png" alt="Website widget"></div>
-          <div class="pill-soon">🚧 Coming Soon</div>
-          <h3>Website Try-on</h3>
-          <p>Embeddable website widget — virtual try-on on your e-commerce product pages with one line of code. Currently in private beta.</p>
-          <ul class="feat-list">
-            <li>One-line install for any website</li>
-            <li>Shopify, WooCommerce, custom sites</li>
-            <li>Customer uploads selfie → sees fit in 3s</li>
-            <li>Analytics dashboard + social sharing</li>
-          </ul>
-          <div class="prod-price"><strong>Launching soon</strong></div>
-          <span class="btn btn-primary" style="margin-top:1.25rem;width:100%;">Coming Soon</span>
-        </div>
-      </div>
-
-      <!-- Digital Mirror (UPCOMING) -->
-      <div class="prod-card upcoming">
-        <div class="prod-stripe purple"></div>
-        <div class="prod-body">
-          <div class="prod-icon purple"><img src="https://cdn-icons-png.flaticon.com/512/9498/9498656.png" alt="Smart mirror"></div>
-          <div class="pill-soon">🚧 Coming Soon</div>
-          <h3>Digital Mirror</h3>
-          <p>Full-size smart mirror — a premium in-store experience for flagship stores and luxury boutiques. Hardware partnerships in progress.</p>
-          <ul class="feat-list">
-            <li>55"–75" human-height touchscreen</li>
-            <li>Professional installation included</li>
-            <li>Cloud dashboard + real-time analytics</li>
-            <li>Hardware warranty + ongoing support</li>
-          </ul>
-          <div class="prod-price"><strong>Launching soon</strong></div>
-          <span class="btn btn-primary" style="margin-top:1.25rem;width:100%;">Coming Soon</span>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ── Comparison Table ── -->
-<section class="section bg-surface" id="compare">
-  <div class="container">
-    <div class="section-hd">
-      <div class="pill pill-cyan">Compare</div>
-      <h2>Available Today &amp; What's Next</h2>
-      <p>Scan &amp; Wear is shipping now. We're rolling out Website Try-on and Digital Mirror through 2026.</p>
-    </div>
-    <div style="overflow-x: auto; max-width: 900px; margin: 0 auto;">
-      <table style="width: 100%; border-collapse: collapse; background: white; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--sh1);">
-        <thead style="background: linear-gradient(135deg, #5a67f2, #00c8e8); color: white;">
-          <tr>
-            <th style="padding: 1rem; text-align: left; font-weight: 700;">Feature</th>
-            <th style="padding: 1rem; text-align: center; font-weight: 700;">Scan &amp; Wear<br><span style="font-size:.7rem;font-weight:600;opacity:.85;">Available Now</span></th>
-            <th style="padding: 1rem; text-align: center; font-weight: 700;">Website Try-on<br><span style="font-size:.7rem;font-weight:600;opacity:.85;">Coming Soon</span></th>
-            <th style="padding: 1rem; text-align: center; font-weight: 700;">Digital Mirror<br><span style="font-size:.7rem;font-weight:600;opacity:.85;">Coming Soon</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr style="border-bottom: 1px solid var(--border);">
-            <td style="padding: 1rem;"><strong>Use Case</strong></td>
-            <td style="padding: 1rem; text-align: center;">In-store</td>
-            <td style="padding: 1rem; text-align: center;">E-commerce</td>
-            <td style="padding: 1rem; text-align: center;">Premium retail</td>
-          </tr>
-          <tr style="border-bottom: 1px solid var(--border); background: var(--surface);">
-            <td style="padding: 1rem;"><strong>Customer Action</strong></td>
-            <td style="padding: 1rem; text-align: center;">Scan QR on tag/display</td>
-            <td style="padding: 1rem; text-align: center;">Click "Try It On" on product page</td>
-            <td style="padding: 1rem; text-align: center;">Stand in front of mirror</td>
-          </tr>
-          <tr style="border-bottom: 1px solid var(--border);">
-            <td style="padding: 1rem;"><strong>Try-On Speed</strong></td>
-            <td style="padding: 1rem; text-align: center;">3–5 seconds</td>
-            <td style="padding: 1rem; text-align: center;">3–5 seconds</td>
-            <td style="padding: 1rem; text-align: center;">3–5 seconds</td>
-          </tr>
-          <tr style="border-bottom: 1px solid var(--border); background: var(--surface);">
-            <td style="padding: 1rem;"><strong>Per-Customer Limits</strong></td>
-            <td style="padding: 1rem; text-align: center;">Yes (passcodes)</td>
-            <td style="padding: 1rem; text-align: center;">—</td>
-            <td style="padding: 1rem; text-align: center;">—</td>
-          </tr>
-          <tr style="border-bottom: 1px solid var(--border);">
-            <td style="padding: 1rem;"><strong>Hardware Required</strong></td>
-            <td style="padding: 1rem; text-align: center;">No</td>
-            <td style="padding: 1rem; text-align: center;">No</td>
-            <td style="padding: 1rem; text-align: center;">Yes (mirror)</td>
-          </tr>
-          <tr style="border-bottom: 1px solid var(--border); background: var(--surface);">
-            <td style="padding: 1rem;"><strong>Onboarding Time</strong></td>
-            <td style="padding: 1rem; text-align: center;">Same day</td>
-            <td style="padding: 1rem; text-align: center;">TBD</td>
-            <td style="padding: 1rem; text-align: center;">TBD</td>
-          </tr>
-          <tr>
-            <td style="padding: 1rem;"><strong>Pricing</strong></td>
-            <td style="padding: 1rem; text-align: center;"><a href="/contact-us" style="color: var(--indigo); font-weight: 600;">Contact us</a></td>
-            <td style="padding: 1rem; text-align: center; color: var(--muted);">Coming Soon</td>
-            <td style="padding: 1rem; text-align: center; color: var(--muted);">Coming Soon</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div style="text-align: center; margin-top: 2rem;">
-      <a href="/contact-us" class="btn btn-primary">Talk to an Expert →</a>
     </div>
   </div>
 </section>
@@ -426,7 +356,7 @@
 
     <div style="text-align:center;margin-top:3rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
       <a href="/register" class="btn btn-primary">Register Free →</a>
-      <a href="#compare" class="btn btn-secondary">Compare Products →</a>
+      <a href="#pricing" class="btn btn-secondary">See Pricing</a>
     </div>
   </div>
 </section>
@@ -567,25 +497,13 @@
       <p>Setup is tailored to your catalogue size and goals. Per try-on pricing is friendly to local margins — every brand gets a quote that fits.</p>
     </div>
 
-    <div class="card-grid card-grid-3" style="max-width:900px;margin:0 auto;">
-      <div class="card" style="text-align:center;border-color:var(--indigo);box-shadow:0 0 0 1px var(--indigo),var(--sh1);">
+    <div style="max-width:380px;margin:0 auto;">
+      <div class="card" style="text-align:center;border-color:var(--indigo);box-shadow:0 0 0 1px var(--indigo),var(--sh1);position:relative;">
         <div class="pricing-badge">Available Now</div>
         <div style="font-size:2rem;margin-bottom:.75rem;">📱</div>
         <h4>Scan &amp; Wear</h4>
         <div style="margin:1rem 0;color:var(--muted);font-size:.95rem;">QR codes for in-store, with passcode-controlled try-limits.</div>
         <p style="font-size:.9rem;margin:0;"><strong>Contact us for pricing</strong></p>
-      </div>
-      <div class="card" style="text-align:center;opacity:.7;">
-        <div style="font-size:2rem;margin-bottom:.75rem;">🌐</div>
-        <h4>Website Try-on</h4>
-        <div style="margin:1rem 0;color:var(--muted);font-size:.95rem;">Website widget for e-commerce.</div>
-        <p style="font-size:.9rem;margin:0;color:var(--muted);"><strong>🚧 Coming Soon</strong></p>
-      </div>
-      <div class="card" style="text-align:center;opacity:.7;">
-        <div style="font-size:2rem;margin-bottom:.75rem;">🪞</div>
-        <h4>Digital Mirror</h4>
-        <div style="margin:1rem 0;color:var(--muted);font-size:.95rem;">Premium smart mirror for flagship stores.</div>
-        <p style="font-size:.9rem;margin:0;color:var(--muted);"><strong>🚧 Coming Soon</strong></p>
       </div>
     </div>
 
@@ -642,14 +560,6 @@
 
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">
-          When are Website Try-on and Digital Mirror launching?
-          <div class="faq-icon">+</div>
-        </div>
-        <div class="faq-a">Both are on our roadmap and in active development. Website Try-on (embeddable widget for e-commerce) is in private beta with a small group of pilot brands. Digital Mirror (in-store hardware) is in hardware partnership talks. <a href="/contact-us" style="color:var(--indigo);font-weight:600;">Contact us</a> if you'd like early access — we're prioritising brands that already use Scan &amp; Wear.</div>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">
           Do customers need to download an app?
           <div class="faq-icon">+</div>
         </div>
@@ -699,12 +609,11 @@
         <p>AI-powered virtual try-on technology for modern fashion retailers. Reduce returns, increase conversions, delight customers.</p>
       </div>
       <div>
-        <h4>Products</h4>
+        <h4>Product</h4>
         <ul class="footer-links">
           <li><a href="#products">Scan &amp; Wear QR</a></li>
-          <li><a href="#products" style="opacity:.6;">Website Try-on (soon)</a></li>
-          <li><a href="#products" style="opacity:.6;">Digital Mirror (soon)</a></li>
-          <li><a href="#compare">Compare All</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#pricing">Pricing</a></li>
         </ul>
       </div>
       <div>

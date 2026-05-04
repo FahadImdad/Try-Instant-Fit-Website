@@ -1021,7 +1021,7 @@
     .source-empty h4 { margin: 0 0 .35rem; color: var(--text); }
     .source-empty p { margin: 0; font-size: .85rem; }
 
-    /* Digital Mirror CTA card */
+    /* (Legacy CTA card — kept for backward compatibility, not rendered) */
     .mirror-cta-card {
       background: linear-gradient(135deg, #0f1e3d 0%, #1a2f5a 100%);
       color: white;
@@ -1266,32 +1266,21 @@
           </div>
         </div>
 
-        <!-- Tab Navigation -->
-        <div class="tab-nav">
-          <button class="tab-btn active" data-tab="scanwear" onclick="switchTab('scanwear')">📱 Scan &amp; Wear<span class="tab-count" id="tabCountScanWear"></span></button>
-          <button class="tab-btn" data-tab="ghost-layer" onclick="switchTab('ghost-layer')">🌐 Website Try-on<span class="soon-badge">Soon</span><span id="tabCountGhostLayer" style="display:none;"></span></button>
-          <button class="tab-btn" data-tab="mirror" onclick="switchTab('mirror')">🪞 Digital Mirror<span class="soon-badge">Soon</span></button>
-        </div>
-
-        <!-- Tab: Website Try-on (Coming Soon) -->
-        <div id="tab-ghost-layer" class="tab-content">
-          <div class="upcoming-card">
-            <div class="upcoming-icon">🌐</div>
-            <div class="upcoming-pill">🚧 Coming Soon</div>
-            <h3>Website Try-on Widget</h3>
-            <p>An embeddable widget for your e-commerce product pages — customers click "Try It On" and see the fit in seconds. Currently in private beta with pilot brands. Want early access?</p>
-            <a href="/contact-us" class="btn btn-primary">Request Early Access →</a>
-          </div>
-          <!-- Hidden legacy elements (kept for JS compatibility, not displayed) -->
-          <div class="source-stats" id="ghostLayerStats" style="display:none;"></div>
-          <div class="products-section" id="productsSection" style="display:none;">
+        <!-- Hidden legacy DOM elements kept so JS that targets them by ID
+             (ghostLayerStats, productsSection, productsGrid, productsSubtitle,
+             tableBody, tab-ghost-layer, tab-mirror) doesn't throw. The visible
+             "Coming Soon" tabs and tab-nav have been removed. -->
+        <div id="tab-ghost-layer" class="tab-content" style="display:none;">
+          <div class="source-stats" id="ghostLayerStats"></div>
+          <div class="products-section" id="productsSection">
             <div class="products-grid" id="productsGrid"></div>
             <span id="productsSubtitle"></span>
           </div>
-          <div id="tableBody" style="display:none;"></div>
+          <div id="tableBody"></div>
         </div>
+        <div id="tab-mirror" class="tab-content" style="display:none;"></div>
 
-        <!-- Tab: Scan & Wear (PRIMARY) -->
+        <!-- Tab: Scan & Wear (only product) -->
         <div id="tab-scanwear" class="tab-content active">
           <!-- Per-source stat strip -->
           <div class="source-stats" id="scanWearStats"></div>
@@ -1325,53 +1314,6 @@
             <!-- Hidden legacy elements (kept for JS compatibility, not displayed) -->
             <div id="productsList" style="display:none;"></div>
             <div id="qrGrid" style="display:none;"></div>
-          </div>
-        </div>
-
-        <!-- Tab: Digital Mirror (placeholder + contact) -->
-        <div id="tab-mirror" class="tab-content">
-          <div class="mirror-cta-card">
-            <div class="mirror-icon">🪞</div>
-            <div class="upcoming-pill">🚧 Coming Soon</div>
-            <h3>Digital Mirror — Premium In-Store Experience</h3>
-            <p class="mirror-tagline">Full-size smart mirrors for flagship stores. Customers see themselves in any garment without changing — the highest-conversion in-store experience. Hardware partnerships in progress; want to be first in line?</p>
-
-            <div class="mirror-features">
-              <div class="mirror-feature">
-                <div class="mirror-feature-icon">✨</div>
-                <div>
-                  <strong>Try multiple looks instantly</strong>
-                  <p>Customers swipe through your catalogue without going back to the rack.</p>
-                </div>
-              </div>
-              <div class="mirror-feature">
-                <div class="mirror-feature-icon">🎯</div>
-                <div>
-                  <strong>3× higher conversion in-store</strong>
-                  <p>Friction-free try-ons mean fewer "I'll think about it" walk-aways.</p>
-                </div>
-              </div>
-              <div class="mirror-feature">
-                <div class="mirror-feature-icon">📸</div>
-                <div>
-                  <strong>Built-in viral sharing</strong>
-                  <p>Customers send try-ons to themselves — your brand watermark, free reach.</p>
-                </div>
-              </div>
-              <div class="mirror-feature">
-                <div class="mirror-feature-icon">📊</div>
-                <div>
-                  <strong>Same dashboard, more data</strong>
-                  <p>All mirror try-ons land here alongside your widget and QR analytics.</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="mirror-cta-row">
-              <a href="https://wa.me/923112011606?text=Hi%2C%20I%27d%20like%20to%20learn%20about%20Digital%20Mirror%20for%20my%20store." target="_blank" rel="noopener" class="btn btn-primary mirror-btn-whatsapp">💬 WhatsApp Us</a>
-              <a href="/contact-us" class="btn btn-secondary">Request a Quote →</a>
-            </div>
-            <p class="mirror-footnote">Hardware + installation + service. Pricing tailored to store size and customisation.</p>
           </div>
         </div>
 
@@ -2027,7 +1969,7 @@
     document.getElementById('installHint').style.display =
       (gl.total || 0) === 0 ? 'flex' : 'none';
 
-    // ── Website Try-on per-source stat strip ──
+    // ── Per-source stat strip (legacy hidden tab) ──
     const glStats = document.getElementById('ghostLayerStats');
     glStats.innerHTML = `
       <div class="source-stat">
@@ -2062,15 +2004,14 @@
       </div>
     `;
 
-    // ── Website Try-on recent try-ons table ──
+    // ── Recent try-ons table (legacy hidden tab) ──
     const glRecent = gl.recent || [];
     const tableBody = document.getElementById('tableBody');
     if (!glRecent.length) {
       tableBody.innerHTML = `
         <div class="empty-state">
-          <div class="icon">🌐</div>
-          <p style="margin:0; font-weight:600; color: var(--text);">No widget try-ons yet</p>
-          <p style="margin:.5rem 0 0; font-size:.85rem;">Install Website Try-on on your e-commerce site to start capturing try-ons.</p>
+          <div class="icon">🧥</div>
+          <p style="margin:0; font-weight:600; color: var(--text);">No try-ons yet</p>
           <a href="/contact-us" class="btn btn-primary" style="margin-top:1rem; display:inline-block;">Contact Us →</a>
         </div>`;
     } else {
@@ -2104,7 +2045,7 @@
         </table>`;
     }
 
-    // ── Website Try-on products section ──
+    // ── Products section (legacy hidden tab) ──
     const glProducts = gl.products || [];
     if (glProducts.length > 0) {
       const totalClicks = gl.button_clicks || 0;
