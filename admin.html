@@ -285,12 +285,20 @@
     </div>
 
     <div class="admin-tabs">
-      <button class="admin-tab active" data-tab="topups" onclick="switchAdminTab('topups')">💳 Top-Up Requests <span class="count" id="cntTopups" style="background:#fef3c7; color:#92400e;">0</span></button>
+      <button class="admin-tab active" data-tab="analytics" onclick="switchAdminTab('analytics')">📊 Analytics</button>
+      <button class="admin-tab" data-tab="topups" onclick="switchAdminTab('topups')">💳 Top-Up Requests <span class="count" id="cntTopups" style="background:#fef3c7; color:#92400e;">0</span></button>
       <button class="admin-tab" data-tab="brands" onclick="switchAdminTab('brands')">🏢 Brands <span class="count" id="cntBrands">0</span></button>
     </div>
 
+    <!-- ── ANALYTICS PANE ── -->
+    <div id="pane-analytics" class="admin-pane active">
+      <div id="analyticsBody" style="display:grid; gap:1.25rem;">
+        <div class="empty"><p style="color:var(--muted); margin:0;">Loading analytics…</p></div>
+      </div>
+    </div>
+
     <!-- ── TOPUPS PANE ── -->
-    <div id="pane-topups" class="admin-pane active">
+    <div id="pane-topups" class="admin-pane">
       <div class="filter-row" id="topupFilters">
         <button class="filter-pill active" data-filter="" onclick="filterTopups('')">All</button>
         <button class="filter-pill" data-filter="pending" onclick="filterTopups('pending')">Pending</button>
@@ -462,6 +470,106 @@ function switchAdminTab(name) {
 
 async function refreshAll() {
   await Promise.all([loadBrands(), loadTopups()]);
+  // Analytics is derived from those two — re-render after both land.
+  renderAnalytics();
+}
+
+// ── ANALYTICS ──
+function renderAnalytics() {
+  const body = document.getElementById('analyticsBody');
+  if (!body) return;
+
+  const brands = allBrands || [];
+  const topups = allTopups || [];
+
+  // Brand stats
+  const totalBrands = brands.length;
+  const byStatus = brands.reduce((acc, b) => {
+    const s = b.status === 'trial' ? 'pending' : (b.status || 'pending');
+    acc[s] = (acc[s] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Try-on totals (sum of credits used across brands)
+  const totalTryons = brands.reduce((sum, b) => sum + (b.tryon_credits_used || 0), 0);
+  const totalCreditsRemaining = brands.reduce((sum, b) => {
+    if (b.unlimited) return sum;
+    return sum + Math.max(0, (b.tryon_credits || 0) - (b.tryon_credits_used || 0));
+  }, 0);
+
+  // Revenue (approved top-ups) + pending volume
+  const approvedTopups = topups.filter(t => t.status === 'approved');
+  const pendingTopups  = topups.filter(t => t.status === 'pending');
+  const rejectedTopups = topups.filter(t => t.status === 'rejected');
+  const revenueUsd = approvedTopups.reduce((s, t) => s + Number(t.amount_usd || 0), 0);
+  const pendingUsd = pendingTopups.reduce((s, t) => s + Number(t.amount_usd || 0), 0);
+  const creditsSold = approvedTopups.reduce((s, t) => s + Number(t.credits_requested || 0), 0);
+
+  // Top brands by usage
+  const topBrands = [...brands]
+    .filter(b => (b.tryon_credits_used || 0) > 0)
+    .sort((a, b) => (b.tryon_credits_used || 0) - (a.tryon_credits_used || 0))
+    .slice(0, 5);
+
+  // Last 30 days — approvals + try-ons
+  const cutoff = Date.now() - 30 * 24 * 3600 * 1000;
+  const recentApprovedRevenue = approvedTopups
+    .filter(t => new Date(t.reviewed_at || t.created_at).getTime() >= cutoff)
+    .reduce((s, t) => s + Number(t.amount_usd || 0), 0);
+
+  const fmtUsd = n => `$${Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const fmtN   = n => Number(n).toLocaleString();
+
+  body.innerHTML = `
+    <!-- Headline KPI grid -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+      ${kpi('💰 Revenue (approved)', fmtUsd(revenueUsd), `${approvedTopups.length} approved · ${fmtUsd(recentApprovedRevenue)} last 30d`)}
+      ${kpi('⏳ Pending revenue',     fmtUsd(pendingUsd), `${pendingTopups.length} pending top-ups`)}
+      ${kpi('🧥 Try-ons run',         fmtN(totalTryons),  `across ${totalBrands} brand${totalBrands === 1 ? '' : 's'}`)}
+      ${kpi('🎟️ Credits sold',        fmtN(creditsSold),  `~${fmtN(totalCreditsRemaining)} unused in wallets`)}
+      ${kpi('🏢 Active brands',       String(byStatus.active || 0), `${byStatus.pending || 0} pending · ${byStatus.suspended || 0} suspended`)}
+      ${kpi('❌ Rejected top-ups',    String(rejectedTopups.length), 'of all time')}
+    </div>
+
+    <!-- Top brands -->
+    <div style="background:#fff; border:1px solid var(--border); border-radius: var(--r-md); padding: 1.25rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.85rem;">
+        <strong style="font-size:.95rem;">Top Brands by Try-Ons</strong>
+        <span style="font-size:.75rem; color:var(--muted);">All time</span>
+      </div>
+      ${topBrands.length === 0
+        ? '<div style="color:var(--muted); font-size:.85rem;">No try-ons run yet.</div>'
+        : `
+        <div style="display:grid; gap:.5rem;">
+          ${topBrands.map((b, i) => {
+            const used = b.tryon_credits_used || 0;
+            const max  = topBrands[0].tryon_credits_used || 1;
+            const pct  = (used / max) * 100;
+            return `
+              <div style="display:grid; grid-template-columns: 28px 1fr auto; gap:.75rem; align-items:center;">
+                <div style="font-weight:700; color:var(--muted); font-size:.85rem;">#${i + 1}</div>
+                <div style="min-width:0;">
+                  <div style="font-weight:700; font-size:.9rem;">${escapeHtml(b.name)}</div>
+                  <div style="height:6px; background:var(--surface); border-radius:3px; margin-top:.35rem; overflow:hidden;">
+                    <div style="height:100%; width:${pct}%; background: linear-gradient(90deg,#5a67f2,#00c8e8);"></div>
+                  </div>
+                </div>
+                <div style="font-weight:800; font-size:.95rem; white-space:nowrap;">${fmtN(used)} <span style="font-size:.7rem; color:var(--muted); font-weight:500;">try-ons</span></div>
+              </div>`;
+          }).join('')}
+        </div>`}
+    </div>
+  `;
+}
+
+function kpi(label, value, sub) {
+  return `
+    <div style="background:#fff; border:1px solid var(--border); border-radius: var(--r-md); padding: 1rem 1.1rem; position:relative; overflow:hidden;">
+      <div style="position:absolute; top:0; left:0; right:0; height:3px; background: linear-gradient(90deg,#5a67f2,#00c8e8);"></div>
+      <div style="font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:.4rem;">${label}</div>
+      <div style="font-size:1.75rem; font-weight:900; line-height:1; color:var(--text);">${value}</div>
+      <div style="font-size:.72rem; color:var(--muted); margin-top:.4rem;">${sub}</div>
+    </div>`;
 }
 
 // ── BRANDS ──
@@ -472,6 +580,7 @@ async function loadBrands() {
     allBrands = data.brands || [];
     document.getElementById('cntBrands').textContent = allBrands.length;
     renderBrands();
+    renderAnalytics();
   } catch (err) {
     document.getElementById('brandsList').innerHTML = `<div class="empty"><p>Error: ${escapeHtml(err.message)}</p></div>`;
   }
@@ -641,6 +750,7 @@ async function loadTopups() {
     const pending = allTopups.filter(t => t.status === 'pending').length;
     document.getElementById('cntTopups').textContent = pending;
     renderTopups();
+    renderAnalytics();
   } catch (err) {
     document.getElementById('topupsList').innerHTML = `<div class="empty"><p>Error: ${escapeHtml(err.message)}</p></div>`;
   }

@@ -1109,6 +1109,19 @@
           </div>
           <div style="display: flex; gap: .75rem; align-items: center; flex-wrap: wrap;">
             <button class="refresh-btn" onclick="refreshDashboard()">↻ Refresh</button>
+            <div style="position: relative;">
+              <button class="refresh-btn" id="notifBtn" onclick="toggleNotifications(event)" style="position: relative;">
+                🔔 <span id="notifCount" style="display:none; position:absolute; top:-4px; right:-4px; background:#ef4444; color:#fff; font-size:.6rem; font-weight:700; padding:2px 5px; border-radius:9999px; min-width: 16px; text-align:center;"></span>
+              </button>
+              <div id="notifPanel" style="display:none; position:absolute; right:0; top:calc(100% + .5rem); width:340px; max-width: calc(100vw - 2rem); max-height:420px; overflow-y:auto; background:#fff; border:1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--sh2); z-index: 100;">
+                <div style="padding:.75rem 1rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                  <strong style="font-size:.9rem;">Notifications</strong>
+                  <button onclick="markAllNotificationsRead()" style="background:none; border:none; color:var(--cyan); font-size:.78rem; font-weight:600; cursor:pointer;">Mark all read</button>
+                </div>
+                <div id="notifList"><div style="padding:1.5rem; text-align:center; color:var(--muted); font-size:.85rem;">No notifications.</div></div>
+              </div>
+            </div>
+            <button class="btn btn-outline-dark btn-sm" onclick="openEditProfile()">✎ Edit Profile</button>
             <button class="btn btn-outline-dark btn-sm" onclick="logout()">Switch Account</button>
           </div>
         </div>
@@ -1351,6 +1364,55 @@
           </div>
           <button type="submit" class="btn btn-primary" id="apSubmit" style="width:100%; padding:.9rem;">Add Product &amp; Generate QR → (~15s)</button>
           <p style="font-size:.78rem; color:var(--muted); text-align:center; margin: .75rem 0 0;">We'll process the image with AI and generate a printable QR. Takes about 15 seconds.</p>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Modal: Edit Profile ── -->
+    <div class="modal-backdrop" id="editProfileModal" onclick="if(event.target===this)closeEditProfile()">
+      <div class="modal" style="max-width: 520px;">
+        <button class="modal-close" onclick="closeEditProfile()">&times;</button>
+        <h3>Edit Profile</h3>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.25rem;">Update your brand details. Email and credits stay the same — those are managed on the admin side.</p>
+        <div class="alert" id="epError"></div>
+        <form onsubmit="return submitEditProfile(event);">
+          <div class="field">
+            <label for="epName">Brand Name *</label>
+            <input type="text" id="epName" required>
+          </div>
+          <div class="field">
+            <label for="epWebsite">Website URL</label>
+            <input type="url" id="epWebsite" placeholder="https://yourbrand.com">
+          </div>
+          <div class="field">
+            <label for="epLogo">Logo URL</label>
+            <input type="url" id="epLogo" placeholder="https://yourbrand.com/logo.png">
+            <div class="field-hint">Used in widget &amp; receipts. Direct image URL only.</div>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: .75rem;">
+            <div class="field">
+              <label for="epContactName">Contact Name</label>
+              <input type="text" id="epContactName">
+            </div>
+            <div class="field">
+              <label for="epContactPosition">Role / Position</label>
+              <input type="text" id="epContactPosition" placeholder="e.g. Founder">
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: .75rem;">
+            <div class="field">
+              <label for="epContactPhone">Contact Phone</label>
+              <input type="tel" id="epContactPhone" placeholder="+92 …">
+            </div>
+            <div class="field">
+              <label for="epCountry">Country</label>
+              <input type="text" id="epCountry" placeholder="PK" maxlength="2" style="text-transform:uppercase;">
+            </div>
+          </div>
+          <div style="display:flex; gap:.5rem; margin-top:.5rem;">
+            <button type="button" class="btn btn-secondary" style="flex:1;" onclick="closeEditProfile()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="epSubmit" style="flex:1;">Save Changes</button>
+          </div>
         </form>
       </div>
     </div>
@@ -2018,6 +2080,7 @@
       loadBrandPasscodes();
       loadProducts();
       loadQrCodes();
+      refreshNotifications();
     }
   }
 
@@ -2920,6 +2983,183 @@
     }
     return false;
   }
+
+  // ════════════════════════════════════════════════════════════════
+  // EDIT PROFILE
+  // ════════════════════════════════════════════════════════════════
+  function openEditProfile() {
+    const b = lastDashboardData?.brand || {};
+    document.getElementById('epError').className = 'alert';
+    document.getElementById('epName').value            = b.name             || '';
+    document.getElementById('epWebsite').value         = b.website_url      || '';
+    document.getElementById('epLogo').value            = b.logo_url         || '';
+    document.getElementById('epContactName').value     = b.contact_name     || '';
+    document.getElementById('epContactPosition').value = b.contact_position || '';
+    document.getElementById('epContactPhone').value    = b.contact_phone    || '';
+    document.getElementById('epCountry').value         = b.country          || '';
+    document.getElementById('editProfileModal').classList.add('open');
+  }
+  function closeEditProfile() {
+    document.getElementById('editProfileModal').classList.remove('open');
+  }
+  async function submitEditProfile(e) {
+    e.preventDefault();
+    const errEl = document.getElementById('epError');
+    const btn   = document.getElementById('epSubmit');
+    errEl.className = 'alert';
+    if (!activeBrandId) { errEl.textContent = 'Sign in first.'; errEl.className = 'alert error'; return false; }
+    const payload = {
+      name:             document.getElementById('epName').value.trim(),
+      website_url:      document.getElementById('epWebsite').value.trim(),
+      logo_url:         document.getElementById('epLogo').value.trim(),
+      contact_name:     document.getElementById('epContactName').value.trim(),
+      contact_position: document.getElementById('epContactPosition').value.trim(),
+      contact_phone:    document.getElementById('epContactPhone').value.trim(),
+      country:          document.getElementById('epCountry').value.trim().toUpperCase(),
+    };
+    if (!payload.name) { errEl.textContent = 'Brand name is required.'; errEl.className = 'alert error'; return false; }
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Failed to save');
+      closeEditProfile();
+      await refreshDashboard();
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.className = 'alert error';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save Changes';
+    }
+    return false;
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // NOTIFICATIONS — derived from top-up history + low-credits warning
+  // ════════════════════════════════════════════════════════════════
+  let notifications = [];
+  function notifReadKey() { return `tif_notif_read_${activeBrandId || 'anon'}`; }
+  function getReadIds() {
+    try { return new Set(JSON.parse(localStorage.getItem(notifReadKey()) || '[]')); }
+    catch { return new Set(); }
+  }
+  function saveReadIds(set) {
+    try { localStorage.setItem(notifReadKey(), JSON.stringify([...set])); } catch {}
+  }
+  async function refreshNotifications() {
+    if (!activeBrandId) return;
+    notifications = [];
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/topup-requests`);
+      if (res.ok) {
+        const data = await res.json();
+        const topups = (data.topups || []).slice(0, 20);
+        for (const t of topups) {
+          if (t.status === 'approved') {
+            notifications.push({
+              id: `topup-approved-${t.id}`,
+              icon: '✅',
+              title: `Top-up approved · +${t.credits_requested} credits`,
+              body:  `$${Number(t.amount_usd).toFixed(2)} · ${fmtDate(t.reviewed_at || t.created_at)}`,
+              ts:    t.reviewed_at || t.created_at,
+            });
+          } else if (t.status === 'rejected') {
+            notifications.push({
+              id: `topup-rejected-${t.id}`,
+              icon: '⛔',
+              title: 'Top-up rejected',
+              body:  (t.rejection_reason || `Your top-up of $${Number(t.amount_usd).toFixed(2)} was rejected. Contact support on WhatsApp.`),
+              ts:    t.reviewed_at || t.created_at,
+            });
+          } else if (t.status === 'pending') {
+            notifications.push({
+              id: `topup-pending-${t.id}`,
+              icon: '⏳',
+              title: 'Top-up under review',
+              body:  `$${Number(t.amount_usd).toFixed(2)} for ${t.credits_requested} credits — we'll confirm once your payment is verified on WhatsApp.`,
+              ts:    t.created_at,
+            });
+          }
+        }
+      }
+    } catch (e) { console.warn('[notif] failed to load topups:', e); }
+
+    // Low-credit warning, derived from current dashboard state.
+    const brand = lastDashboardData?.brand;
+    if (brand && !brand.unlimited) {
+      const remaining = Math.max(0, (brand.tryon_credits || 0) - (brand.tryon_credits_used || 0));
+      if (remaining === 0) {
+        notifications.unshift({
+          id: 'lowcredit-zero',
+          icon: '🔴',
+          title: 'Out of credits',
+          body:  'Top up to keep customers trying on. Click "💳 Top Up Credits" above.',
+          ts:    new Date().toISOString(),
+        });
+      } else if (remaining <= 5) {
+        notifications.unshift({
+          id: `lowcredit-${remaining}`,
+          icon: '🟡',
+          title: `Only ${remaining} try-on${remaining === 1 ? '' : 's'} left`,
+          body:  'Top up soon to avoid interruption.',
+          ts:    new Date().toISOString(),
+        });
+      }
+    }
+
+    notifications.sort((a, b) => (b.ts || '').localeCompare(a.ts || ''));
+    renderNotifications();
+  }
+  function renderNotifications() {
+    const list  = document.getElementById('notifList');
+    const count = document.getElementById('notifCount');
+    const read  = getReadIds();
+    const unread = notifications.filter(n => !read.has(n.id)).length;
+    if (unread > 0) { count.textContent = String(unread); count.style.display = 'inline-block'; }
+    else            { count.style.display = 'none'; }
+    if (notifications.length === 0) {
+      list.innerHTML = `<div style="padding:1.5rem; text-align:center; color:var(--muted); font-size:.85rem;">No notifications.</div>`;
+      return;
+    }
+    list.innerHTML = notifications.map(n => {
+      const isUnread = !read.has(n.id);
+      return `
+        <div style="padding:.75rem 1rem; border-bottom:1px solid var(--border); display:flex; gap:.6rem; align-items:flex-start; background:${isUnread ? 'rgba(0,200,232,.05)' : 'transparent'};">
+          <div style="font-size:1.05rem; line-height:1.2;">${n.icon}</div>
+          <div style="min-width:0; flex:1;">
+            <div style="font-weight:${isUnread ? 700 : 600}; font-size:.85rem; color:var(--text); margin-bottom:.15rem;">${escapeHtml(n.title)}</div>
+            <div style="font-size:.78rem; color:var(--muted); line-height:1.4;">${escapeHtml(n.body)}</div>
+          </div>
+          ${isUnread ? '<div style="width:6px; height:6px; border-radius:50%; background:var(--cyan); margin-top:.5rem; flex-shrink:0;"></div>' : ''}
+        </div>`;
+    }).join('');
+  }
+  function toggleNotifications(e) {
+    if (e) e.stopPropagation();
+    const panel = document.getElementById('notifPanel');
+    const isOpen = panel.style.display === 'block';
+    panel.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) refreshNotifications();
+  }
+  function markAllNotificationsRead() {
+    const read = getReadIds();
+    notifications.forEach(n => read.add(n.id));
+    saveReadIds(read);
+    renderNotifications();
+  }
+  // Close notifications when clicking outside.
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('notifPanel');
+    const btn   = document.getElementById('notifBtn');
+    if (!panel || !btn) return;
+    if (panel.style.display === 'block' && !panel.contains(e.target) && !btn.contains(e.target)) {
+      panel.style.display = 'none';
+    }
+  });
 
   // ════════════════════════════════════════════════════════════════
   // CREDIT TOP-UP — credits-first + WhatsApp receipt flow
