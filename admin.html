@@ -678,6 +678,10 @@ function renderTopups() {
       <tbody>
         ${filtered.map(t => {
           const localStr = t.amount_local ? ` (~${t.local_currency} ${Number(t.amount_local).toLocaleString()})` : '';
+          const status = String(t.status || 'pending').toLowerCase().trim();
+          const isFinal = status === 'approved' || status === 'rejected';
+          const pillClass = status === 'approved' ? 'pill-converted' : status === 'rejected' ? 'pill-rejected' : 'pill-pending';
+          const safeBrandName = String(t.brand?.name || '').replace(/[\\'`]/g, ' ');
           return `
             <tr>
               <td data-label="Brand">
@@ -687,18 +691,18 @@ function renderTopups() {
               </td>
               <td data-label="Amount"><strong>$${Number(t.amount_usd).toFixed(2)}</strong>${localStr ? `<div style="font-size:.75rem; color:var(--muted);">${escapeHtml(localStr)}</div>` : ''}</td>
               <td data-label="Credits"><strong>${t.credits_requested}</strong></td>
-              <td data-label="Method">${escapeHtml(t.payment_method)}${t.payment_ref ? `<div style="font-size:.7rem; color:var(--muted); font-family:monospace;">${escapeHtml(t.payment_ref)}</div>` : ''}</td>
+              <td data-label="Method">${escapeHtml(t.payment_method || '—')}${t.payment_ref ? `<div style="font-size:.7rem; color:var(--muted); font-family:monospace;">${escapeHtml(t.payment_ref)}</div>` : ''}</td>
               <td data-label="Screenshot">${t.payment_screenshot_url ? `<a href="${escapeHtml(t.payment_screenshot_url)}" target="_blank"><img src="${escapeHtml(t.payment_screenshot_url)}" style="width:64px; height:64px; object-fit:cover; border-radius: var(--r-sm); cursor:zoom-in;" loading="lazy"></a>` : '—'}</td>
-              <td data-label="Status"><span class="status-pill pill-${t.status === 'pending' ? 'new' : t.status === 'approved' ? 'converted' : 'rejected'}">${t.status}</span>${t.rejection_reason ? `<div style="font-size:.72rem; color:#991b1b; margin-top:.25rem;">${escapeHtml(t.rejection_reason)}</div>` : ''}</td>
+              <td data-label="Status"><span class="status-pill ${pillClass}">${status}</span>${t.rejection_reason ? `<div style="font-size:.72rem; color:#991b1b; margin-top:.25rem;">${escapeHtml(t.rejection_reason)}</div>` : ''}</td>
               <td data-label="Date" style="color:var(--muted); font-size:.78rem;">${fmtDate(t.created_at)}</td>
               <td data-label="Actions">
-                ${t.status === 'pending'
+                ${!isFinal
                   ? `<div class="row-actions">
-                      <button class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #14b8a6); border-color: transparent;" onclick="approveTopup('${t.id}', ${Number(t.amount_usd)}, ${t.credits_requested}, '${escapeHtml(t.brand?.name || '').replace(/'/g, "\\'")}')">✓ Approve</button>
+                      <button class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #14b8a6); border-color: transparent;" onclick="approveTopup('${t.id}', ${Number(t.amount_usd)}, ${t.credits_requested}, ${JSON.stringify(safeBrandName)})">✓ Approve</button>
                       <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="rejectTopup('${t.id}')">Reject</button>
                     </div>`
                   : t.notes ? `<div style="font-size:.78rem; color:var(--muted);">${escapeHtml(t.notes)}</div>` : ''}
-                ${t.brand?.name ? `<a class="btn btn-secondary" style="margin-top:.35rem; font-size:.7rem;" href="https://wa.me/?text=${encodeURIComponent(`Hi, your Try Instant Fit top-up of $${Number(t.amount_usd).toFixed(2)} (${t.credits_requested} credits) has been ${t.status === 'pending' ? 'received and is being reviewed' : t.status}.`)}" target="_blank">WhatsApp</a>` : ''}
+                ${t.brand?.name ? `<a class="btn btn-secondary" style="margin-top:.35rem; font-size:.7rem;" href="https://wa.me/?text=${encodeURIComponent(`Hi, your Try Instant Fit top-up of $${Number(t.amount_usd).toFixed(2)} (${t.credits_requested} credits) has been ${isFinal ? status : 'received and is being reviewed'}.`)}" target="_blank">WhatsApp</a>` : ''}
               </td>
             </tr>`;
         }).join('')}
