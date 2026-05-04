@@ -256,6 +256,9 @@
 <!-- ── LOGIN VIEW ── -->
 <div id="loginView">
   <div class="login-box">
+    <div style="display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem;">
+      <img src="/assets/logo.png" alt="Try Instant Fit" style="height: 36px; width: auto; display: block;">
+    </div>
     <h2>Admin Login</h2>
     <p style="color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem;">Try Instant Fit · Internal</p>
     <div class="alert" id="loginError"></div>
@@ -277,7 +280,7 @@
 <div id="adminView" style="display: none;">
   <div class="admin-shell">
     <div class="admin-header">
-      <h1>🛠️ Admin <span class="badge-admin">TIF</span></h1>
+      <h1 style="display: flex; align-items: center; gap: .65rem; margin: 0;"><img src="/assets/logo.png" alt="Try Instant Fit" style="height: 38px; width: auto; display: block;"> <span style="font-size: 1.1rem; font-weight: 800; letter-spacing: -.02em;">Admin</span> <span class="badge-admin">TIF</span></h1>
       <div style="display: flex; gap: .5rem; align-items: center;">
         <button class="btn btn-secondary btn-sm" onclick="refreshAll()">↻ Refresh</button>
         <button class="btn btn-secondary btn-sm" onclick="logout()">Sign Out</button>
@@ -808,7 +811,7 @@ function renderTopups() {
               <td data-label="Actions">
                 ${!isFinal
                   ? `<div class="row-actions">
-                      <button class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #14b8a6); border-color: transparent;" onclick="approveTopup('${t.id}', ${Number(t.amount_usd)}, ${t.credits_requested}, ${JSON.stringify(safeBrandName)})">✓ Approve</button>
+                      <button class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #14b8a6); border-color: transparent;" onclick="approveTopup('${t.id}', ${Number(t.amount_usd)}, ${t.credits_requested}, ${JSON.stringify(safeBrandName).replace(/"/g, '&quot;')})">✓ Approve</button>
                       <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="rejectTopup('${t.id}')">Reject</button>
                     </div>`
                   : t.notes ? `<div style="font-size:.78rem; color:var(--muted);">${escapeHtml(t.notes)}</div>` : ''}
