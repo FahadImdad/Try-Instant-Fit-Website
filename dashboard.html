@@ -1387,9 +1387,17 @@
             <input type="url" id="epWebsite" placeholder="https://yourbrand.com">
           </div>
           <div class="field">
-            <label for="epLogo">Logo URL</label>
-            <input type="url" id="epLogo" placeholder="https://yourbrand.com/logo.png">
-            <div class="field-hint">Used in widget &amp; receipts. Direct image URL only.</div>
+            <label>Brand Logo</label>
+            <label for="epLogoFile" id="epLogoZone" style="display:flex; gap:.85rem; align-items:center; border: 2px dashed var(--border); border-radius: var(--r-md); padding: .85rem 1rem; cursor: pointer; background: var(--surface); transition: all .15s;">
+              <input type="file" id="epLogoFile" accept="image/jpeg,image/png,image/webp,image/svg+xml" style="display:none;">
+              <img id="epLogoPreview" alt="Current logo" style="width:56px; height:56px; object-fit:contain; border-radius: var(--r-sm); background:#fff; flex-shrink:0; display:none;">
+              <div id="epLogoPlaceholder" style="width:56px; height:56px; border-radius: var(--r-sm); background:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; border:1px solid var(--border);">🎨</div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-weight:700; font-size:.9rem;" id="epLogoTitle">Click to upload a logo</div>
+                <div style="font-size:.75rem; color:var(--muted); margin-top:.15rem;">PNG · JPG · WebP · SVG · up to 5MB</div>
+              </div>
+            </label>
+            <div class="field-hint">Used in widget, scan page, and receipts.</div>
           </div>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap: .75rem;">
             <div class="field">
@@ -2989,44 +2997,97 @@
   // ════════════════════════════════════════════════════════════════
   // EDIT PROFILE
   // ════════════════════════════════════════════════════════════════
+  let epPickedLogoFile = null;
   function openEditProfile() {
     const b = lastDashboardData?.brand || {};
     document.getElementById('epError').className = 'alert';
     document.getElementById('epName').value            = b.name             || '';
     document.getElementById('epWebsite').value         = b.website_url      || '';
-    document.getElementById('epLogo').value            = b.logo_url         || '';
     document.getElementById('epContactName').value     = b.contact_name     || '';
     document.getElementById('epContactPosition').value = b.contact_position || '';
     document.getElementById('epContactPhone').value    = b.contact_phone    || '';
     document.getElementById('epCountry').value         = b.country          || '';
+
+    // Logo: clear any previously picked file, show existing logo as preview.
+    epPickedLogoFile = null;
+    const fi = document.getElementById('epLogoFile');
+    const preview = document.getElementById('epLogoPreview');
+    const placeholder = document.getElementById('epLogoPlaceholder');
+    const title = document.getElementById('epLogoTitle');
+    if (fi) fi.value = '';
+    if (b.logo_url) {
+      preview.src = b.logo_url;
+      preview.style.display = 'block';
+      placeholder.style.display = 'none';
+      title.textContent = 'Click to replace your logo';
+    } else {
+      preview.style.display = 'none';
+      placeholder.style.display = 'flex';
+      title.textContent = 'Click to upload a logo';
+    }
+
     document.getElementById('editProfileModal').classList.add('open');
   }
   function closeEditProfile() {
     document.getElementById('editProfileModal').classList.remove('open');
   }
+  // Wire the logo file picker once.
+  (function wireEpLogoPicker() {
+    const fi = document.getElementById('epLogoFile');
+    if (!fi) return;
+    fi.addEventListener('change', (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      const ok = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'].includes(f.type);
+      if (!ok) { alert('Logo must be JPG, PNG, WebP, or SVG.'); fi.value = ''; return; }
+      if (f.size > 5 * 1024 * 1024) { alert('Logo must be under 5MB.'); fi.value = ''; return; }
+      epPickedLogoFile = f;
+      const r = new FileReader();
+      r.onload = (ev) => {
+        const preview = document.getElementById('epLogoPreview');
+        const placeholder = document.getElementById('epLogoPlaceholder');
+        const title = document.getElementById('epLogoTitle');
+        preview.src = ev.target.result;
+        preview.style.display = 'block';
+        placeholder.style.display = 'none';
+        title.textContent = `New logo selected · ${f.name}`;
+      };
+      r.readAsDataURL(f);
+    });
+  })();
   async function submitEditProfile(e) {
     e.preventDefault();
     const errEl = document.getElementById('epError');
     const btn   = document.getElementById('epSubmit');
     errEl.className = 'alert';
     if (!activeBrandId) { errEl.textContent = 'Sign in first.'; errEl.className = 'alert error'; return false; }
-    const payload = {
+
+    const fields = {
       name:             document.getElementById('epName').value.trim(),
       website_url:      document.getElementById('epWebsite').value.trim(),
-      logo_url:         document.getElementById('epLogo').value.trim(),
       contact_name:     document.getElementById('epContactName').value.trim(),
       contact_position: document.getElementById('epContactPosition').value.trim(),
       contact_phone:    document.getElementById('epContactPhone').value.trim(),
       country:          document.getElementById('epCountry').value.trim().toUpperCase(),
     };
-    if (!payload.name) { errEl.textContent = 'Brand name is required.'; errEl.className = 'alert error'; return false; }
+    if (!fields.name) { errEl.textContent = 'Brand name is required.'; errEl.className = 'alert error'; return false; }
+
     btn.disabled = true; btn.textContent = 'Saving…';
     try {
-      const res = await fetch(`${API}/api/brands/${activeBrandId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      let res;
+      if (epPickedLogoFile) {
+        // Multipart so the new logo image goes up too.
+        const fd = new FormData();
+        for (const [k, v] of Object.entries(fields)) fd.append(k, v);
+        fd.append('logo', epPickedLogoFile);
+        res = await fetch(`${API}/api/brands/${activeBrandId}`, { method: 'PATCH', body: fd });
+      } else {
+        res = await fetch(`${API}/api/brands/${activeBrandId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(fields),
+        });
+      }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Failed to save');
       closeEditProfile();
