@@ -36,8 +36,10 @@
       letter-spacing: .06em;
       margin-left: .5rem;
     }
-    .status-trial { background: #fef3c7; color: #92400e; }
-    .status-active { background: #d1fae5; color: #065f46; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-active  { background: #d1fae5; color: #065f46; }
+    /* Legacy 'trial' status — same visual as pending until existing brands are migrated. */
+    .status-trial   { background: #fef3c7; color: #92400e; }
 
     /* ── Stat cards ── */
     .stat-grid {
@@ -1102,7 +1104,7 @@
         <!-- Header -->
         <div class="dash-header">
           <div class="dash-brand-info">
-            <h2 id="dashBrandName">Brand Name <span class="status-badge status-trial" id="dashStatus">Trial</span></h2>
+            <h2 id="dashBrandName">Brand Name <span class="status-badge status-pending" id="dashStatus">Pending</span></h2>
             <p id="dashWebsite"></p>
           </div>
           <div style="display: flex; gap: .75rem; align-items: center; flex-wrap: wrap;">
@@ -1790,9 +1792,12 @@
     const gl = (by_source && by_source['ghost-layer']) || {};
     const sw = (by_source && by_source['scan-wear']) || {};
 
-    // Header
+    // Header. Legacy 'trial' brands are rendered as 'pending' (the
+    // 'trial' status has been retired) until they get their first
+    // approved top-up.
+    const displayStatus = brand.status === 'trial' ? 'pending' : brand.status;
     document.getElementById('dashBrandName').innerHTML =
-      `${brand.name} <span class="status-badge status-${brand.status}">${brand.status}</span>`;
+      `${brand.name} <span class="status-badge status-${displayStatus}">${displayStatus}</span>`;
     document.getElementById('dashWebsite').textContent =
       brand.website_url ? `🌐 ${brand.website_url}` : '(no website on file)';
 

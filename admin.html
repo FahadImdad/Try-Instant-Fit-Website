@@ -167,8 +167,10 @@
     .pill-qualified { background: #ede9fe; color: #5b21b6; }
     .pill-converted { background: #d1fae5; color: #065f46; }
     .pill-rejected  { background: #fee2e2; color: #991b1b; }
-    .pill-trial     { background: #fef3c7; color: #92400e; }
+    .pill-pending   { background: #fef3c7; color: #92400e; }
     .pill-active    { background: #d1fae5; color: #065f46; }
+    /* Legacy 'trial' status — same colour as pending until existing brands are migrated. */
+    .pill-trial     { background: #fef3c7; color: #92400e; }
 
     .row-actions { display: flex; gap: .35rem; flex-wrap: wrap; }
     .row-actions .btn { font-size: .75rem; padding: .35rem .65rem; }
@@ -303,64 +305,10 @@
     <div id="pane-brands" class="admin-pane">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: .5rem;">
         <p style="color: var(--muted); font-size: .85rem; margin: 0;">All registered brands with credit balance and usage.</p>
-        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
-          <input type="search" id="brandSearch" placeholder="🔎  Search by name, email, or ID…" oninput="renderBrands()" style="padding:.5rem .85rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:.85rem; min-width:260px; font-family: inherit;">
-          <button class="btn btn-primary btn-sm" onclick="openCreateBrandModal()">+ Create Brand</button>
-        </div>
+        <input type="search" id="brandSearch" placeholder="🔎  Search by name, email, or ID…" oninput="renderBrands()" style="padding:.5rem .85rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:.85rem; min-width:260px; font-family: inherit;">
       </div>
       <div id="brandsList"></div>
     </div>
-  </div>
-</div>
-
-<!-- ── MODAL: Convert Submission to Brand / Create Brand ── -->
-<div class="modal-bg" id="createBrandModal" onclick="if(event.target===this)closeCreateBrandModal()">
-  <div class="modal-box">
-    <button class="close-x" onclick="closeCreateBrandModal()">&times;</button>
-    <h3 id="cbTitle">Create Brand</h3>
-    <p style="color: var(--muted); font-size: .85rem; margin: 0 0 1.25rem;">Register a new brand and seed initial try-on credits.</p>
-    <div class="alert" id="cbError"></div>
-    <form onsubmit="return submitCreateBrand(event);">
-      <div class="field">
-        <label>Brand Name *</label>
-        <input type="text" id="cbName" required>
-      </div>
-      <div class="field">
-        <label>Email *</label>
-        <input type="email" id="cbEmail" required>
-      </div>
-      <div class="field">
-        <label>Website URL</label>
-        <input type="url" id="cbWebsite" placeholder="https://…">
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-        <div class="field">
-          <label>Initial Credits</label>
-          <input type="number" id="cbCredits" min="0" value="50">
-        </div>
-        <div class="field">
-          <label>Price per Try-On (USD)</label>
-          <input type="number" id="cbPrice" step="0.001" min="0" value="0.125">
-        </div>
-      </div>
-      <div class="field">
-        <label>Amount Paid (USD)</label>
-        <input type="number" id="cbAmount" step="0.01" min="0" placeholder="e.g. 6.25">
-      </div>
-      <div class="field">
-        <label>Payment Reference</label>
-        <input type="text" id="cbRef" placeholder="bank ref / invoice no.">
-      </div>
-      <div class="field">
-        <label>Notes</label>
-        <textarea id="cbNotes" rows="2"></textarea>
-      </div>
-      <div class="field" style="display: flex; gap: .5rem; align-items: center;">
-        <input type="checkbox" id="cbUnlimited" style="width: auto;">
-        <label for="cbUnlimited" style="margin: 0; cursor: pointer;">Unlimited (no quota — for partner/demo brands)</label>
-      </div>
-      <button type="submit" class="btn btn-primary" id="cbSubmit" style="width: 100%; padding: .8rem;">Create Brand →</button>
-    </form>
   </div>
 </div>
 
@@ -516,69 +464,6 @@ async function refreshAll() {
   await Promise.all([loadBrands(), loadTopups()]);
 }
 
-// ── CREATE BRAND MODAL ──
-function openCreateBrandModal() {
-  document.getElementById('cbTitle').textContent = 'Create Brand';
-  ['cbName','cbEmail','cbWebsite','cbAmount','cbRef','cbNotes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('cbCredits').value = '50';
-  document.getElementById('cbPrice').value = '0.125';
-  document.getElementById('cbUnlimited').checked = false;
-  document.getElementById('cbError').className = 'alert';
-  document.getElementById('createBrandModal').classList.add('open');
-}
-
-function closeCreateBrandModal() {
-  document.getElementById('createBrandModal').classList.remove('open');
-}
-
-async function submitCreateBrand(e) {
-  e.preventDefault();
-  const errEl = document.getElementById('cbError');
-  const btn = document.getElementById('cbSubmit');
-  errEl.className = 'alert';
-  btn.disabled = true;
-  btn.textContent = 'Creating…';
-
-  const payload = {
-    name: document.getElementById('cbName').value.trim(),
-    email: document.getElementById('cbEmail').value.trim(),
-    website_url: document.getElementById('cbWebsite').value.trim() || undefined,
-    initial_credits: parseInt(document.getElementById('cbCredits').value, 10) || 0,
-    price_per_tryon_usd: parseFloat(document.getElementById('cbPrice').value) || 0.125,
-    unlimited: document.getElementById('cbUnlimited').checked,
-    payment_amount_usd: parseFloat(document.getElementById('cbAmount').value) || undefined,
-    payment_ref: document.getElementById('cbRef').value.trim() || undefined,
-    notes: document.getElementById('cbNotes').value.trim() || undefined,
-  };
-
-  try {
-    const res = await fetchAdmin('/api/admin/brands', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to create');
-
-    closeCreateBrandModal();
-    await refreshAll();
-
-    // Show WhatsApp share prompt with dashboard URL
-    const dashUrl = `https://tryinstantfit.com/dashboard?id=${data.brand.id}`;
-    const wa = `https://wa.me/?text=${encodeURIComponent(`Welcome to Try Instant Fit. Your brand "${data.brand.name}" is ready.\n\nDashboard: ${dashUrl}\n\nStarting credits: ${payload.initial_credits}`)}`;
-
-    if (confirm(`Brand created!\n\nDashboard URL:\n${dashUrl}\n\nClick OK to send a WhatsApp welcome message.`)) {
-      window.open(wa, '_blank');
-    }
-  } catch (err) {
-    errEl.textContent = err.message;
-    errEl.className = 'alert error';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Create Brand →';
-  }
-  return false;
-}
-
 // ── BRANDS ──
 async function loadBrands() {
   try {
@@ -629,7 +514,7 @@ function renderBrands() {
                 <div style="color:var(--muted); font-size:.78rem;">${escapeHtml(b.email)}</div>
                 <div style="font-size:.7rem; color:var(--muted); font-family: monospace; margin-top:.15rem;">${b.id}</div>
               </td>
-              <td data-label="Status"><span class="status-pill pill-${b.status}">${b.status}</span></td>
+              <td data-label="Status"><span class="status-pill pill-${b.status === 'trial' ? 'pending' : b.status}">${b.status === 'trial' ? 'pending' : b.status}</span></td>
               <td data-label="Credits">
                 <div class="credits-cell">
                   ${b.unlimited
