@@ -2817,24 +2817,16 @@
     dl.href = imgUrl;
     dl.download = `qr-${productName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.png`;
 
-    // Status banner about garment processing
+    // Status banner about garment processing. The backend now refuses
+    // to issue the QR until isolation succeeds, so the only state that
+    // ever reaches this modal is 'ready'.
     const statusEl = document.getElementById('qrSuccessStatus');
     if (statusEl) {
-      if (garmentIsolated === true) {
-        statusEl.style.display = 'block';
-        statusEl.style.background = '#d1fae5';
-        statusEl.style.color = '#065f46';
-        statusEl.style.borderColor = '#6ee7b7';
-        statusEl.innerHTML = '✓ Product is ready. Customers can scan the QR now.';
-      } else if (garmentIsolated === false) {
-        statusEl.style.display = 'block';
-        statusEl.style.background = '#fef3c7';
-        statusEl.style.color = '#92400e';
-        statusEl.style.borderColor = '#fcd34d';
-        statusEl.innerHTML = '⚠ Setup incomplete — the first customer scan will take ~15s extra.';
-      } else {
-        statusEl.style.display = 'none';
-      }
+      statusEl.style.display = 'block';
+      statusEl.style.background = '#d1fae5';
+      statusEl.style.color = '#065f46';
+      statusEl.style.borderColor = '#6ee7b7';
+      statusEl.innerHTML = '✓ Product is ready. Customers can scan the QR now.';
     }
 
     // Show uploaded + processed image previews
