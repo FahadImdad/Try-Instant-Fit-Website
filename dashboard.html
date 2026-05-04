@@ -2006,6 +2006,14 @@
     const url = new URL(window.location.href);
     url.searchParams.set('id', activeBrandId);
     window.history.replaceState({}, '', url.toString());
+
+    // The Scan & Wear data (passcodes / products / QRs) used to load on
+    // tab click; the tab nav was removed so we trigger them directly.
+    if (activeBrandId) {
+      loadBrandPasscodes();
+      loadProducts();
+      loadQrCodes();
+    }
   }
 
   async function refreshDashboard() {
