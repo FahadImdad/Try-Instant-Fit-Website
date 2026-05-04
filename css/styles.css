@@ -102,7 +102,7 @@ p:last-child{margin-bottom:0}
 .section-alt{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 
 /* ── Navbar ── */
-.navbar{position:sticky;top:0;z-index:1000;background:rgba(255,255,255,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:box-shadow .3s}
+.navbar{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid var(--border);transition:box-shadow .3s}
 .navbar.scrolled{box-shadow:var(--sh1)}
 .nav-container{display:flex;align-items:center;justify-content:space-between;height:66px}
 .logo{font-size:1.2rem;font-weight:900;letter-spacing:-.04em;color:var(--primary);white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center}

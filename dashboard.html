@@ -119,7 +119,7 @@
     body { display: flex; flex-direction: column; min-height: 100vh; }
     body > section { flex: 1; }
 
-    /* ── Spinner (legacy small spinner kept for inline use) ── */
+    /* ── Spinner ── */
     .spinner-lg {
       width: 40px; height: 40px;
       border: 4px solid var(--border);
@@ -129,94 +129,6 @@
       margin: 3rem auto;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Branded loading screen ── */
-    .loading-screen {
-      background: linear-gradient(135deg, #080d1a 0%, #0d1f40 60%, #091830 100%);
-      border-radius: var(--r-xl);
-      padding: 5rem 2rem;
-      min-height: 60vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-      margin: 1rem 0 2rem;
-    }
-    .loading-screen::before,
-    .loading-screen::after {
-      content: '';
-      position: absolute;
-      width: 480px; height: 480px;
-      border-radius: 50%;
-      filter: blur(120px);
-      opacity: .35;
-      pointer-events: none;
-    }
-    .loading-screen::before { background: #5a67f2; top: -150px; left: -120px; }
-    .loading-screen::after  { background: #00c8e8; bottom: -160px; right: -120px; }
-    .loading-stage { text-align: center; max-width: 380px; position: relative; z-index: 1; }
-    .loading-logo {
-      position: relative;
-      width: 92px; height: 92px;
-      margin: 0 auto 1.75rem;
-    }
-    .loading-logo .logo-mark {
-      position: absolute; inset: 0;
-      background: var(--grad);
-      border-radius: 22px;
-      display: flex; align-items: center; justify-content: center;
-      color: #fff;
-      font-size: 2.6rem;
-      font-weight: 900;
-      letter-spacing: -.06em;
-      box-shadow: 0 18px 60px rgba(0,200,232,.45), 0 0 0 1px rgba(255,255,255,.08);
-      animation: logoPulse 1.8s ease-in-out infinite;
-    }
-    .loading-logo .ring {
-      position: absolute; inset: 0;
-      border-radius: 22px;
-      border: 2px solid rgba(0,200,232,.55);
-      animation: logoRing 1.8s ease-out infinite;
-    }
-    .loading-logo .ring.delay { animation-delay: .9s; }
-    @keyframes logoPulse {
-      0%, 100% { transform: scale(1); }
-      50%      { transform: scale(.92); }
-    }
-    @keyframes logoRing {
-      0%   { transform: scale(1);   opacity: .85; }
-      100% { transform: scale(1.55); opacity: 0; }
-    }
-    .loading-title {
-      color: #fff;
-      font-size: 1.4rem;
-      font-weight: 800;
-      margin: 0 0 .35rem;
-      letter-spacing: -.01em;
-    }
-    .loading-sub {
-      color: rgba(255,255,255,.55);
-      font-size: .92rem;
-      margin: 0 0 2rem;
-    }
-    .loading-dots {
-      display: flex; gap: 8px; justify-content: center;
-    }
-    .loading-dots span {
-      width: 9px; height: 9px;
-      border-radius: 50%;
-      background: var(--cyan);
-      box-shadow: 0 0 12px rgba(0,200,232,.6);
-      animation: dotBounce 1.2s ease-in-out infinite;
-    }
-    .loading-dots span:nth-child(2) { animation-delay: .15s; }
-    .loading-dots span:nth-child(3) { animation-delay: .3s;  }
-    .loading-dots span:nth-child(4) { animation-delay: .45s; }
-    @keyframes dotBounce {
-      0%, 80%, 100% { transform: translateY(0);    opacity: .3; }
-      40%           { transform: translateY(-10px); opacity: 1; }
-    }
 
     /* ── Refresh badge ── */
     .refresh-btn {
@@ -1453,70 +1365,48 @@
       <div class="modal" style="max-width: 560px;">
         <button class="modal-close" onclick="closeTopupModal()">&times;</button>
         <h3>Top Up Credits</h3>
-        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.25rem;">Pay via bank transfer / JazzCash / EasyPaisa, then upload the screenshot. We'll review and approve within hours.</p>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.25rem;">Pick how many try-ons you need. We'll generate a receipt — pay via WhatsApp and we'll add the credits to your account.</p>
         <div class="alert" id="tuError"></div>
 
         <form onsubmit="return submitTopup(event);">
-          <!-- Amount picker -->
+          <!-- Credits picker -->
           <div class="field">
-            <label>How much would you like to top up?</label>
+            <label>How many try-ons do you need?</label>
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; margin-bottom: .5rem;">
-              <button type="button" class="topup-preset" data-usd="10" onclick="setTopupAmount(10)">$10</button>
-              <button type="button" class="topup-preset" data-usd="25" onclick="setTopupAmount(25)">$25</button>
-              <button type="button" class="topup-preset" data-usd="50" onclick="setTopupAmount(50)">$50</button>
-              <button type="button" class="topup-preset" data-usd="100" onclick="setTopupAmount(100)">$100</button>
+              <button type="button" class="topup-preset" data-credits="100" onclick="setTopupCredits(100)">100</button>
+              <button type="button" class="topup-preset" data-credits="500" onclick="setTopupCredits(500)">500</button>
+              <button type="button" class="topup-preset" data-credits="1000" onclick="setTopupCredits(1000)">1,000</button>
+              <button type="button" class="topup-preset" data-credits="5000" onclick="setTopupCredits(5000)">5,000</button>
             </div>
-            <input type="number" id="tuAmountUsd" min="1" step="1" required placeholder="Or enter custom USD amount" oninput="recalcTopup()">
+            <input type="number" id="tuCreditsInput" min="1" step="1" required placeholder="Or enter custom number of try-ons" oninput="recalcTopup()">
           </div>
 
-          <div id="tuConversion" style="display:none; padding: 1rem; background: linear-gradient(135deg, rgba(90,103,242,.08), rgba(0,200,232,.08)); border-radius: var(--r-md); margin-bottom: 1.25rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem;">
-              <span style="font-size:.85rem; color:var(--muted);">You'll get</span>
-              <span style="font-size: 1.4rem; font-weight: 800; color: var(--indigo);" id="tuCredits">— credits</span>
+          <!-- Receipt preview -->
+          <div id="tuConversion" style="display:none; padding: 1.1rem 1.2rem; background: linear-gradient(135deg, rgba(90,103,242,.08), rgba(0,200,232,.08)); border: 1px solid rgba(90,103,242,.18); border-radius: var(--r-md); margin-bottom: 1.25rem;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.6rem; padding-bottom:.6rem; border-bottom: 1px dashed rgba(90,103,242,.2);">
+              <span style="font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);">Receipt</span>
+              <span style="font-size:.75rem; color:var(--muted); font-family: monospace;" id="tuReceiptId">—</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size:.85rem; color:var(--muted);">Local equivalent (~)</span>
-              <span style="font-weight: 700;" id="tuLocal">— PKR</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: .35rem;">
+              <span style="font-size:.85rem; color:var(--muted);">Try-on credits</span>
+              <span style="font-weight: 700;" id="tuCreditsLine">— credits</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: .35rem;">
+              <span style="font-size:.85rem; color:var(--muted);">Rate</span>
+              <span style="font-weight: 700;" id="tuRateLine">$0.125 / try-on</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: .6rem; padding-top: .6rem; border-top: 1px dashed rgba(90,103,242,.2);">
+              <span style="font-size:.95rem; font-weight:700;">Total</span>
+              <span style="font-size: 1.5rem; font-weight: 900; color: var(--indigo);" id="tuTotal">$—</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: .25rem;">
+              <span style="font-size:.75rem; color:var(--muted);">Local (~)</span>
+              <span style="font-size:.85rem; color:var(--muted);" id="tuLocal">Rs —</span>
             </div>
           </div>
 
-          <div class="field">
-            <label for="tuMethod">Payment Method *</label>
-            <select id="tuMethod" required style="width:100%; padding:.7rem .9rem; border:1px solid var(--border); border-radius: var(--r-md); font-size: .95rem; font-family: inherit; background: white;">
-              <option value="">— Select method —</option>
-              <option value="bank_transfer">Bank Transfer</option>
-              <option value="jazzcash">JazzCash</option>
-              <option value="easypaisa">EasyPaisa</option>
-              <option value="card">Credit/Debit Card</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="tuRef">Transaction Reference / ID (optional)</label>
-            <input type="text" id="tuRef" placeholder="e.g. TXN-1234567">
-          </div>
-
-          <div class="field">
-            <label>Payment Screenshot *</label>
-            <label class="logo-zone" for="tuScreenshotFile" id="tuScreenshotZone" style="display:block; border: 2px dashed var(--border); border-radius: var(--r-md); padding: 1.25rem; text-align: center; cursor: pointer; background: var(--surface);">
-              <input type="file" id="tuScreenshotFile" accept="image/jpeg,image/png,image/webp" style="display: none;">
-              <div id="tuScreenshotHint">
-                <div style="font-size: 1.6rem;">📸</div>
-                <p style="margin: .25rem 0 0; font-size: .9rem;"><strong>Click to upload</strong> payment screenshot</p>
-                <p style="margin: .15rem 0 0; font-size: .72rem; color: var(--muted);">JPG/PNG/WebP up to 10MB</p>
-              </div>
-              <img id="tuScreenshotPreview" style="display: none; max-height: 180px; max-width: 100%; border-radius: var(--r-sm); margin: 0 auto;">
-            </label>
-          </div>
-
-          <div class="field">
-            <label for="tuNotes">Notes (optional)</label>
-            <input type="text" id="tuNotes" placeholder="Anything we should know?">
-          </div>
-
-          <button type="submit" class="btn btn-primary" id="tuSubmit" style="width:100%; padding:.9rem; font-size: 1rem;">Submit Top-Up Request →</button>
-          <p style="font-size:.78rem; color:var(--muted); text-align:center; margin: .75rem 0 0;">After we approve, credits land in your account within minutes.</p>
+          <button type="submit" class="btn btn-primary" id="tuSubmit" style="width:100%; padding:.9rem; font-size: 1rem; background: linear-gradient(135deg, #25d366, #128c7e); border-color: transparent; box-shadow: 0 8px 20px rgba(37,211,102,.35);">💬 Send Receipt via WhatsApp</button>
+          <p style="font-size:.78rem; color:var(--muted); text-align:center; margin: .75rem 0 0;">We'll reply with bank details. After payment, send us the screenshot on WhatsApp and we'll add credits within hours.</p>
         </form>
       </div>
     </div>
@@ -1922,9 +1812,11 @@
     document.getElementById('statAvg').textContent =
       stats.avg_processing_ms ? `${(stats.avg_processing_ms / 1000).toFixed(1)}s` : '—';
 
-    // Tab counts
-    document.getElementById('tabCountGhostLayer').textContent = fmt(gl.total || 0);
-    document.getElementById('tabCountScanWear').textContent = fmt(sw.total || 0);
+    // Tab counts (tab nav was removed; guard against missing nodes)
+    const tcGhost = document.getElementById('tabCountGhostLayer');
+    if (tcGhost) tcGhost.textContent = fmt(gl.total || 0);
+    const tcSw = document.getElementById('tabCountScanWear');
+    if (tcSw) tcSw.textContent = fmt(sw.total || 0);
 
     // Credits widget
     const widget = document.getElementById('creditsWidget');
@@ -3024,109 +2916,91 @@
   }
 
   // ════════════════════════════════════════════════════════════════
-  // CREDIT TOP-UP
+  // CREDIT TOP-UP — credits-first + WhatsApp receipt flow
   // ════════════════════════════════════════════════════════════════
   const USD_TO_PKR = 280;  // hardcoded conversion rate; update as needed
-  let tuScreenshotFile = null;
+  const TIF_WHATSAPP = '923112011606';
+
+  function genReceiptId() {
+    // Short human-friendly receipt code: TIF-YYMMDD-XXXX
+    const d = new Date();
+    const yy = String(d.getFullYear()).slice(-2);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+    return `TIF-${yy}${mm}${dd}-${rand}`;
+  }
 
   function openTopupModal() {
     document.getElementById('tuError').className = 'alert';
-    ['tuAmountUsd','tuRef','tuNotes'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('tuMethod').value = '';
+    document.getElementById('tuCreditsInput').value = '';
     document.querySelectorAll('.topup-preset').forEach(p => p.classList.remove('active'));
-    tuScreenshotFile = null;
-    document.getElementById('tuScreenshotFile').value = '';
-    document.getElementById('tuScreenshotPreview').style.display = 'none';
-    document.getElementById('tuScreenshotPreview').src = '';
-    document.getElementById('tuScreenshotHint').style.display = 'block';
     document.getElementById('tuConversion').style.display = 'none';
+    // Pre-generate a receipt ID so customer sees it as soon as they pick credits
+    document.getElementById('tuReceiptId').textContent = genReceiptId();
     document.getElementById('topupModal').classList.add('open');
   }
   function closeTopupModal() { document.getElementById('topupModal').classList.remove('open'); }
 
-  function setTopupAmount(usd) {
-    document.getElementById('tuAmountUsd').value = usd;
+  function setTopupCredits(credits) {
+    document.getElementById('tuCreditsInput').value = credits;
     document.querySelectorAll('.topup-preset').forEach(p => {
-      p.classList.toggle('active', Number(p.dataset.usd) === usd);
+      p.classList.toggle('active', Number(p.dataset.credits) === credits);
     });
     recalcTopup();
   }
 
   function recalcTopup() {
-    const usd = parseFloat(document.getElementById('tuAmountUsd').value) || 0;
-    if (usd <= 0) {
+    const credits = parseInt(document.getElementById('tuCreditsInput').value, 10) || 0;
+    if (credits <= 0) {
       document.getElementById('tuConversion').style.display = 'none';
       return;
     }
     const rate = (lastDashboardData?.brand?.price_per_tryon_usd) ? Number(lastDashboardData.brand.price_per_tryon_usd) : 0.125;
-    const credits = Math.floor(usd / rate);
+    const usd = credits * rate;
     const pkr = Math.round(usd * USD_TO_PKR);
-    document.getElementById('tuCredits').textContent = `${fmt(credits)} credits`;
+    document.getElementById('tuCreditsLine').textContent = `${fmt(credits)} credits`;
+    document.getElementById('tuRateLine').textContent = `$${rate.toFixed(3)} / try-on`;
+    document.getElementById('tuTotal').textContent = `$${usd.toFixed(2)}`;
     document.getElementById('tuLocal').textContent = `Rs ${fmt(pkr)}`;
     document.getElementById('tuConversion').style.display = 'block';
   }
 
-  // Wire screenshot upload
-  (function wireTuScreenshot() {
-    const fi = document.getElementById('tuScreenshotFile');
-    const pv = document.getElementById('tuScreenshotPreview');
-    const hint = document.getElementById('tuScreenshotHint');
-    if (!fi) return;
-    fi.addEventListener('change', e => {
-      const f = e.target.files?.[0];
-      if (!f) return;
-      if (!['image/jpeg','image/png','image/webp'].includes(f.type)) { alert('JPG/PNG/WebP only'); return; }
-      if (f.size > 10*1024*1024) { alert('Max 10MB'); return; }
-      tuScreenshotFile = f;
-      const r = new FileReader();
-      r.onload = e => { pv.src = e.target.result; pv.style.display = 'block'; hint.style.display = 'none'; };
-      r.readAsDataURL(f);
-    });
-  })();
-
-  async function submitTopup(e) {
+  function submitTopup(e) {
     e.preventDefault();
     const errEl = document.getElementById('tuError');
-    const btn = document.getElementById('tuSubmit');
     errEl.className = 'alert';
 
-    const usd = parseFloat(document.getElementById('tuAmountUsd').value);
-    if (!usd || usd <= 0) { errEl.textContent = 'Enter a valid USD amount.'; errEl.className = 'alert error'; return false; }
-    if (!document.getElementById('tuMethod').value) { errEl.textContent = 'Select a payment method.'; errEl.className = 'alert error'; return false; }
-    if (!tuScreenshotFile) { errEl.textContent = 'Please upload your payment screenshot.'; errEl.className = 'alert error'; return false; }
-
-    const rate = (lastDashboardData?.brand?.price_per_tryon_usd) ? Number(lastDashboardData.brand.price_per_tryon_usd) : 0.125;
-    const credits = Math.floor(usd / rate);
-    const pkr = Math.round(usd * USD_TO_PKR);
-
-    const fd = new FormData();
-    fd.append('amount_usd', String(usd));
-    fd.append('amount_local', String(pkr));
-    fd.append('local_currency', 'PKR');
-    fd.append('credits_requested', String(credits));
-    fd.append('payment_method', document.getElementById('tuMethod').value);
-    if (document.getElementById('tuRef').value.trim()) fd.append('payment_ref', document.getElementById('tuRef').value.trim());
-    if (document.getElementById('tuNotes').value.trim()) fd.append('notes', document.getElementById('tuNotes').value.trim());
-    fd.append('screenshot', tuScreenshotFile);
-
-    btn.disabled = true; btn.textContent = 'Submitting…';
-    try {
-      const res = await fetch(`${API}/api/brands/${activeBrandId}/topup-requests`, { method: 'POST', body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to submit');
-
-      closeTopupModal();
-      // Notify success + WhatsApp the team
-      const waMsg = `New top-up request from ${lastDashboardData?.brand?.name || 'a brand'}: $${usd} for ${credits} credits via ${document.getElementById('tuMethod').value}. Please review in admin panel.`;
-      const waUrl = `https://wa.me/923112011606?text=${encodeURIComponent(waMsg)}`;
-      if (confirm(`✓ Request submitted!\n\n$${usd} → ${credits} credits\n\nClick OK to also send a WhatsApp note to speed up approval.`)) {
-        window.open(waUrl, '_blank');
-      }
-    } catch (err) {
-      errEl.textContent = err.message; errEl.className = 'alert error';
-    } finally {
-      btn.disabled = false; btn.textContent = 'Submit Top-Up Request →';
+    const credits = parseInt(document.getElementById('tuCreditsInput').value, 10);
+    if (!credits || credits <= 0) {
+      errEl.textContent = 'Enter how many try-ons you need.';
+      errEl.className = 'alert error';
+      return false;
     }
+
+    const brand = lastDashboardData?.brand || {};
+    const rate = brand.price_per_tryon_usd ? Number(brand.price_per_tryon_usd) : 0.125;
+    const usd = credits * rate;
+    const pkr = Math.round(usd * USD_TO_PKR);
+    const receiptId = document.getElementById('tuReceiptId').textContent;
+    const brandName = brand.name || 'My brand';
+
+    const lines = [
+      `🧾 *Try Instant Fit — Top-Up Receipt*`,
+      ``,
+      `Receipt: *${receiptId}*`,
+      `Brand: *${brandName}*`,
+      ``,
+      `Try-on credits: *${fmt(credits)}*`,
+      `Rate: $${rate.toFixed(3)} / try-on`,
+      `Total: *$${usd.toFixed(2)}* (~ Rs ${fmt(pkr)})`,
+      ``,
+      `Hi! I'd like to top up ${fmt(credits)} try-on credits.`,
+      `Please share your bank details so I can complete the payment.`,
+    ];
+    const waUrl = `https://wa.me/${TIF_WHATSAPP}?text=${encodeURIComponent(lines.join('\n'))}`;
+    window.open(waUrl, '_blank');
+    closeTopupModal();
     return false;
   }
 
