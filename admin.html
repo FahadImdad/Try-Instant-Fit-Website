@@ -283,31 +283,18 @@
     </div>
 
     <div class="admin-tabs">
-      <button class="admin-tab active" data-tab="submissions" onclick="switchAdminTab('submissions')">📥 Submissions <span class="count" id="cntSubs">0</span></button>
-      <button class="admin-tab" data-tab="topups" onclick="switchAdminTab('topups')">💳 Top-Up Requests <span class="count" id="cntTopups" style="background:#fef3c7; color:#92400e;">0</span></button>
+      <button class="admin-tab active" data-tab="topups" onclick="switchAdminTab('topups')">💳 Top-Up Requests <span class="count" id="cntTopups" style="background:#fef3c7; color:#92400e;">0</span></button>
       <button class="admin-tab" data-tab="brands" onclick="switchAdminTab('brands')">🏢 Brands <span class="count" id="cntBrands">0</span></button>
     </div>
 
-    <!-- ── SUBMISSIONS PANE ── -->
-    <div id="pane-submissions" class="admin-pane active">
-      <div class="filter-row" id="subFilters">
-        <button class="filter-pill active" data-filter="" onclick="filterSubs('')">All</button>
-        <button class="filter-pill" data-filter="new" onclick="filterSubs('new')">New</button>
-        <button class="filter-pill" data-filter="contacted" onclick="filterSubs('contacted')">Contacted</button>
-        <button class="filter-pill" data-filter="qualified" onclick="filterSubs('qualified')">Qualified</button>
-        <button class="filter-pill" data-filter="converted" onclick="filterSubs('converted')">Converted</button>
-        <button class="filter-pill" data-filter="rejected" onclick="filterSubs('rejected')">Rejected</button>
-      </div>
-      <div id="subsList"></div>
-    </div>
-
     <!-- ── TOPUPS PANE ── -->
-    <div id="pane-topups" class="admin-pane">
+    <div id="pane-topups" class="admin-pane active">
       <div class="filter-row" id="topupFilters">
         <button class="filter-pill active" data-filter="" onclick="filterTopups('')">All</button>
         <button class="filter-pill" data-filter="pending" onclick="filterTopups('pending')">Pending</button>
         <button class="filter-pill" data-filter="approved" onclick="filterTopups('approved')">Approved</button>
         <button class="filter-pill" data-filter="rejected" onclick="filterTopups('rejected')">Rejected</button>
+        <input type="search" id="topupSearch" placeholder="🔎  Search by brand, email, receipt, or amount…" oninput="renderTopups()" style="margin-left:auto; padding:.5rem .85rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:.85rem; min-width:280px; font-family: inherit;">
       </div>
       <div id="topupsList"></div>
     </div>
@@ -316,7 +303,10 @@
     <div id="pane-brands" class="admin-pane">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: .5rem;">
         <p style="color: var(--muted); font-size: .85rem; margin: 0;">All registered brands with credit balance and usage.</p>
-        <button class="btn btn-primary btn-sm" onclick="openCreateBrandModal()">+ Create Brand</button>
+        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+          <input type="search" id="brandSearch" placeholder="🔎  Search by name, email, or ID…" oninput="renderBrands()" style="padding:.5rem .85rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:.85rem; min-width:260px; font-family: inherit;">
+          <button class="btn btn-primary btn-sm" onclick="openCreateBrandModal()">+ Create Brand</button>
+        </div>
       </div>
       <div id="brandsList"></div>
     </div>
@@ -374,6 +364,26 @@
   </div>
 </div>
 
+<!-- ── MODAL: Reject Top-Up ── -->
+<div class="modal-bg" id="rejectTopupModal" onclick="if(event.target===this)closeRejectTopupModal()">
+  <div class="modal-box" style="max-width: 480px;">
+    <button class="close-x" onclick="closeRejectTopupModal()">&times;</button>
+    <h3>Reject Top-Up Request</h3>
+    <p style="color: var(--muted); font-size: .85rem; margin: 0 0 1.25rem;">The brand will see this reason. Leave blank if you don't want to share one.</p>
+    <div class="alert" id="rjError"></div>
+    <form onsubmit="return submitRejectTopup(event);">
+      <div class="field">
+        <label>Reason (optional)</label>
+        <textarea id="rjReason" rows="4" placeholder="e.g. We couldn't verify the payment screenshot. Please re-send a clearer one on WhatsApp."></textarea>
+      </div>
+      <div style="display:flex; gap:.5rem; margin-top:.5rem;">
+        <button type="button" class="btn btn-secondary" style="flex:1;" onclick="closeRejectTopupModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="rjSubmit" style="flex:1; background:#ef4444; border-color:transparent;">Reject Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ── MODAL: Add Credits ── -->
 <div class="modal-bg" id="addCreditsModal" onclick="if(event.target===this)closeAddCreditsModal()">
   <div class="modal-box">
@@ -411,10 +421,7 @@
 const API = '';
 
 let authHeader = sessionStorage.getItem('admin_auth') || '';
-let allSubs = [];
 let allBrands = [];
-let currentSubFilter = '';
-let pendingConvert = null; // submission being converted
 
 // Auto-login if we have a stored auth header
 (function autoLogin() {
@@ -506,102 +513,11 @@ function switchAdminTab(name) {
 }
 
 async function refreshAll() {
-  await Promise.all([loadSubs(), loadBrands(), loadTopups()]);
+  await Promise.all([loadBrands(), loadTopups()]);
 }
 
-// ── SUBMISSIONS ──
-async function loadSubs() {
-  try {
-    const res = await fetchAdmin('/api/admin/contact-submissions');
-    const data = await res.json();
-    allSubs = data.submissions || [];
-    document.getElementById('cntSubs').textContent = allSubs.length;
-    renderSubs();
-  } catch (err) {
-    document.getElementById('subsList').innerHTML = `<div class="empty"><p>Error: ${escapeHtml(err.message)}</p></div>`;
-  }
-}
-
-function filterSubs(status) {
-  currentSubFilter = status;
-  document.querySelectorAll('#subFilters .filter-pill').forEach(p => p.classList.toggle('active', p.dataset.filter === status));
-  renderSubs();
-}
-
-function renderSubs() {
-  const filtered = currentSubFilter ? allSubs.filter(s => s.status === currentSubFilter) : allSubs;
-  const container = document.getElementById('subsList');
-  if (filtered.length === 0) {
-    container.innerHTML = `<div class="empty"><div class="icon">📭</div><p>No submissions${currentSubFilter ? ` with status "${currentSubFilter}"` : ''} yet.</p></div>`;
-    return;
-  }
-  container.innerHTML = `
-    <table class="data-table">
-      <thead><tr><th>Name</th><th>Brand / Email</th><th>Product Interest</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
-      <tbody>
-        ${filtered.map(s => `
-          <tr>
-            <td data-label="Name"><strong>${escapeHtml(s.name)}</strong></td>
-            <td data-label="Brand">
-              <div>${escapeHtml(s.brand_name)}</div>
-              <div style="color:var(--muted); font-size:.78rem;">${escapeHtml(s.email)}</div>
-              ${s.website_url ? `<div style="font-size:.75rem;"><a href="${escapeHtml(s.website_url)}" target="_blank" style="color:var(--indigo);">${escapeHtml(s.website_url)}</a></div>` : ''}
-            </td>
-            <td data-label="Interest">${escapeHtml(s.product_interest || '—')}</td>
-            <td data-label="Status"><span class="status-pill pill-${s.status}">${s.status}</span></td>
-            <td data-label="Date" style="color:var(--muted); font-size:.78rem;">${fmtDate(s.created_at)}</td>
-            <td data-label="Actions">
-              <div class="row-actions">
-                ${s.status !== 'converted' && s.status !== 'rejected'
-                  ? `<button class="btn btn-primary" onclick="openConvertModal(${JSON.stringify(s).replace(/"/g, '&quot;')})">Convert</button>`
-                  : ''}
-                ${s.status === 'new' ? `<button class="btn btn-secondary" onclick="updateSubStatus('${s.id}','contacted')">Mark Contacted</button>` : ''}
-                ${s.status === 'contacted' ? `<button class="btn btn-secondary" onclick="updateSubStatus('${s.id}','qualified')">Qualified</button>` : ''}
-                ${s.status !== 'rejected' && s.status !== 'converted' ? `<button class="btn btn-secondary" style="color:#991b1b;" onclick="updateSubStatus('${s.id}','rejected')">Reject</button>` : ''}
-                <a class="btn btn-secondary" target="_blank" href="https://wa.me/?text=${encodeURIComponent(`Hi ${s.name}, this is Try Instant Fit — thanks for reaching out about ${s.brand_name}. When's a good time for a quick demo call?`)}">WhatsApp</a>
-              </div>
-              ${s.message ? `<details style="margin-top:.4rem;"><summary style="cursor:pointer; font-size:.78rem; color:var(--muted);">Message</summary><p style="font-size:.85rem; margin:.5rem 0 0;">${escapeHtml(s.message)}</p></details>` : ''}
-            </td>
-          </tr>`).join('')}
-      </tbody>
-    </table>`;
-}
-
-async function updateSubStatus(id, status) {
-  try {
-    const res = await fetchAdmin(`/api/admin/contact-submissions/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
-    });
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || 'Failed');
-    }
-    await loadSubs();
-  } catch (err) {
-    alert('Error: ' + err.message);
-  }
-}
-
-// ── CONVERT MODAL ──
-function openConvertModal(sub) {
-  pendingConvert = sub;
-  document.getElementById('cbTitle').textContent = `Convert "${sub.brand_name}" to Brand`;
-  document.getElementById('cbName').value = sub.brand_name;
-  document.getElementById('cbEmail').value = sub.email;
-  document.getElementById('cbWebsite').value = sub.website_url || '';
-  document.getElementById('cbCredits').value = '50';
-  document.getElementById('cbPrice').value = '0.125';
-  document.getElementById('cbAmount').value = '';
-  document.getElementById('cbRef').value = '';
-  document.getElementById('cbNotes').value = `Converted from contact submission (${sub.name})`;
-  document.getElementById('cbUnlimited').checked = false;
-  document.getElementById('cbError').className = 'alert';
-  document.getElementById('createBrandModal').classList.add('open');
-}
-
+// ── CREATE BRAND MODAL ──
 function openCreateBrandModal() {
-  pendingConvert = null;
   document.getElementById('cbTitle').textContent = 'Create Brand';
   ['cbName','cbEmail','cbWebsite','cbAmount','cbRef','cbNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('cbCredits').value = '50';
@@ -613,7 +529,6 @@ function openCreateBrandModal() {
 
 function closeCreateBrandModal() {
   document.getElementById('createBrandModal').classList.remove('open');
-  pendingConvert = null;
 }
 
 async function submitCreateBrand(e) {
@@ -634,7 +549,6 @@ async function submitCreateBrand(e) {
     payment_amount_usd: parseFloat(document.getElementById('cbAmount').value) || undefined,
     payment_ref: document.getElementById('cbRef').value.trim() || undefined,
     notes: document.getElementById('cbNotes').value.trim() || undefined,
-    contact_submission_id: pendingConvert?.id,
   };
 
   try {
@@ -650,9 +564,7 @@ async function submitCreateBrand(e) {
 
     // Show WhatsApp share prompt with dashboard URL
     const dashUrl = `https://tryinstantfit.com/dashboard?id=${data.brand.id}`;
-    const wa = pendingConvert
-      ? `https://wa.me/?text=${encodeURIComponent(`Hi ${pendingConvert.name}!\n\nWelcome to Try Instant Fit. Your brand "${data.brand.name}" is ready.\n\nYour dashboard: ${dashUrl}\n\nYou have ${payload.initial_credits} try-on credits to start with. Let me know once you've had a look!\n\n— Fahad`)}`
-      : `https://wa.me/?text=${encodeURIComponent(`Welcome to Try Instant Fit. Your brand "${data.brand.name}" is ready.\n\nDashboard: ${dashUrl}\n\nStarting credits: ${payload.initial_credits}`)}`;
+    const wa = `https://wa.me/?text=${encodeURIComponent(`Welcome to Try Instant Fit. Your brand "${data.brand.name}" is ready.\n\nDashboard: ${dashUrl}\n\nStarting credits: ${payload.initial_credits}`)}`;
 
     if (confirm(`Brand created!\n\nDashboard URL:\n${dashUrl}\n\nClick OK to send a WhatsApp welcome message.`)) {
       window.open(wa, '_blank');
@@ -683,20 +595,33 @@ async function loadBrands() {
 function renderBrands() {
   const container = document.getElementById('brandsList');
   if (allBrands.length === 0) {
-    container.innerHTML = `<div class="empty"><div class="icon">🏢</div><p>No brands yet. Create one from a submission.</p></div>`;
+    container.innerHTML = `<div class="empty"><div class="icon">🏢</div><p>No brands yet.</p></div>`;
+    return;
+  }
+  const q = (document.getElementById('brandSearch')?.value || '').trim().toLowerCase();
+  const list = q
+    ? allBrands.filter(b =>
+        (b.name || '').toLowerCase().includes(q) ||
+        (b.email || '').toLowerCase().includes(q) ||
+        (b.id || '').toLowerCase().includes(q)
+      )
+    : allBrands;
+  if (list.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="icon">🔎</div><p>No brands match "${escapeHtml(q)}".</p></div>`;
     return;
   }
   container.innerHTML = `
     <table class="data-table">
       <thead><tr><th>Brand</th><th>Status</th><th>Credits</th><th>Used</th><th>Rate</th><th>Actions</th></tr></thead>
       <tbody>
-        ${allBrands.map(b => {
+        ${list.map(b => {
           const remaining = (b.tryon_credits || 0) - (b.tryon_credits_used || 0);
           const usagePct = b.tryon_credits > 0 ? (b.tryon_credits_used / b.tryon_credits) * 100 : 0;
           let creditClass = 'ok';
           if (b.unlimited) creditClass = 'unlimited';
           else if (remaining === 0) creditClass = 'low';
           else if (usagePct >= 80) creditClass = 'warn';
+          const nameAttr = JSON.stringify(b.name).replace(/"/g, '&quot;');
           return `
             <tr>
               <td data-label="Brand">
@@ -720,14 +645,36 @@ function renderBrands() {
               <td data-label="Rate">$${Number(b.price_per_tryon_usd).toFixed(3)}</td>
               <td data-label="Actions">
                 <div class="row-actions">
-                  ${!b.unlimited ? `<button class="btn btn-primary" onclick="openAddCredits('${b.id}', ${JSON.stringify(b.name).replace(/"/g, '&quot;')}, ${b.price_per_tryon_usd})">+ Credits</button>` : ''}
+                  ${!b.unlimited ? `<button class="btn btn-primary" onclick="openAddCredits('${b.id}', ${nameAttr}, ${b.price_per_tryon_usd})">+ Credits</button>` : ''}
                   <a class="btn btn-secondary" href="dashboard.html?id=${b.id}" target="_blank">Dashboard ↗</a>
+                  <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteBrand('${b.id}', ${nameAttr})">Delete</button>
                 </div>
               </td>
             </tr>`;
         }).join('')}
       </tbody>
     </table>`;
+}
+
+async function deleteBrand(brandId, brandName) {
+  const confirmation = prompt(
+    `Delete "${brandName}" PERMANENTLY?\n\nThis removes the brand and ALL their try-ons, products, QR codes, passcodes, and top-up records. Cannot be undone.\n\nType the brand name to confirm:`
+  );
+  if (confirmation === null) return;
+  if (confirmation.trim() !== brandName) {
+    alert('Name did not match. Brand was not deleted.');
+    return;
+  }
+  try {
+    const res = await fetchAdmin(`/api/admin/brands/${brandId}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed to delete');
+    }
+    await refreshAll();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
 }
 
 let acBrandId = null;
@@ -821,10 +768,23 @@ function filterTopups(status) {
 }
 
 function renderTopups() {
-  const filtered = currentTopupFilter ? allTopups.filter(t => t.status === currentTopupFilter) : allTopups;
+  let filtered = currentTopupFilter ? allTopups.filter(t => t.status === currentTopupFilter) : allTopups;
+  const q = (document.getElementById('topupSearch')?.value || '').trim().toLowerCase();
+  if (q) {
+    filtered = filtered.filter(t =>
+      (t.brand?.name || '').toLowerCase().includes(q) ||
+      (t.brand?.email || '').toLowerCase().includes(q) ||
+      (t.brand_id || '').toLowerCase().includes(q) ||
+      (t.payment_ref || '').toLowerCase().includes(q) ||
+      (t.notes || '').toLowerCase().includes(q) ||
+      String(t.amount_usd || '').includes(q) ||
+      String(t.credits_requested || '').includes(q)
+    );
+  }
   const container = document.getElementById('topupsList');
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="empty"><div class="icon">💳</div><p>No top-up requests${currentTopupFilter ? ' with status "' + currentTopupFilter + '"' : ''}.</p></div>`;
+    const hint = q ? ` matching "${escapeHtml(q)}"` : (currentTopupFilter ? ' with status "' + currentTopupFilter + '"' : '');
+    container.innerHTML = `<div class="empty"><div class="icon">💳</div><p>No top-up requests${hint}.</p></div>`;
     return;
   }
   container.innerHTML = `
@@ -879,17 +839,47 @@ async function approveTopup(id, amount, credits, brandName) {
   } catch (err) { alert('Error: ' + err.message); }
 }
 
-async function rejectTopup(id) {
-  const reason = prompt('Reason for rejection (visible to brand):');
-  if (reason === null) return;
+// ── Reject Top-Up modal ──────────────────────────────────────────────
+let rejectingTopupId = null;
+function rejectTopup(id) {
+  rejectingTopupId = id;
+  document.getElementById('rjReason').value = '';
+  document.getElementById('rjError').className = 'alert';
+  document.getElementById('rejectTopupModal').classList.add('open');
+  setTimeout(() => document.getElementById('rjReason').focus(), 50);
+}
+function closeRejectTopupModal() {
+  document.getElementById('rejectTopupModal').classList.remove('open');
+  rejectingTopupId = null;
+}
+async function submitRejectTopup(e) {
+  e.preventDefault();
+  if (!rejectingTopupId) return false;
+  const errEl = document.getElementById('rjError');
+  const btn = document.getElementById('rjSubmit');
+  const reason = document.getElementById('rjReason').value.trim();
+  errEl.className = 'alert';
+  btn.disabled = true;
+  btn.textContent = 'Rejecting…';
   try {
-    const res = await fetchAdmin(`/api/admin/topup-requests/${id}`, {
+    const res = await fetchAdmin(`/api/admin/topup-requests/${rejectingTopupId}`, {
       method: 'POST',
-      body: JSON.stringify({ action: 'reject', rejection_reason: reason }),
+      body: JSON.stringify({ action: 'reject', rejection_reason: reason || null }),
     });
-    if (!res.ok) throw new Error('Failed');
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed to reject');
+    }
+    closeRejectTopupModal();
     await loadTopups();
-  } catch (err) { alert('Error: ' + err.message); }
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.className = 'alert error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Reject Request';
+  }
+  return false;
 }
 
 // ── Helpers ──
