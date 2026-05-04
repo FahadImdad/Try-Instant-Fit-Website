@@ -130,21 +130,18 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Branded loading screen (breaks out of container for full-bleed) ── */
+    /* ── Branded loading screen ── */
     .loading-screen {
       background: linear-gradient(135deg, #080d1a 0%, #0d1f40 60%, #091830 100%);
-      width: 100vw;
-      margin-left: calc(-50vw + 50%);
-      margin-right: calc(-50vw + 50%);
-      margin-top: -4rem;
-      margin-bottom: -5rem;
-      padding: 6rem 2rem;
-      min-height: calc(100vh - 64px);
+      border-radius: var(--r-xl);
+      padding: 5rem 2rem;
+      min-height: 60vh;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
       overflow: hidden;
+      margin: 1rem 0 2rem;
     }
     .loading-screen::before,
     .loading-screen::after {
