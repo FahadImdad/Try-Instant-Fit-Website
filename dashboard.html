@@ -2166,9 +2166,9 @@
         <div class="source-stat-sub">issued</div>
       </div>
       <div class="source-stat">
-        <div class="source-stat-label">Cost</div>
-        <div class="source-stat-val">$${((sw.total || 0) * (Number(brand.price_per_tryon_usd) || 0.125)).toFixed(2)}</div>
-        <div class="source-stat-sub">at $${(Number(brand.price_per_tryon_usd) || 0.125).toFixed(3)}/try-on</div>
+        <div class="source-stat-label">Total Spend</div>
+        <div class="source-stat-val">$${((Number(brand.tryon_credits_used) || 0) * (Number(brand.price_per_tryon_usd) || 0.125)).toFixed(2)}</div>
+        <div class="source-stat-sub">${fmt(brand.tryon_credits_used || 0)} credit${(brand.tryon_credits_used || 0) === 1 ? '' : 's'} used · $${(Number(brand.price_per_tryon_usd) || 0.125).toFixed(3)}/try-on</div>
       </div>
     `;
 
