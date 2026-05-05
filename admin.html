@@ -643,7 +643,7 @@ function renderBrands() {
               <td data-label="Actions">
                 <div class="row-actions">
                   ${!b.unlimited ? `<button class="btn btn-primary" onclick="openAddCredits('${b.id}', ${nameAttr}, ${b.price_per_tryon_usd})">+ Credits</button>` : ''}
-                  <a class="btn btn-secondary" href="dashboard.html?id=${b.id}" target="_blank">Dashboard ↗</a>
+                  <a class="btn btn-secondary" href="/dashboard?id=${b.id}" target="_blank">Dashboard ↗</a>
                   <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteBrand('${b.id}', ${nameAttr})">Delete</button>
                 </div>
               </td>
