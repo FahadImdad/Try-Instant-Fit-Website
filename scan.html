@@ -274,9 +274,10 @@
       <span>Try Instant<span class="fit-mark">Fit</span></span>
     </a>
   </div>
-  <!-- Brand logo header (shown if QR's brand has uploaded a logo) -->
+  <!-- Brand header — shows the brand's logo if uploaded, otherwise the brand name -->
   <div id="brandHeader" style="display:none; text-align: center; margin-bottom: 1.5rem; padding: 1rem 0;">
-    <img id="brandLogoImg" src="" alt="" style="max-width: 200px; max-height: 80px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0,0,0,.25));">
+    <img id="brandLogoImg" src="" alt="" style="display:none; max-width: 200px; max-height: 80px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0,0,0,.25));">
+    <h2 id="brandNameText" style="display:none; color: #fff; font-size: 1.6rem; font-weight: 800; letter-spacing: -.01em; margin: 0;"></h2>
     <p style="color: rgba(255,255,255,.6); font-size: .72rem; margin: .75rem 0 0; letter-spacing: .05em;">POWERED BY <a href="/" target="_blank" style="color: rgba(255,255,255,.85); text-decoration: none; font-weight: 700;">Try Instant<span style="color: var(--cyan);">Fit</span></a></p>
   </div>
 
@@ -413,12 +414,25 @@
   })();
 
   function renderProductHeader() {
-    // Swap to brand-logo header if available
-    if (qrInfo.brand?.logo_url) {
+    // Replace the default Try-Instant-Fit header with the brand's identity —
+    // logo if uploaded, otherwise the brand name. Customer should see the
+    // store they're shopping with, not the platform.
+    const brand = qrInfo.brand;
+    if (brand && (brand.logo_url || brand.name)) {
       document.getElementById('scanHeader').style.display = 'none';
       const bh = document.getElementById('brandHeader');
-      document.getElementById('brandLogoImg').src = qrInfo.brand.logo_url;
-      document.getElementById('brandLogoImg').alt = qrInfo.brand.name || '';
+      const logoImg = document.getElementById('brandLogoImg');
+      const nameText = document.getElementById('brandNameText');
+      if (brand.logo_url) {
+        logoImg.src = brand.logo_url;
+        logoImg.alt = brand.name || '';
+        logoImg.style.display = 'inline-block';
+        nameText.style.display = 'none';
+      } else {
+        nameText.textContent = brand.name;
+        nameText.style.display = 'block';
+        logoImg.style.display = 'none';
+      }
       bh.style.display = 'block';
     }
 

@@ -2193,6 +2193,7 @@
           <span>${inactive ? '<span class="status-badge pill-inactive">Disabled</span>' : exhausted ? '<span class="status-badge pill-inactive">Used Up</span>' : '<span class="status-badge pill-active">Active</span>'}</span>
           <div style="display: flex; gap: .35rem;">
             <button class="btn btn-secondary" style="font-size:.75rem; padding:.35rem .6rem;" onclick="viewPasscodeTryons('${p.id}', ${JSON.stringify(p.code).replace(/"/g, '&quot;')})">Try-Ons</button>
+            <button class="btn btn-secondary" style="font-size:.75rem; padding:.35rem .6rem;" onclick="editPasscode('${p.id}')">Edit</button>
             <button class="btn btn-secondary" style="font-size:.75rem; padding:.35rem .6rem; color:#991b1b;" onclick="deletePasscode('${p.id}', ${JSON.stringify(p.code).replace(/"/g, '&quot;')})">Delete</button>
           </div>
         </div>`;
@@ -2239,6 +2240,44 @@
     try {
       const res = await fetch(`${API}/api/passcodes/${id}?hard=true`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
+      await loadBrandPasscodes();
+    } catch (err) { alert('Error: ' + err.message); }
+  }
+
+  async function editPasscode(id) {
+    const p = allBrandPasscodes.find(x => x.id === id);
+    if (!p) return;
+
+    const newLabel = prompt('Customer name (leave blank to clear):', p.customer_label || '');
+    if (newLabel === null) return;
+
+    const newLimitStr = prompt(`Try-on limit (currently ${p.use_limit}, used ${p.used_count}):`, String(p.use_limit));
+    if (newLimitStr === null) return;
+    const newLimit = parseInt(newLimitStr, 10);
+    if (!Number.isFinite(newLimit) || newLimit < p.used_count) {
+      alert(`Limit must be a number ≥ ${p.used_count} (already used).`);
+      return;
+    }
+
+    const activeChoice = confirm(
+      p.active
+        ? 'Passcode is currently ACTIVE.\n\nOK = keep active.\nCancel = disable it (customer can no longer use it).'
+        : 'Passcode is currently DISABLED.\n\nOK = re-enable it.\nCancel = keep disabled.'
+    );
+    const newActive = p.active ? activeChoice : activeChoice;
+
+    try {
+      const res = await fetch(`${API}/api/passcodes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_label: newLabel.trim() || null,
+          use_limit: newLimit,
+          active: newActive,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Update failed');
       await loadBrandPasscodes();
     } catch (err) { alert('Error: ' + err.message); }
   }
