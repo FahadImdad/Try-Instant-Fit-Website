@@ -1771,10 +1771,10 @@
       const data = await res.json();
 
       if (res.status === 404) {
-        // No brand registered with this Google account — send them straight
-        // to the registration page. Friendlier than showing an error and
-        // asking them to click another button. They'll click Google sign-in
-        // there too and the same email gets verified by the token exchange.
+        // No brand registered with this Google account — pass the just-verified
+        // Google credential through to /register so they skip the redundant
+        // "Sign in with Google" step and land on the brand-details form.
+        try { sessionStorage.setItem('tif_pending_google_credential', response.credential); } catch (_) {}
         window.location.href = '/register';
         return;
       }

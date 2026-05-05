@@ -212,6 +212,17 @@ let googleVerifiedEmail = null;  // for display only — backend re-verifies the
 
 // ── Google Sign-Up (mandatory first step) ──
 async function initGoogleSignUp() {
+  // If the dashboard's sign-in flow forwarded a Google credential
+  // (because the user signed in but had no brand yet), use it directly
+  // and skip the redundant "Sign in with Google" button click.
+  let pending = null;
+  try { pending = sessionStorage.getItem('tif_pending_google_credential'); } catch (_) {}
+  if (pending) {
+    try { sessionStorage.removeItem('tif_pending_google_credential'); } catch (_) {}
+    handleGoogleSignUp({ credential: pending });
+    return;
+  }
+
   const hint = document.getElementById('googleStageHint');
   try {
     const res = await fetch(`${API}/api/auth/config`);
