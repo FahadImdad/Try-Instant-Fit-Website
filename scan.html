@@ -30,6 +30,14 @@
     .scan-logo img { height: 44px; width: 44px; border-radius: 11px; display: block; }
     .scan-logo .fit-mark { background: linear-gradient(90deg, #5a67f2, #00c8e8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 
+    /* On desktop (mouse, no touchscreen), the file input's `capture` attribute
+       is ignored by browsers — "Take Photo" just opens the file picker, same
+       as Upload. Hide it and let Upload take the full width. */
+    @media (hover: hover) and (pointer: fine) {
+      #cameraBtn { display: none !important; }
+      #galleryBtn { width: 100%; }
+    }
+
     .scan-card {
       background: white;
       border-radius: 1.25rem;
@@ -420,27 +428,11 @@
   })();
 
   function renderProductHeader() {
-    // Replace the default Try-Instant-Fit header with the brand's identity —
-    // logo if uploaded, otherwise the brand name. Customer should see the
-    // store they're shopping with, not the platform.
-    const brand = qrInfo.brand;
-    if (brand && (brand.logo_url || brand.name)) {
-      document.getElementById('scanHeader').style.display = 'none';
-      const bh = document.getElementById('brandHeader');
-      const logoImg = document.getElementById('brandLogoImg');
-      const nameText = document.getElementById('brandNameText');
-      if (brand.logo_url) {
-        logoImg.src = brand.logo_url;
-        logoImg.alt = brand.name || '';
-        logoImg.style.display = 'inline-block';
-        nameText.style.display = 'none';
-      } else {
-        nameText.textContent = brand.name;
-        nameText.style.display = 'block';
-        logoImg.style.display = 'none';
-      }
-      bh.style.display = 'block';
-    }
+    // Always keep the Try Instant Fit logo + wordmark visible at the top so
+    // the platform identity is clear. Brand identity is conveyed via the
+    // product card (brand name + product image) below.
+    // (brandHeader stays hidden — was causing only the brand's icon to show
+    //  with the TIF wordmark cropped out underneath.)
 
     document.getElementById('productName').textContent = qrInfo.product_name;
     document.getElementById('brandName').textContent = qrInfo.brand?.name || '—';
