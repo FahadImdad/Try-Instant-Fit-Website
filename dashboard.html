@@ -1823,7 +1823,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_token: response.credential }),
       });
-      const data = await res.json();
+      const data = await safeJson(res);
 
       if (res.status === 404) {
         // No brand registered with this Google account — pass the just-verified
@@ -1844,7 +1844,7 @@
 
       await fetchAndRender(data.brand_id);
     } catch (err) {
-      errEl.textContent = err.message; errEl.className = 'alert error';
+      errEl.textContent = humanError(err); errEl.className = 'alert error';
     }
   }
 
@@ -1977,7 +1977,7 @@
       hide('loadingView');
       console.error('[dashboard] renderDashboard threw:', err);
       if (silent) { clearSavedSession(); return; }
-      showLoginError('Dashboard error: ' + (err && err.message ? err.message : 'render failed') + '. Open DevTools console for details.');
+      showLoginError(humanError(err, 'Couldn’t load your dashboard. Please refresh and try again.'));
     }
   }
 
@@ -2267,6 +2267,37 @@
   function show(id) { document.getElementById(id).style.display = 'block'; }
   function hide(id) { document.getElementById(id).style.display = 'none'; }
   function fmt(n) { return (n ?? 0).toLocaleString(); }
+
+  // Parse a fetch Response safely. If the body isn't valid JSON (e.g. server
+  // returned an HTML error page), throw a clean human-friendly error instead
+  // of letting "Unexpected token '<'..." bubble up to the UI.
+  async function safeJson(res) {
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch (_) {
+      console.error('[safeJson] non-JSON response (' + res.status + '):', text.slice(0, 300));
+      const e = new Error('Server is having trouble right now. Please try again in a moment.');
+      e.httpStatus = res.status;
+      throw e;
+    }
+  }
+
+  // Map any caught error to a message safe to show users. Logs the raw error
+  // to the console for debugging.
+  function humanError(err, fallback) {
+    const raw = (err && err.message) ? String(err.message) : '';
+    console.error('[error]', err);
+    // Looks like a JSON parser / HTML / stack trace / token leak — hide it.
+    if (/Unexpected token|<!DOCTYPE|<html|JSON\.parse|Cannot read prop|undefined is not/i.test(raw)) {
+      return fallback || 'Something went wrong. Please try again.';
+    }
+    if (/Failed to fetch|NetworkError|Load failed/i.test(raw)) {
+      return 'Couldn’t reach the server. Check your connection and try again.';
+    }
+    // Looks human-friendly already (short, no jargon) — show it.
+    if (raw && raw.length < 200) return raw;
+    return fallback || 'Something went wrong. Please try again.';
+  }
   function fmtDate(iso) {
     if (!iso) return '—';
     const d = new Date(iso);
@@ -2319,12 +2350,12 @@
     const list = document.getElementById('brandPasscodesList');
     try {
       const res = await fetch(`${API}/api/brands/${activeBrandId}/passcodes`);
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed to load');
       allBrandPasscodes = data.passcodes || [];
       renderBrandPasscodes();
     } catch (err) {
-      list.innerHTML = `<div class="empty-state-mini">⚠ ${escapeHtml(err.message)}</div>`;
+      list.innerHTML = `<div class="empty-state-mini">⚠ ${escapeHtml(humanError(err))}</div>`;
     }
   }
 
@@ -2376,12 +2407,12 @@
           use_limit: parseInt(document.getElementById('bpcLimit').value, 10),
         }),
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed');
       closeAddPasscode();
       await loadBrandPasscodes();
     } catch (err) {
-      errEl.textContent = err.message; errEl.className = 'alert error';
+      errEl.textContent = humanError(err); errEl.className = 'alert error';
     } finally {
       btn.disabled = false; btn.textContent = 'Generate Passcode →';
     }
@@ -2394,7 +2425,7 @@
       const res = await fetch(`${API}/api/passcodes/${id}?hard=true`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
       await loadBrandPasscodes();
-    } catch (err) { alert('Error: ' + err.message); }
+    } catch (err) { alert(humanError(err)); }
   }
 
   let editingPasscodeId = null;
@@ -2456,12 +2487,12 @@
           active: document.getElementById('epcActive').checked,
         }),
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Update failed');
       closeEditPasscode();
       await loadBrandPasscodes();
     } catch (err) {
-      errEl.textContent = err.message;
+      errEl.textContent = humanError(err);
       errEl.className = 'alert error';
     } finally {
       btn.disabled = false; btn.textContent = 'Save Changes →';
@@ -2482,7 +2513,7 @@
 
     try {
       const res = await fetch(`${API}/api/passcodes/${id}`);
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed');
       activePasscodeTryons = data.tryons || [];
       // Default currency from first try-on, or fall back to brand default
@@ -2490,7 +2521,7 @@
       activePasscodeCurrency = firstWithCur?.sold_currency || 'PKR';
       renderPasscodeTryons();
     } catch (err) {
-      document.getElementById('ptcList').innerHTML = `<div class="empty-state-mini">⚠ ${escapeHtml(err.message)}</div>`;
+      document.getElementById('ptcList').innerHTML = `<div class="empty-state-mini">⚠ ${escapeHtml(humanError(err))}</div>`;
     }
   }
 
@@ -2558,7 +2589,7 @@
           sold_currency: activePasscodeCurrency,
         }),
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed');
       // Update local state
       const t = activePasscodeTryons.find(x => x.id === tryonId);
@@ -2569,7 +2600,7 @@
         t.sold_at = data.tryon.sold_at;
       }
       renderPasscodeTryons();
-    } catch (err) { alert('Error: ' + err.message); }
+    } catch (err) { alert(humanError(err)); }
   }
 
   async function updateSoldPrice(tryonId, value) {
@@ -2585,7 +2616,7 @@
       const t = activePasscodeTryons.find(x => x.id === tryonId);
       if (t) t.sold_price = price;
       renderPasscodeTryons();
-    } catch (err) { alert('Error: ' + err.message); }
+    } catch (err) { alert(humanError(err)); }
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -2599,7 +2630,7 @@
     if (!activeBrandId) return;
     try {
       const res = await fetch(`${API}/api/brands/${activeBrandId}/products`);
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed to load');
       allProducts = data.products || [];
       // Refresh QR product picker (used by legacy "+ Generate QR" if still around)
@@ -2614,7 +2645,7 @@
       }
       renderUnified();
     } catch (err) {
-      document.getElementById('unifiedList').innerHTML = `<div class="empty-state-mini">⚠ ${escapeHtml(err.message)}</div>`;
+      document.getElementById('unifiedList').innerHTML = `<div class="empty-state-mini">⚠ ${escapeHtml(humanError(err))}</div>`;
     }
   }
 
@@ -2692,7 +2723,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ brand_id: activeBrandId, product_uuid: productUuid }),
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed');
       await loadQrCodes();
       const product = allProducts.find(p => p.id === productUuid);
@@ -2700,7 +2731,7 @@
         uploaded: product?.image_url,
         isolated: data.isolated_garment_url || product?.isolated_garment_url,
       });
-    } catch (err) { alert('Error: ' + err.message); }
+    } catch (err) { alert(humanError(err)); }
   }
 
   function formatPrice(price, currency) {
@@ -2772,8 +2803,8 @@
     try {
       // Step 1: create the product (charges 1 credit for AI processing)
       const res = await fetch(`${API}/api/brands/${activeBrandId}/products`, { method: 'POST', body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Product creation failed');
+      const data = await safeJson(res);
+      if (!res.ok) throw new Error(data.error || 'Couldn’t save the product. Please try again.');
 
       // Step 2: auto-generate QR for the product
       btn.textContent = 'Step 2/2: generating QR…';
@@ -2787,12 +2818,12 @@
           total_limit: qrLimit ? parseInt(qrLimit, 10) : undefined,
         }),
       });
-      const qrData = await qrRes.json();
+      const qrData = await safeJson(qrRes);
       if (!qrRes.ok) {
         // Product created but QR failed — show warning instead of error
         closeAddProduct();
         await loadProducts();
-        alert(`Product saved, but QR generation failed: ${qrData.error || 'Unknown error'}\n\nYou can still create the QR manually from the QR Codes section.`);
+        alert('Product saved, but the QR code couldn’t be generated right now.\n\nYou can create it manually from the QR Codes section.');
         return false;
       }
 
@@ -2807,7 +2838,8 @@
       // Refresh brand info so credits widget reflects the deduction
       if (typeof refreshDashboard === 'function') refreshDashboard();
     } catch (err) {
-      errEl.textContent = err.message; errEl.className = 'alert error';
+      errEl.textContent = humanError(err, 'Couldn’t save the product. Please try again.');
+      errEl.className = 'alert error';
     } finally {
       btn.disabled = false; btn.textContent = 'Add Product & Generate QR → (~15s)';
     }
@@ -2825,7 +2857,7 @@
       if (!res.ok) throw new Error('Failed to delete product');
       await loadProducts();
       await loadQrCodes();
-    } catch (err) { alert('Error: ' + err.message); }
+    } catch (err) { alert(humanError(err)); }
   }
 
   let editingProductId = null;
@@ -2890,12 +2922,12 @@
           active: document.getElementById('epcdActive').checked,
         }),
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Update failed');
       closeEditProduct();
       await loadProducts();
     } catch (err) {
-      errEl.textContent = err.message;
+      errEl.textContent = humanError(err);
       errEl.className = 'alert error';
     } finally {
       btn.disabled = false; btn.textContent = 'Save Changes →';
@@ -2913,7 +2945,7 @@
     if (!activeBrandId) return;
     try {
       const res = await fetch(`${API}/api/brands/${activeBrandId}/qr-codes`);
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed to load');
       allQrs = data.qr_codes || [];
       renderUnified();  // re-render unified tiles with QR data
@@ -2998,11 +3030,11 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: makeActive }),
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || `Failed to ${action}`);
       loadQrCodes();
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      alert(humanError(err));
     }
   }
 
@@ -3016,11 +3048,11 @@
     }
     try {
       const res = await fetch(`${API}/api/qr/${qrId}?hard=true`, { method: 'DELETE' });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed to delete');
       loadQrCodes();
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      alert(humanError(err));
     }
   }
 
@@ -3067,7 +3099,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Generation failed');
 
       closeCreateQrModal();
@@ -3078,7 +3110,7 @@
       });
       loadQrCodes();
     } catch (err) {
-      errEl.textContent = err.message;
+      errEl.textContent = humanError(err);
       errEl.className = 'alert error';
     } finally {
       btn.disabled = false;
@@ -3193,11 +3225,11 @@
     list.innerHTML = `<p style="color:var(--muted); font-size:.85rem;">Loading…</p>`;
     try {
       const res = await fetch(`${API}/api/qr/${qrId}/passcodes`);
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed to load');
       renderPasscodes(data.passcodes || []);
     } catch (err) {
-      list.innerHTML = `<p style="color:#991b1b; font-size:.85rem;">${escapeHtml(err.message)}</p>`;
+      list.innerHTML = `<p style="color:#991b1b; font-size:.85rem;">${escapeHtml(humanError(err))}</p>`;
     }
   }
 
@@ -3255,12 +3287,12 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed');
       ['pcCode','pcLabel','pcLimit'].forEach(id => document.getElementById(id).value = '');
       await loadPasscodes(activeQrId);
     } catch (err) {
-      errEl.textContent = err.message;
+      errEl.textContent = humanError(err);
       errEl.className = 'alert error';
     }
     return false;
@@ -3365,7 +3397,7 @@
       closeEditProfile();
       await refreshDashboard();
     } catch (err) {
-      errEl.textContent = err.message;
+      errEl.textContent = humanError(err);
       errEl.className = 'alert error';
     } finally {
       btn.disabled = false; btn.textContent = 'Save Changes';
@@ -3391,7 +3423,7 @@
     try {
       const res = await fetch(`${API}/api/brands/${activeBrandId}/topup-requests`);
       if (res.ok) {
-        const data = await res.json();
+        const data = await safeJson(res);
         const topups = (data.topups || []).slice(0, 20);
         for (const t of topups) {
           if (t.status === 'approved') {
@@ -3640,7 +3672,7 @@
         throw new Error(data.error || 'Could not create top-up request');
       }
     } catch (err) {
-      errEl.textContent = err.message + ' — please try again.';
+      errEl.textContent = humanError(err, 'Couldn’t create your top-up request. Please try again.');
       errEl.className = 'alert error';
       btn.disabled = false;
       btn.innerHTML = '<img src="/assets/whatsapp.svg" alt="" style="width: 1.2em; height: 1.2em; vertical-align: middle; margin-right: .5rem;">Send Receipt via WhatsApp';
