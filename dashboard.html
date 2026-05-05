@@ -3535,7 +3535,17 @@
   // ════════════════════════════════════════════════════════════════
   // CREDIT TOP-UP — credits-first + WhatsApp receipt flow
   // ════════════════════════════════════════════════════════════════
-  const USD_TO_PKR = 280;  // hardcoded conversion rate; update as needed
+  // Live USD->PKR rate, refreshed once per page load from /api/fx (cached in
+  // Supabase by a daily cron). Falls back to 285 if the endpoint is unreachable.
+  let USD_TO_PKR = 285;
+  (async () => {
+    try {
+      const r = await fetch('/api/fx?to=PKR', { cache: 'no-store' });
+      if (!r.ok) return;
+      const d = await r.json();
+      if (typeof d.rate === 'number' && d.rate > 0) USD_TO_PKR = d.rate;
+    } catch (_) { /* keep fallback */ }
+  })();
   const TIF_WHATSAPP = '923112011606';
 
   function genReceiptId() {
@@ -3577,7 +3587,7 @@
     const usd = credits * rate;
     const pkr = Math.round(usd * USD_TO_PKR);
     document.getElementById('tuCreditsLine').textContent = `${fmt(credits)} credits`;
-    document.getElementById('tuRateLine').textContent = `$${rate.toFixed(3)} / try-on`;
+    document.getElementById('tuRateLine').textContent = `$${rate.toFixed(3)} / try-on (≈ Rs ${fmt(Math.round(rate * USD_TO_PKR))})`;
     document.getElementById('tuTotal').textContent = `$${usd.toFixed(2)}`;
     document.getElementById('tuLocal').textContent = `Rs ${fmt(pkr)}`;
     document.getElementById('tuConversion').style.display = 'block';
