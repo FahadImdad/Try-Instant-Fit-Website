@@ -1311,6 +1311,41 @@
       </div>
     </div>
 
+    <!-- ── Modal: Edit Brand-wide Passcode ── -->
+    <div class="modal-backdrop" id="editPasscodeModal" onclick="if(event.target===this)closeEditPasscode()">
+      <div class="modal">
+        <button class="modal-close" onclick="closeEditPasscode()">&times;</button>
+        <h3>Edit Passcode</h3>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.5rem;">Update the code, customer name, or try-on credits.</p>
+        <div class="alert" id="epcError"></div>
+        <form onsubmit="return submitEditPasscode(event);">
+          <div class="field">
+            <label for="epcCode">Code *</label>
+            <input type="text" id="epcCode" style="font-family: monospace; text-transform: uppercase;" required pattern="[A-Za-z0-9_\-]{3,32}" placeholder="e.g. SARAH50">
+            <div class="field-hint">3–32 characters: letters, digits, underscore, or hyphen.</div>
+          </div>
+          <div class="field">
+            <label for="epcLabel">Customer Name (optional)</label>
+            <input type="text" id="epcLabel" placeholder="e.g. Sarah Khan">
+            <div class="field-hint">Helps you remember who you gave it to.</div>
+          </div>
+          <div class="field">
+            <label for="epcLimit">Try-On Credits *</label>
+            <input type="number" id="epcLimit" min="1" required placeholder="e.g. 5">
+            <div class="field-hint" id="epcLimitHint">How many try-ons this customer can do (across all your products).</div>
+          </div>
+          <div class="field">
+            <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer; font-weight:600;">
+              <input type="checkbox" id="epcActive" style="width:auto; margin:0;">
+              <span>Active</span>
+            </label>
+            <div class="field-hint">Uncheck to disable — customer can no longer use this passcode.</div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="epcSubmit" style="width:100%; padding:.9rem;">Save Changes →</button>
+        </form>
+      </div>
+    </div>
+
     <!-- ── Modal: Add Product ── -->
     <div class="modal-backdrop" id="addProductModal" onclick="if(event.target===this)closeAddProduct()">
       <div class="modal">
@@ -2278,50 +2313,76 @@
     } catch (err) { alert('Error: ' + err.message); }
   }
 
-  async function editPasscode(id) {
+  let editingPasscodeId = null;
+
+  function editPasscode(id) {
     const p = allBrandPasscodes.find(x => x.id === id);
     if (!p) return;
+    editingPasscodeId = id;
+    document.getElementById('epcError').className = 'alert';
+    document.getElementById('epcCode').value = p.code || '';
+    document.getElementById('epcLabel').value = p.customer_label || '';
+    document.getElementById('epcLimit').value = p.use_limit;
+    document.getElementById('epcLimit').min = Math.max(1, p.used_count);
+    document.getElementById('epcLimitHint').textContent =
+      p.used_count > 0
+        ? `Already used ${p.used_count} — can't go below that.`
+        : 'How many try-ons this customer can do (across all your products).';
+    document.getElementById('epcActive').checked = !!p.active;
+    document.getElementById('editPasscodeModal').classList.add('open');
+  }
 
-    const newCode = prompt('Code (letters/digits, 3–32 chars):', p.code);
-    if (newCode === null) return;
-    const codeClean = newCode.trim().toUpperCase();
+  function closeEditPasscode() {
+    editingPasscodeId = null;
+    document.getElementById('editPasscodeModal').classList.remove('open');
+  }
+
+  async function submitEditPasscode(e) {
+    e.preventDefault();
+    if (!editingPasscodeId) return false;
+    const errEl = document.getElementById('epcError');
+    const btn = document.getElementById('epcSubmit');
+    errEl.className = 'alert';
+
+    const codeClean = document.getElementById('epcCode').value.trim().toUpperCase();
     if (!/^[A-Z0-9_-]{3,32}$/.test(codeClean)) {
-      alert('Code must be 3–32 characters: letters, digits, underscore, or hyphen.');
-      return;
+      errEl.textContent = 'Code must be 3–32 characters: letters, digits, underscore, or hyphen.';
+      errEl.className = 'alert error';
+      return false;
+    }
+    const newLimit = parseInt(document.getElementById('epcLimit').value, 10);
+    const p = allBrandPasscodes.find(x => x.id === editingPasscodeId);
+    if (!Number.isFinite(newLimit) || (p && newLimit < p.used_count)) {
+      errEl.textContent = p && p.used_count > 0
+        ? `Credits must be a number ≥ ${p.used_count} (already used).`
+        : 'Credits must be a positive number.';
+      errEl.className = 'alert error';
+      return false;
     }
 
-    const newLabel = prompt('Customer name (leave blank to clear):', p.customer_label || '');
-    if (newLabel === null) return;
-
-    const newLimitStr = prompt(`Try-on credits (currently ${p.use_limit}, used ${p.used_count}):`, String(p.use_limit));
-    if (newLimitStr === null) return;
-    const newLimit = parseInt(newLimitStr, 10);
-    if (!Number.isFinite(newLimit) || newLimit < p.used_count) {
-      alert(`Credits must be a number ≥ ${p.used_count} (already used).`);
-      return;
-    }
-
-    const newActive = confirm(
-      p.active
-        ? 'Passcode is currently ACTIVE.\n\nOK = keep active.\nCancel = disable it (customer can no longer use it).'
-        : 'Passcode is currently DISABLED.\n\nOK = re-enable it.\nCancel = keep disabled.'
-    );
-
+    btn.disabled = true; btn.textContent = 'Saving…';
     try {
-      const res = await fetch(`${API}/api/passcodes/${id}`, {
+      const res = await fetch(`${API}/api/passcodes/${editingPasscodeId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           code: codeClean,
-          customer_label: newLabel.trim() || null,
+          customer_label: document.getElementById('epcLabel').value.trim() || null,
           use_limit: newLimit,
-          active: newActive,
+          active: document.getElementById('epcActive').checked,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Update failed');
+      closeEditPasscode();
       await loadBrandPasscodes();
-    } catch (err) { alert('Error: ' + err.message); }
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.className = 'alert error';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save Changes →';
+    }
+    return false;
   }
 
   let activePasscodeTryons = [];
