@@ -1081,7 +1081,7 @@
     <div id="loginView">
       <div class="login-wrap">
         <div style="text-align: center; margin-bottom: 2rem;">
-          <img src="/assets/website%20icon.png" alt="" style="width: 64px; height: 64px; border-radius: 16px; margin: 0 auto 1rem; display: block;">
+          <img src="/assets/logo.png" alt="Try Instant Fit" style="height: 56px; width: auto; margin: 0 auto 1.25rem; display: block;">
           <h1 style="font-size: clamp(1.5rem,3vw,2rem); margin-bottom: .5rem;">Sign In</h1>
           <p style="color: var(--muted);">Welcome back. Sign in with the Google account you registered with.</p>
         </div>
@@ -1771,9 +1771,11 @@
       const data = await res.json();
 
       if (res.status === 404) {
-        // No brand registered — offer to register
-        errEl.textContent = `No brand registered with ${data.email}. Click "Register Now" below to create your account.`;
-        errEl.className = 'alert error';
+        // No brand registered with this Google account — send them straight
+        // to the registration page. Friendlier than showing an error and
+        // asking them to click another button. They'll click Google sign-in
+        // there too and the same email gets verified by the token exchange.
+        window.location.href = '/register';
         return;
       }
       if (!res.ok) throw new Error(data.error || 'Sign-in failed');
