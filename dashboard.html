@@ -1540,7 +1540,7 @@
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary" id="tuSubmit" style="width:100%; padding:.9rem; font-size: 1rem; background: linear-gradient(135deg, #25d366, #128c7e); border-color: transparent; box-shadow: 0 8px 20px rgba(37,211,102,.35);">💬 Send Receipt via WhatsApp</button>
+          <button type="submit" class="btn btn-primary" id="tuSubmit" style="width:100%; padding:.9rem; font-size: 1rem; background: linear-gradient(135deg, #25d366, #128c7e); border-color: transparent; box-shadow: 0 8px 20px rgba(37,211,102,.35); display: inline-flex; align-items: center; justify-content: center; gap: .5rem;"><img src="/assets/whatsapp.svg" alt="" style="width: 1.2em; height: 1.2em;"> Send Receipt via WhatsApp</button>
           <p style="font-size:.78rem; color:var(--muted); text-align:center; margin: .75rem 0 0;">We'll reply with bank details. After payment, send us the screenshot on WhatsApp and we'll add credits within hours.</p>
         </form>
       </div>
@@ -1700,7 +1700,7 @@
         <h4>Support</h4>
         <ul class="footer-links">
           <li><a href="mailto:hello@tryinstantfit.com">hello@tryinstantfit.com</a></li>
-          <li><a href="https://wa.me/923112011606">WhatsApp</a></li>
+          <li><a href="https://wa.me/923112011606" style="display:inline-flex; align-items:center; gap:.4rem;"><img src="/assets/whatsapp.svg" alt="" style="width:1em; height:1em;"> WhatsApp</a></li>
         </ul>
       </div>
     </div>
@@ -3524,7 +3524,7 @@
       errEl.textContent = err.message + ' — please try again.';
       errEl.className = 'alert error';
       btn.disabled = false;
-      btn.textContent = '💬 Send Receipt via WhatsApp';
+      btn.innerHTML = '<img src="/assets/whatsapp.svg" alt="" style="width: 1.2em; height: 1.2em; vertical-align: middle; margin-right: .5rem;">Send Receipt via WhatsApp';
       return false;
     }
 
@@ -3545,7 +3545,7 @@
     const waUrl = `https://wa.me/${TIF_WHATSAPP}?text=${encodeURIComponent(lines.join('\n'))}`;
     window.open(waUrl, '_blank');
     btn.disabled = false;
-    btn.textContent = '💬 Send Receipt via WhatsApp';
+    btn.innerHTML = '<img src="/assets/whatsapp.svg" alt="" style="width: 1.2em; height: 1.2em; vertical-align: middle; margin-right: .5rem;">Send Receipt via WhatsApp';
     closeTopupModal();
     return false;
   }
