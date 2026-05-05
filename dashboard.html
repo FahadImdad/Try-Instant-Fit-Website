@@ -1106,8 +1106,14 @@
         <!-- Header -->
         <div class="dash-header">
           <div class="dash-brand-info">
-            <h2 id="dashBrandName">Brand Name <span class="status-badge status-pending" id="dashStatus">Pending</span></h2>
-            <p id="dashWebsite"></p>
+            <div style="display:flex; align-items:center; gap: .9rem; flex-wrap:wrap;">
+              <img id="dashBrandLogo" src="" alt="" style="display:none; width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border);">
+              <div>
+                <h2 id="dashBrandName">Brand Name <span class="status-badge status-pending" id="dashStatus">Pending</span></h2>
+                <p id="dashWebsite"></p>
+              </div>
+            </div>
+            <div id="dashProfileGrid" style="margin-top: .9rem; display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .35rem .9rem; font-size: .82rem; color: var(--muted);"></div>
           </div>
           <div style="display: flex; gap: .75rem; align-items: center; flex-wrap: wrap;">
             <button class="refresh-btn" onclick="refreshDashboard()">↻ Refresh</button>
@@ -1869,9 +1875,37 @@
     // approved top-up.
     const displayStatus = brand.status === 'trial' ? 'pending' : brand.status;
     document.getElementById('dashBrandName').innerHTML =
-      `${brand.name} <span class="status-badge status-${displayStatus}">${displayStatus}</span>`;
+      `${escapeHtml(brand.name)} <span class="status-badge status-${displayStatus}">${displayStatus}</span>`;
     document.getElementById('dashWebsite').textContent =
       brand.website_url ? `🌐 ${brand.website_url}` : '(no website on file)';
+
+    // Logo (if uploaded)
+    const dashLogo = document.getElementById('dashBrandLogo');
+    if (brand.logo_url) {
+      dashLogo.src = brand.logo_url;
+      dashLogo.alt = brand.name || '';
+      dashLogo.style.display = 'block';
+    } else {
+      dashLogo.style.display = 'none';
+    }
+
+    // Profile grid — every field on the brand row that the dashboard owns
+    const profileRow = (label, value) => value
+      ? `<div><span style="color: var(--text); font-weight: 600;">${escapeHtml(label)}:</span> ${escapeHtml(String(value))}</div>`
+      : '';
+    document.getElementById('dashProfileGrid').innerHTML = [
+      profileRow('Email', brand.email),
+      profileRow('Contact', brand.contact_name),
+      profileRow('Position', brand.contact_position),
+      profileRow('Phone', brand.contact_phone),
+      profileRow('Country', brand.country),
+      brand.primary_color
+        ? `<div><span style="color: var(--text); font-weight: 600;">Brand Color:</span> <span style="display:inline-block; width:.7rem; height:.7rem; border-radius:50%; background:${escapeHtml(brand.primary_color)}; vertical-align:middle; border:1px solid var(--border);"></span> <code style="font-size:.78rem;">${escapeHtml(brand.primary_color)}</code></div>`
+        : '',
+      brand.created_at
+        ? `<div><span style="color: var(--text); font-weight: 600;">Member Since:</span> ${new Date(brand.created_at).toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' })}</div>`
+        : '',
+    ].filter(Boolean).join('');
 
     // Top overall stats (across all sources)
     document.getElementById('statTotal').textContent = fmt(stats.total_tryons);
@@ -2248,29 +2282,37 @@
     const p = allBrandPasscodes.find(x => x.id === id);
     if (!p) return;
 
-    const newLabel = prompt('Customer name (leave blank to clear):', p.customer_label || '');
-    if (newLabel === null) return;
-
-    const newLimitStr = prompt(`Try-on limit (currently ${p.use_limit}, used ${p.used_count}):`, String(p.use_limit));
-    if (newLimitStr === null) return;
-    const newLimit = parseInt(newLimitStr, 10);
-    if (!Number.isFinite(newLimit) || newLimit < p.used_count) {
-      alert(`Limit must be a number ≥ ${p.used_count} (already used).`);
+    const newCode = prompt('Code (letters/digits, 3–32 chars):', p.code);
+    if (newCode === null) return;
+    const codeClean = newCode.trim().toUpperCase();
+    if (!/^[A-Z0-9_-]{3,32}$/.test(codeClean)) {
+      alert('Code must be 3–32 characters: letters, digits, underscore, or hyphen.');
       return;
     }
 
-    const activeChoice = confirm(
+    const newLabel = prompt('Customer name (leave blank to clear):', p.customer_label || '');
+    if (newLabel === null) return;
+
+    const newLimitStr = prompt(`Try-on credits (currently ${p.use_limit}, used ${p.used_count}):`, String(p.use_limit));
+    if (newLimitStr === null) return;
+    const newLimit = parseInt(newLimitStr, 10);
+    if (!Number.isFinite(newLimit) || newLimit < p.used_count) {
+      alert(`Credits must be a number ≥ ${p.used_count} (already used).`);
+      return;
+    }
+
+    const newActive = confirm(
       p.active
         ? 'Passcode is currently ACTIVE.\n\nOK = keep active.\nCancel = disable it (customer can no longer use it).'
         : 'Passcode is currently DISABLED.\n\nOK = re-enable it.\nCancel = keep disabled.'
     );
-    const newActive = p.active ? activeChoice : activeChoice;
 
     try {
       const res = await fetch(`${API}/api/passcodes/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          code: codeClean,
           customer_label: newLabel.trim() || null,
           use_limit: newLimit,
           active: newActive,
