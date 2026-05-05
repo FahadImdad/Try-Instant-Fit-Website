@@ -385,8 +385,14 @@
 
   // ── Init: read token from URL, lookup QR ──
   (async function init() {
+    // Token can arrive in three shapes:
+    //   /scan/abc123     (clean URL — Vercel rewrites internally to /scan.html?token=abc123,
+    //                     but the browser still sees the path, so window.location.search is empty)
+    //   /scan?token=abc123  (legacy / fallback)
+    //   /scan?t=abc123      (short alias)
     const params = new URLSearchParams(window.location.search);
-    const token = params.get('token') || params.get('t');
+    const pathMatch = window.location.pathname.match(/\/scan\/([^/?#]+)/);
+    const token = (pathMatch && decodeURIComponent(pathMatch[1])) || params.get('token') || params.get('t');
     if (!token) return showError('🤔', 'No QR token', "This link doesn't have a QR token. Make sure you scanned a valid QR code.");
 
     try {
