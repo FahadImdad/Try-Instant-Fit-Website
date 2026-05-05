@@ -147,6 +147,24 @@
     }
     .refresh-btn:hover { border-color: var(--cyan); color: var(--cyan); }
 
+    /* ── Account dropdown menu ── */
+    .acct-menu-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: .7rem 1rem;
+      background: none;
+      border: none;
+      font-size: .88rem;
+      font-weight: 600;
+      color: var(--text);
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .acct-menu-item:hover { background: var(--surface); }
+    .acct-menu-item + .acct-menu-item { border-top: 1px solid var(--border); }
+
     /* ── Install hint card ── */
     .install-hint {
       background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
@@ -1104,8 +1122,8 @@
       <div class="dash-wrap">
 
         <!-- Header -->
-        <div class="dash-header">
-          <div class="dash-brand-info">
+        <div class="dash-header" style="align-items: flex-start;">
+          <div class="dash-brand-info" style="flex: 1; min-width: 0;">
             <div style="display:flex; align-items:center; gap: .9rem; flex-wrap:wrap;">
               <img id="dashBrandLogo" src="" alt="" style="display:none; width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border);">
               <div>
@@ -1113,9 +1131,12 @@
                 <p id="dashWebsite"></p>
               </div>
             </div>
-            <div id="dashProfileGrid" style="margin-top: .9rem; display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .35rem .9rem; font-size: .82rem; color: var(--muted);"></div>
+            <button type="button" id="profileToggleBtn" onclick="toggleProfileDetails()" style="margin-top:.75rem; background:none; border:none; padding:0; color: var(--cyan); font-size:.82rem; font-weight:700; cursor:pointer; font-family:inherit;">
+              <span id="profileToggleArrow">▾</span> <span id="profileToggleLabel">Show profile details</span>
+            </button>
+            <div id="dashProfileGrid" style="display:none; margin-top: .75rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .35rem .9rem; font-size: .82rem; color: var(--muted);"></div>
           </div>
-          <div style="display: flex; gap: .75rem; align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; flex-shrink: 0;">
             <button class="refresh-btn" onclick="refreshDashboard()">↻ Refresh</button>
             <div style="position: relative;">
               <button class="refresh-btn" id="notifBtn" onclick="toggleNotifications(event)" style="position: relative;">
@@ -1129,8 +1150,14 @@
                 <div id="notifList"><div style="padding:1.5rem; text-align:center; color:var(--muted); font-size:.85rem;">No notifications.</div></div>
               </div>
             </div>
-            <button class="btn btn-outline-dark btn-sm" onclick="openEditProfile()">✎ Edit Profile</button>
-            <button class="btn btn-outline-dark btn-sm" onclick="logout()">Switch Account</button>
+            <div style="position: relative;">
+              <button class="btn btn-outline-dark btn-sm" id="accountMenuBtn" onclick="toggleAccountMenu(event)">Account ▾</button>
+              <div id="accountMenuPanel" style="display:none; position:absolute; right:0; top:calc(100% + .5rem); min-width: 200px; background:#fff; border:1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--sh2); z-index: 100; overflow:hidden;">
+                <button class="acct-menu-item" onclick="closeAccountMenu(); openEditProfile();">✎ Edit Profile</button>
+                <button class="acct-menu-item" onclick="closeAccountMenu(); openTopupModal();">💳 Top Up Credits</button>
+                <button class="acct-menu-item" onclick="closeAccountMenu(); logout();" style="color:#991b1b;">↩ Switch Account</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -3357,6 +3384,42 @@
       panel.style.display = 'none';
     }
   });
+
+  // ── Account dropdown ──
+  function toggleAccountMenu(e) {
+    if (e) e.stopPropagation();
+    const panel = document.getElementById('accountMenuPanel');
+    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+  }
+  function closeAccountMenu() {
+    const panel = document.getElementById('accountMenuPanel');
+    if (panel) panel.style.display = 'none';
+  }
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('accountMenuPanel');
+    const btn   = document.getElementById('accountMenuBtn');
+    if (!panel || !btn) return;
+    if (panel.style.display === 'block' && !panel.contains(e.target) && !btn.contains(e.target)) {
+      panel.style.display = 'none';
+    }
+  });
+
+  // ── Profile details collapse/expand ──
+  function toggleProfileDetails() {
+    const grid = document.getElementById('dashProfileGrid');
+    const arrow = document.getElementById('profileToggleArrow');
+    const label = document.getElementById('profileToggleLabel');
+    const open = grid.style.display === 'grid';
+    if (open) {
+      grid.style.display = 'none';
+      arrow.textContent = '▾';
+      label.textContent = 'Show profile details';
+    } else {
+      grid.style.display = 'grid';
+      arrow.textContent = '▴';
+      label.textContent = 'Hide profile details';
+    }
+  }
 
   // ════════════════════════════════════════════════════════════════
   // CREDIT TOP-UP — credits-first + WhatsApp receipt flow
