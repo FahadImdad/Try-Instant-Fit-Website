@@ -155,7 +155,7 @@
 
                     <!-- Trust Indicators -->
                     <div style="margin-top: 1.5rem; display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap;">
-                        <span class="badge badge-success">✓ Flat $0.125 / Try-On</span>
+                        <span class="badge badge-success" data-usd="0.125">✓ Flat $0.125 / Try-On</span>
                         <span class="badge badge-info">✓ Live Demo Included</span>
                         <span class="badge badge-warning">✓ 24h Response</span>
                     </div>
@@ -274,6 +274,7 @@
     </footer>
 
     <script src="js/script.js"></script>
+    <script src="js/fx-display.js" defer></script>
     <script>
         // Same-origin via Vercel rewrite (see vercel.json). Avoids adblock/CORS issues.
         const API = '';
