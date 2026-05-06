@@ -312,10 +312,12 @@
       <div class="product-info">
         <h2 id="productName">Product Name</h2>
         <p id="brandName">Brand Name</p>
+        <p id="productSku" style="display:none; font-size:.78rem; color:var(--muted); margin: .1rem 0 0; font-family: ui-monospace, monospace;"></p>
         <p id="productPrice" style="display:none; font-size:.95rem; font-weight:700; color:var(--indigo); margin: .15rem 0 0;"></p>
         <span class="brand-pill" id="remainingPill" style="display:none; margin-top: .35rem;"></span>
       </div>
     </div>
+    <p id="productDescription" style="display:none; color:var(--muted); font-size:.9rem; margin: .25rem 0 1rem; line-height: 1.5;"></p>
     <h3 class="step-title"><span class="step-num" id="uploadStepNum">1</span> Add Your Photo</h3>
     <p style="color:var(--muted); font-size:.88rem; margin: 0 0 1rem;">Stand against a plain background, full body, facing forward — best results.</p>
     <div class="alert" id="uploadError"></div>
@@ -435,6 +437,13 @@
       img.style.display = 'block';
       img.onload = () => document.getElementById('productImagePlaceholder').style.display = 'none';
     }
+    // Show SKU / product code if available
+    const sku = qrInfo.product_sku || qrInfo.product_id;
+    if (sku) {
+      const skuEl = document.getElementById('productSku');
+      skuEl.textContent = sku;
+      skuEl.style.display = 'block';
+    }
     // Show price if available
     if (qrInfo.product_price !== null && qrInfo.product_price !== undefined) {
       const priceEl = document.getElementById('productPrice');
@@ -446,6 +455,12 @@
           : `${c} ${n.toLocaleString()}`;
         priceEl.style.display = 'block';
       }
+    }
+    // Show description if available
+    if (qrInfo.product_description) {
+      const descEl = document.getElementById('productDescription');
+      descEl.textContent = qrInfo.product_description;
+      descEl.style.display = 'block';
     }
     if (qrInfo.remaining !== null && !qrInfo.requires_passcode) {
       document.getElementById('remainingPill').textContent = `${qrInfo.remaining} tries left`;
