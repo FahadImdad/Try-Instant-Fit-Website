@@ -7,7 +7,7 @@
   <meta name="description" content="Scan, upload your photo, see how it looks on you in seconds.">
   <link rel="icon" type="image/jpeg" href="/assets/website%20icon.png">
   <link rel="apple-touch-icon" href="/assets/website%20icon.png">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="/css/styles.css">
   <style>
     body { background: linear-gradient(180deg, #0f1e3d 0%, #1a2f5a 100%); min-height: 100vh; }
     .scan-wrap { max-width: 480px; margin: 0 auto; padding: 1.5rem 1rem; }
@@ -30,13 +30,6 @@
     .scan-logo img { height: 44px; width: 44px; border-radius: 11px; display: block; }
     .scan-logo .fit-mark { background: linear-gradient(90deg, #5a67f2, #00c8e8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 
-    /* On desktop (mouse, no touchscreen), the file input's `capture` attribute
-       is ignored by browsers — "Take Photo" just opens the file picker, same
-       as Upload. Hide it and let Upload take the full width. */
-    @media (hover: hover) and (pointer: fine) {
-      #cameraBtn { display: none !important; }
-      #galleryBtn { width: 100%; }
-    }
 
     .scan-card {
       background: white;
