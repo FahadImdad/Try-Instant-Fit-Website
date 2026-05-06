@@ -1183,14 +1183,6 @@
           </div>
         </div>
 
-        <!-- Install hint (shown when 0 try-ons) -->
-        <div class="install-hint" id="installHint" style="display: none;">
-          <div class="icon">🚀</div>
-          <div>
-            <h4>No try-ons yet</h4>
-            <p>Your brand account is ready. <a href="/contact-us">Contact us</a> and we'll handle setup so customers can start trying on.</p>
-          </div>
-        </div>
 
         <!-- Stat cards -->
         <div class="stat-grid">
@@ -2052,7 +2044,7 @@
       widget.className = 'credits-widget unlimited';
       document.getElementById('creditsRemaining').textContent = '∞';
       document.getElementById('creditsOf').textContent = 'unlimited';
-      document.getElementById('creditsMeta').textContent = `${fmt(used)} try-on${used !== 1 ? 's' : ''} run on this account.`;
+      document.getElementById('creditsMeta').textContent = `${fmt(used)} credit${used !== 1 ? 's' : ''} used (try-ons + product processing).`;
       document.getElementById('creditsBarFill').style.width = '100%';
       document.getElementById('creditsUsedLbl').textContent = `${fmt(used)} used`;
       document.getElementById('creditsRateLbl').textContent = 'Partner / demo brand';
@@ -2069,7 +2061,7 @@
         ? '⚠ Out of credits — top up to keep customers trying on.'
         : usagePct >= 80
           ? `⚠ ${Math.round(100 - usagePct)}% remaining — consider topping up.`
-          : `${fmt(used)} try-on${used !== 1 ? 's' : ''} used so far.`;
+          : `${fmt(used)} credit${used !== 1 ? 's' : ''} used so far (1 per product processed + 1 per customer try-on).`;
       if (dailyBurn > 0 && remaining > 0) {
         const days = Math.floor(remaining / dailyBurn);
         if (days < 30) metaTxt += ` ~${days} day${days !== 1 ? 's' : ''} at current rate.`;
@@ -2080,9 +2072,6 @@
       document.getElementById('creditsRateLbl').textContent = `$${rate.toFixed(3)} / try-on`;
     }
 
-    // Install hint (only if zero ghost-layer try-ons specifically)
-    document.getElementById('installHint').style.display =
-      (gl.total || 0) === 0 ? 'flex' : 'none';
 
     // ── Per-source stat strip (legacy hidden tab) ──
     const glStats = document.getElementById('ghostLayerStats');
