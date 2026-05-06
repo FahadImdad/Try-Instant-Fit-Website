@@ -1435,21 +1435,20 @@
       <div class="modal">
         <button class="modal-close" onclick="closeEditProduct()">&times;</button>
         <h3>Edit Product</h3>
-        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.5rem;">Update product details. To change the image, delete this product and add it again.</p>
+        <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.5rem;">Update product details and QR settings. The QR code itself stays the same — no need to reprint.</p>
         <div class="alert" id="epcdError"></div>
         <form onsubmit="return submitEditProduct(event);">
           <div class="field">
             <label>Product Image</label>
             <div style="border: 2px dashed var(--border); border-radius: var(--r-md); padding: 1.5rem 1rem; text-align: center; background: var(--surface);">
               <img id="epcdImagePreview" src="" alt="" style="max-height: 220px; max-width: 100%; border-radius: var(--r-sm); margin: 0 auto; display: block;">
-              <p style="margin: .75rem 0 0; font-size: .72rem; color: var(--muted);">Image is read-only. Delete + re-add to change.</p>
+              <p style="margin: .75rem 0 0; font-size: .72rem; color: var(--muted);">⏳ Replace image — coming soon. Re-processing will cost <strong>1 credit</strong>.</p>
             </div>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="field">
-              <label for="epcdSku">SKU / Code</label>
-              <input type="text" id="epcdSku" disabled style="background: var(--surface); color: var(--muted); cursor: not-allowed;">
-              <div class="field-hint">SKU can't be changed — it's linked to existing QRs.</div>
+              <label for="epcdSku">SKU / Code *</label>
+              <input type="text" id="epcdSku" required>
             </div>
             <div class="field">
               <label for="epcdName">Name *</label>
@@ -1476,9 +1475,31 @@
             <label for="epcdDesc">Description (optional)</label>
             <textarea id="epcdDesc" rows="2" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
           </div>
+
+          <!-- QR settings — only shown when this product has a QR. -->
+          <div id="epcdQrSection" style="display:none; padding: 1rem; background: var(--surface); border-radius: var(--r-md); margin-bottom: .75rem;">
+            <div style="font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:.75rem;">QR Settings</div>
+
+            <div class="field" style="display: flex; align-items: center; gap: .75rem; margin-bottom: .75rem;">
+              <input type="checkbox" id="epcdQrPasscode" style="width: auto;">
+              <label for="epcdQrPasscode" style="margin: 0; cursor: pointer; font-size: .9rem;">🔑 Require a passcode to use this QR</label>
+            </div>
+
+            <div class="field" style="margin-bottom: .75rem;">
+              <label for="epcdQrLimit" style="font-size:.85rem;">Try-on cap (optional)</label>
+              <input type="number" id="epcdQrLimit" min="1" step="1" placeholder="Leave blank for unlimited">
+              <div class="field-hint">Stop accepting try-ons after this count. Useful for limited campaigns.</div>
+            </div>
+
+            <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .65rem; background: white; border-radius: var(--r-sm); margin: 0;">
+              <input type="checkbox" id="epcdQrActive" style="width: auto;">
+              <label for="epcdQrActive" style="margin: 0; cursor: pointer; font-size: .9rem;">QR is active — customers can scan it</label>
+            </div>
+          </div>
+
           <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .75rem; background: var(--surface); border-radius: var(--r-md); margin-bottom: .75rem;">
             <input type="checkbox" id="epcdActive" style="width: auto;">
-            <label for="epcdActive" style="margin: 0; cursor: pointer; font-size: .9rem;">Active — customers can try this product on</label>
+            <label for="epcdActive" style="margin: 0; cursor: pointer; font-size: .9rem;">Product is active — appears in your catalogue</label>
           </div>
           <button type="submit" class="btn btn-primary" id="epcdSubmit" style="width:100%; padding:.9rem;">Save Changes →</button>
         </form>
@@ -2686,6 +2707,7 @@
               ${(p.image_url || p.isolated_garment_url)
                 ? `<button class="btn btn-secondary" onclick="viewProductImages(${JSON.stringify(p.name).replace(/"/g, '&quot;')}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')})">View Processed</button>`
                 : '<span></span>'}
+              <button class="btn btn-secondary" onclick="editProduct('${p.id}')">✏️ Edit</button>
               ${qr.active
                 ? `<button class="btn btn-secondary" style="color:#92400e; border-color:#fcd34d;" onclick="toggleQrActive('${qr.id}', false, ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">Disable QR</button>`
                 : `<button class="btn btn-primary" onclick="toggleQrActive('${qr.id}', true, ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">Re-enable QR</button>`}
@@ -2851,6 +2873,8 @@
 
   let editingProductId = null;
 
+  let editingQrId = null;
+
   function editProduct(id) {
     const p = allProducts.find(x => x.id === id);
     if (!p) return;
@@ -2869,6 +2893,20 @@
     document.getElementById('epcdCurrency').value = p.currency || 'PKR';
     document.getElementById('epcdDesc').value = p.description || '';
     document.getElementById('epcdActive').checked = p.active !== false;
+
+    // Pre-fill QR settings if this product has a QR
+    const qr = allQrs.find(q => q.product_uuid === id);
+    editingQrId = qr ? qr.id : null;
+    const qrSection = document.getElementById('epcdQrSection');
+    if (qr) {
+      qrSection.style.display = 'block';
+      document.getElementById('epcdQrPasscode').checked = !!qr.requires_passcode;
+      document.getElementById('epcdQrLimit').value = qr.total_limit ?? '';
+      document.getElementById('epcdQrActive').checked = qr.active !== false;
+    } else {
+      qrSection.style.display = 'none';
+    }
+
     document.getElementById('editProductModal').classList.add('open');
   }
 
@@ -2898,12 +2936,21 @@
       return false;
     }
 
+    const sku = document.getElementById('epcdSku').value.trim();
+    if (!sku) {
+      errEl.textContent = 'SKU is required.';
+      errEl.className = 'alert error';
+      return false;
+    }
+
     btn.disabled = true; btn.textContent = 'Saving…';
     try {
+      // Step 1 — patch product fields
       const res = await fetch(`${API}/api/products/${editingProductId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          sku,
           name,
           price,
           currency: document.getElementById('epcdCurrency').value,
@@ -2912,9 +2959,31 @@
         }),
       });
       const data = await safeJson(res);
-      if (!res.ok) throw new Error(data.error || 'Update failed');
+      if (!res.ok) throw new Error(data.error || 'Could not save product changes.');
+
+      // Step 2 — patch QR settings (only if this product has a QR)
+      if (editingQrId) {
+        const limitRaw = document.getElementById('epcdQrLimit').value;
+        const total_limit = limitRaw === '' ? null : parseInt(limitRaw, 10);
+        if (total_limit !== null && (!Number.isFinite(total_limit) || total_limit < 1)) {
+          throw new Error('Try-on cap must be 1 or more, or blank for unlimited.');
+        }
+        const qrRes = await fetch(`${API}/api/qr/${editingQrId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            requires_passcode: document.getElementById('epcdQrPasscode').checked,
+            total_limit,
+            active: document.getElementById('epcdQrActive').checked,
+          }),
+        });
+        const qrData = await safeJson(qrRes);
+        if (!qrRes.ok) throw new Error(qrData.error || 'Product saved but QR settings update failed.');
+      }
+
       closeEditProduct();
       await loadProducts();
+      await loadQrCodes();
     } catch (err) {
       errEl.textContent = humanError(err);
       errEl.className = 'alert error';
