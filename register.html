@@ -109,7 +109,7 @@
       </div>
 
       <div class="field">
-        <label>Brand Logo <span class="req">*</span></label>
+        <label>Brand Logo</label>
         <label class="logo-zone" for="logoFile" id="logoDropZone">
           <input type="file" id="logoFile" accept="image/jpeg,image/png,image/webp,image/svg+xml" style="display: none;">
           <div id="logoHint">
@@ -119,7 +119,7 @@
           </div>
           <img id="logoPreview" class="logo-preview" style="display:none;" alt="Logo preview">
         </label>
-        <div class="field-hint">Shown to customers on QR scan pages.</div>
+        <div class="field-hint">Optional. Shown to customers on QR scan pages — you can add this later from your dashboard.</div>
       </div>
 
       <div class="field">
@@ -334,12 +334,6 @@ async function submitRegister(e) {
     return false;
   }
 
-  if (!logoFileSelected) {
-    errEl.textContent = 'Brand logo is required.';
-    errEl.className = 'alert error';
-    return false;
-  }
-
   // All fields required — pull and validate
   const positionVal = document.getElementById('regContactPosition').value.trim();
   if (!positionVal) {
@@ -382,7 +376,7 @@ async function submitRegister(e) {
   fd.append('country', document.getElementById('regCountry').value);
   fd.append('website_url', websiteVal);
   fd.append('primary_color', document.getElementById('regColor').value);
-  fd.append('logo', logoFileSelected);
+  if (logoFileSelected) fd.append('logo', logoFileSelected);
 
   btn.disabled = true; btn.textContent = 'Creating account…';
   try {
