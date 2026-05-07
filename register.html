@@ -119,6 +119,10 @@
           </div>
           <img id="logoPreview" class="logo-preview" style="display:none;" alt="Logo preview">
         </label>
+        <div id="logoActions" style="display:none; margin-top:.5rem; display:flex; gap:.85rem;">
+          <button type="button" id="logoChangeBtn" style="background:none; border:none; color:var(--cyan); font-size:.85rem; cursor:pointer; padding:0; text-decoration:underline;">Change</button>
+          <button type="button" id="logoRemoveBtn" style="background:none; border:none; color:#ef4444; font-size:.85rem; cursor:pointer; padding:0; text-decoration:underline;">Remove</button>
+        </div>
         <div class="field-hint">Optional. Shown to customers on QR scan pages — you can add this later from your dashboard.</div>
       </div>
 
@@ -303,6 +307,9 @@ initGoogleSignUp();
   const fi = document.getElementById('logoFile');
   const pv = document.getElementById('logoPreview');
   const hint = document.getElementById('logoHint');
+  const actions = document.getElementById('logoActions');
+  const changeBtn = document.getElementById('logoChangeBtn');
+  const removeBtn = document.getElementById('logoRemoveBtn');
   fi.addEventListener('change', e => handle(e.target.files?.[0]));
   function handle(f) {
     if (!f) return;
@@ -310,9 +317,23 @@ initGoogleSignUp();
     if (f.size > 5*1024*1024) { alert('Logo must be under 5MB.'); return; }
     logoFileSelected = f;
     const r = new FileReader();
-    r.onload = e => { pv.src = e.target.result; pv.style.display = 'block'; hint.style.display = 'none'; };
+    r.onload = e => {
+      pv.src = e.target.result;
+      pv.style.display = 'block';
+      hint.style.display = 'none';
+      actions.style.display = 'flex';
+    };
     r.readAsDataURL(f);
   }
+  changeBtn.addEventListener('click', () => fi.click());
+  removeBtn.addEventListener('click', () => {
+    logoFileSelected = null;
+    fi.value = '';
+    pv.style.display = 'none';
+    pv.src = '';
+    hint.style.display = '';
+    actions.style.display = 'none';
+  });
   ['dragenter','dragover'].forEach(evt => dz.addEventListener(evt, e => {
     e.preventDefault(); dz.style.borderColor = 'var(--cyan)'; dz.style.background = 'rgba(0,200,232,.05)';
   }));
