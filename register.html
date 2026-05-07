@@ -160,9 +160,9 @@
       </div>
 
       <div class="field">
-        <label for="regWebsite">Website URL <span class="req">*</span></label>
-        <input type="url" id="regWebsite" required pattern="https?://.+" placeholder="https://yourbrand.com">
-        <div class="field-hint">Must start with http:// or https://. Where customers will find your products.</div>
+        <label for="regWebsite">Website URL</label>
+        <input type="url" id="regWebsite" pattern="https?://.+" placeholder="https://yourbrand.com">
+        <div class="field-hint">Optional. If provided, must start with http:// or https://.</div>
       </div>
 
       <div class="field-row">
@@ -362,18 +362,15 @@ async function submitRegister(e) {
   }
 
   const websiteVal = document.getElementById('regWebsite').value.trim();
-  if (!websiteVal) {
-    errEl.textContent = 'Website URL is required.';
-    errEl.className = 'alert error';
-    return false;
-  }
-  try {
-    const u = new URL(websiteVal);
-    if (!['http:', 'https:'].includes(u.protocol)) throw new Error();
-  } catch {
-    errEl.textContent = 'Website URL must start with http:// or https:// (e.g. https://yourbrand.com).';
-    errEl.className = 'alert error';
-    return false;
+  if (websiteVal) {
+    try {
+      const u = new URL(websiteVal);
+      if (!['http:', 'https:'].includes(u.protocol)) throw new Error();
+    } catch {
+      errEl.textContent = 'Website URL must start with http:// or https:// (e.g. https://yourbrand.com).';
+      errEl.className = 'alert error';
+      return false;
+    }
   }
 
   const fd = new FormData();
