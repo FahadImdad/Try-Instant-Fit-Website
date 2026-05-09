@@ -319,7 +319,8 @@
     </div>
     <p id="productDescription" style="display:none; color:var(--muted); font-size:.9rem; margin: .25rem 0 1rem; line-height: 1.5;"></p>
     <h3 class="step-title"><span class="step-num" id="uploadStepNum">1</span> Add Your Photo</h3>
-    <p style="color:var(--muted); font-size:.88rem; margin: 0 0 1rem;">Stand against a plain background, full body, facing forward — best results.</p>
+    <p style="color:var(--muted); font-size:.88rem; margin: 0 0 .6rem;">Stand against a plain background, full body, facing forward — best results.</p>
+    <p style="color:var(--muted); font-size:.78rem; margin: 0 0 1rem; line-height: 1.5;">🔒 Your photo is used only for this try-on. It's never saved on our servers and can't be recovered later.</p>
     <div class="alert" id="uploadError"></div>
 
     <!-- Source picker: camera vs gallery -->
@@ -366,10 +367,11 @@
     <h3 class="step-title" style="margin-bottom: 1rem;">✨ Your Try-On</h3>
     <img id="resultImage" class="result-image" src="" alt="Try-on result">
     <div class="result-actions">
-      <a id="downloadBtn" class="btn btn-secondary" download="try-on.png">⬇ Download</a>
+      <button id="downloadBtn" class="btn btn-secondary" onclick="downloadResult()">⬇ Download</button>
       <button class="btn btn-secondary" onclick="shareResult()">↗ Share</button>
     </div>
     <button class="btn-block primary" onclick="retryFlow()">Try Another Photo</button>
+    <p style="color:var(--muted); font-size:.78rem; margin: 1rem 0 0; line-height: 1.5; text-align: center;">🔒 This try-on isn't saved anywhere. It's gone once you close this page — download now if you want to keep it.</p>
   </div>
 
   <div class="scan-footer">
@@ -385,6 +387,7 @@
   let qrInfo = null;       // { qr_id, product_id, product_name, ..., requires_passcode, brand: {name, ...} }
   let validatedPasscode = null;  // { code, passcode_id, remaining }
   let userPhoto = null;    // File
+  let resultUrl = null;    // URL of the try-on result image (used by downloadResult/shareResult)
 
   // ── Init: read token from URL, lookup QR ──
   (async function init() {
@@ -590,8 +593,8 @@
       if (!res.ok) throw new Error(data.error || 'Try-on failed');
 
       hide('processingView');
+      resultUrl = data.result_url;
       document.getElementById('resultImage').src = data.result_url;
-      document.getElementById('downloadBtn').href = data.result_url;
       show('resultView');
     } catch (err) {
       hide('processingView');
@@ -606,15 +609,56 @@
     show('uploadView');
   }
 
+  // Build a safe filename from the product name. Falls back to a generic name
+  // if the product name is missing or contains nothing slug-friendly.
+  function buildResultFilename() {
+    const raw = (qrInfo?.product_name || '').toString();
+    const slug = raw.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const base = slug ? `tryinstantfit-${slug}` : 'tryinstantfit-tryon';
+    return `${base}.png`;
+  }
+
+  // Download the result image directly (not in a new tab), at the original
+  // quality returned by the API. Fetching as a blob lets us bypass iOS
+  // Safari's behaviour of ignoring the `download` attribute on cross-origin
+  // links — same-origin via Vercel rewrite anyway, but blob is robust.
+  async function downloadResult() {
+    if (!resultUrl) return;
+    const btn = document.getElementById('downloadBtn');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Downloading…';
+    try {
+      const res = await fetch(resultUrl);
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = buildResultFilename();
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // Release the blob URL after the browser has had a chance to start the save.
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+    } catch (err) {
+      // Fall back to opening the original URL if blob fetch fails.
+      window.location.href = resultUrl;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+
   async function shareResult() {
-    const url = document.getElementById('resultImage').src;
+    if (!resultUrl) return;
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'My virtual try-on', text: `Check out how ${qrInfo.product_name} looks on me!`, url });
+        await navigator.share({ title: 'My virtual try-on', text: `Check out how ${qrInfo.product_name} looks on me!`, url: resultUrl });
         return;
       } catch (err) { /* user cancelled */ }
     }
-    navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(resultUrl);
     alert('Link copied! Paste it anywhere to share.');
   }
 
