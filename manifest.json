@@ -1,0 +1,45 @@
+{
+  "name": "Try Instant Fit Dashboard",
+  "short_name": "InstantFit",
+  "description": "AI-powered virtual try-on dashboard for fashion brands.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#00c8e8",
+  "icons": [
+    {
+      "src": "/assets/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/website%20icon.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Products",
+      "short_name": "Products",
+      "url": "/dashboard?tab=products",
+      "icons": [{ "src": "/assets/logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Codes",
+      "short_name": "Codes",
+      "url": "/dashboard?tab=code",
+      "icons": [{ "src": "/assets/logo.png", "sizes": "192x192" }]
+    }
+  ]
+}

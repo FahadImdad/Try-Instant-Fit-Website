@@ -7,6 +7,13 @@
   <meta name="description" content="See your virtual try-on analytics — button clicks, AI try-ons, processing times, and more.">
   <link rel="icon" type="image/jpeg" href="/assets/website%20icon.png">
   <link rel="apple-touch-icon" href="/assets/website%20icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#00c8e8">
+  <!-- iOS PWA support — Add to Home Screen launches in standalone mode. -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="InstantFit">
+  <meta name="mobile-web-app-capable" content="yes">
   <link rel="stylesheet" href="css/styles.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
@@ -1634,6 +1641,7 @@
             <div class="profile-actions">
               <button class="btn btn-primary btn-sm" onclick="openEditProfile()">✎ Edit Profile</button>
               <button class="btn btn-primary btn-sm" onclick="openTopupModal()">💳 Top Up</button>
+              <button id="installAppBtn" class="btn btn-secondary btn-sm" onclick="installApp()" style="grid-column: 1 / -1; display: none;">📲 Install App on Phone</button>
               <button class="btn btn-secondary btn-sm profile-signout" onclick="logout()">↩ Sign Out</button>
             </div>
           </div>
@@ -2722,6 +2730,50 @@
       }
     }
   });
+
+  // ── PWA install prompt (Add to Home Screen) ──
+  let deferredInstallPrompt = null;
+  // Android / Chrome / Edge: capture the browser's install prompt and reveal
+  // the in-app install button when it fires.
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    const btn = document.getElementById('installAppBtn');
+    if (btn) btn.style.display = '';
+  });
+  // iOS: no `beforeinstallprompt` event — show the button anyway with
+  // iOS-specific instructions when tapped.
+  (function showIosInstallButton() {
+    const ua = navigator.userAgent || '';
+    const isIos = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (isIos && !standalone) {
+      const btn = document.getElementById('installAppBtn');
+      if (btn) btn.style.display = '';
+    }
+  })();
+  // Hide the button once installed (the appinstalled event fires after success).
+  window.addEventListener('appinstalled', () => {
+    const btn = document.getElementById('installAppBtn');
+    if (btn) btn.style.display = 'none';
+    deferredInstallPrompt = null;
+  });
+
+  async function installApp() {
+    const ua = navigator.userAgent || '';
+    const isIos = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      try { await deferredInstallPrompt.userChoice; } catch {}
+      deferredInstallPrompt = null;
+      const btn = document.getElementById('installAppBtn');
+      if (btn) btn.style.display = 'none';
+    } else if (isIos) {
+      alert("To install: tap the Share button (square with up-arrow), scroll down, then tap 'Add to Home Screen'.");
+    } else {
+      alert("Use your browser's menu → 'Install app' or 'Add to Home Screen' to install.");
+    }
+  }
 
   function logout() {
     activeBrandId = null;
