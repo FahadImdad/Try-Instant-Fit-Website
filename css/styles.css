@@ -474,7 +474,11 @@ textarea.form-control{min-height:110px;resize:vertical}
    GLOBAL MOBILE FRIENDLINESS
    ============================================================ */
 /* Block horizontal scroll caused by overflowing children. */
-html, body { overflow-x: hidden; }
+/* `overflow-x: clip` (instead of `hidden`) prevents horizontal scroll
+   without creating a new scrolling context, so position:sticky still
+   works on descendants. Falls back to `hidden` on browsers that don't
+   support `clip`. */
+html, body { overflow-x: hidden; overflow-x: clip; }
 
 /* Inputs and selects must be ≥16px to prevent iOS Safari from
    auto-zooming when the user focuses them. We only enforce this

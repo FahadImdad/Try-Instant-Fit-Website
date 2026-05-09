@@ -1464,22 +1464,18 @@
     <div id="dashView" style="display: none;">
       <div class="dash-wrap">
 
-        <!-- Header -->
-        <div class="dash-header" style="align-items: flex-start;">
-          <div class="dash-brand-info" style="flex: 1; min-width: 0;">
-            <div style="display:flex; align-items:center; gap: .9rem; flex-wrap:wrap;">
-              <img id="dashBrandLogo" src="" alt="" style="display:none; width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border);">
-              <div>
-                <h2 id="dashBrandName">Brand Name <span class="status-badge status-pending" id="dashStatus">Pending</span></h2>
-              </div>
-            </div>
+        <!-- Header — single row: logo · name · status · live · bell · account -->
+        <div class="dash-header" style="align-items: center; flex-wrap: nowrap;">
+          <div class="dash-brand-info" style="flex: 1; min-width: 0; display:flex; align-items:center; gap: .6rem;">
+            <img id="dashBrandLogo" src="" alt="" style="display:none; width: 36px; height: 36px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0;">
+            <h2 id="dashBrandName" style="margin:0; font-size:1rem; font-weight:800; line-height:1.2; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Brand Name <span class="status-badge status-pending" id="dashStatus">Pending</span></h2>
             <!-- Hidden legacy elements (kept so old JS that targets them by
                  ID doesn't throw — full profile lives in the Profile tab). -->
             <p id="dashWebsite" style="display:none;"></p>
             <button type="button" id="profileToggleBtn" style="display:none;"></button>
             <div id="dashProfileGrid" style="display:none;"></div>
           </div>
-          <div style="display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; flex-shrink: 0;">
+          <div style="display: flex; gap: .35rem; align-items: center; flex-wrap: nowrap; flex-shrink: 0;">
             <span id="liveIndicator" title="Auto-refreshes every 30 seconds while this tab is visible." style="display:none; font-size:.72rem; color: var(--muted); font-weight:600; align-self:center;">
               <span style="display:inline-block; width:.45rem; height:.45rem; border-radius:50%; background:#10b981; margin-right:.3rem; vertical-align:.05rem; box-shadow: 0 0 0 0 rgba(16,185,129,.5); animation: livePulse 2s infinite;"></span>
               Live
