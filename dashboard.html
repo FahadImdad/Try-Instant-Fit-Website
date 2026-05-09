@@ -321,316 +321,6 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    @keyframes livePulse {
-      0%   { box-shadow: 0 0 0 0 rgba(16,185,129,.55); }
-      70%  { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
-      100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
-    }
-
-    /* ── Compact product list (scales to 1000s of products) ── */
-    .product-list { display: flex; flex-direction: column; gap: .35rem; }
-    .product-list-row {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-      transition: border-color .15s;
-    }
-    .product-list-row.open { border-color: var(--cyan); }
-    .product-list-summary {
-      display: flex;
-      align-items: center;
-      gap: .65rem;
-      padding: .55rem .65rem;
-      cursor: pointer;
-    }
-    .pl-thumb {
-      width: 40px; height: 40px;
-      border-radius: 8px;
-      object-fit: cover;
-      background: var(--surface);
-      flex-shrink: 0;
-    }
-    .pl-thumb-ph { display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-    .pl-info { flex: 1; min-width: 0; }
-    .pl-name {
-      font-weight: 700;
-      font-size: .9rem;
-      color: var(--text);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .pl-meta {
-      font-size: .72rem;
-      color: var(--muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      margin-top: .1rem;
-    }
-    .pl-status {
-      display: inline-block;
-      padding: .15rem .5rem;
-      border-radius: 999px;
-      font-size: .62rem;
-      font-weight: 800;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
-    .pl-status-on   { background: #d1fae5; color: #065f46; }
-    .pl-status-off  { background: #e5e7eb; color: #4b5563; }
-    .pl-status-warn { background: #fef3c7; color: #92400e; }
-    .pl-chevron {
-      color: var(--muted);
-      font-size: 1rem;
-      width: 18px;
-      text-align: center;
-      flex-shrink: 0;
-      transition: transform .15s;
-    }
-    .product-list-drawer {
-      border-top: 1px solid var(--border);
-      padding: .75rem;
-      background: var(--surface);
-    }
-    .pl-drawer-grid {
-      display: grid;
-      grid-template-columns: 130px 1fr;
-      gap: .85rem;
-      align-items: start;
-      margin-bottom: .65rem;
-    }
-    @media (max-width: 480px) {
-      .pl-drawer-grid { grid-template-columns: 100px 1fr; gap: .65rem; }
-    }
-    .pl-drawer-qr {
-      width: 100%;
-      aspect-ratio: 1;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: white;
-    }
-    .pl-drawer-meta {
-      display: grid;
-      gap: .35rem;
-      font-size: .78rem;
-    }
-    .pl-drawer-meta > div {
-      display: flex;
-      justify-content: space-between;
-      gap: .5rem;
-      padding: .25rem 0;
-      border-bottom: 1px dashed var(--border);
-    }
-    .pl-drawer-meta > div:last-child { border-bottom: 0; }
-    .pl-drawer-meta span { color: var(--muted); }
-    .pl-drawer-meta strong { color: var(--text); font-weight: 700; }
-    .pl-drawer-actions {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
-      gap: .35rem;
-    }
-    .pl-drawer-actions .btn { font-size: .75rem; padding: .45rem .5rem; min-height: 36px; }
-    .pl-drawer-warn {
-      padding: .65rem .85rem;
-      background: #fef3c7;
-      border: 1px solid #fcd34d;
-      border-radius: 8px;
-      font-size: .82rem;
-      color: #78350f;
-      margin-bottom: .65rem;
-    }
-
-    /* Sticky search + Add button at the top of Products / Codes tabs.
-       Pinned so users can search/add while scrolling through 1000s of rows. */
-    .sticky-list-header {
-      position: sticky;
-      top: 0;
-      z-index: 5;
-      background: white;
-      padding: .75rem 0;
-      margin: -.75rem 0 .5rem;
-    }
-
-    /* ── Profile tab layout ── */
-    .profile-section { padding: 1rem !important; }
-    .profile-hero {
-      display: flex;
-      gap: .85rem;
-      align-items: center;
-      padding: .85rem;
-      background: var(--surface);
-      border-radius: var(--r-md);
-      margin-bottom: 1rem;
-    }
-    .profile-hero #profileBrandLogo {
-      width: 56px; height: 56px;
-      border-radius: 12px; object-fit: cover;
-      border: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .profile-logo-placeholder {
-      width: 56px; height: 56px;
-      border-radius: 12px;
-      background: white; border: 1px solid var(--border);
-      align-items: center; justify-content: center;
-      font-size: 1.6rem; flex-shrink: 0;
-    }
-    .profile-hero-info { flex: 1; min-width: 0; }
-    .profile-hero-info h2 {
-      margin: 0;
-      font-size: 1.05rem;
-      font-weight: 800;
-      line-height: 1.2;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .profile-hero-meta {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      flex-wrap: wrap;
-      margin-top: .35rem;
-    }
-    .profile-website-link {
-      font-size: .78rem;
-      color: var(--cyan);
-      text-decoration: none;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 100%;
-      flex: 1; min-width: 0;
-    }
-    .profile-website-link:hover { text-decoration: underline; }
-    .profile-website-link:empty { display: none; }
-    .profile-detail-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: .35rem;
-      font-size: .82rem;
-      color: var(--muted);
-      padding: 0;
-      margin-bottom: 1rem;
-    }
-    .profile-detail-grid > div { word-break: break-word; }
-    .profile-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: .5rem;
-    }
-    .profile-actions .profile-signout {
-      grid-column: 1 / -1;
-      color: #991b1b;
-      border-color: #fca5a5;
-    }
-    @media (min-width: 600px) {
-      .profile-detail-grid { grid-template-columns: 1fr 1fr; gap: .35rem .9rem; }
-    }
-
-    /* Notifications dropdown — desktop anchors to bell, mobile becomes a
-       compact popover near the bell (not a full-width banner). */
-    .notif-panel {
-      position: absolute;
-      right: 0;
-      top: calc(100% + .5rem);
-      width: 320px;
-      max-width: calc(100vw - 2rem);
-      max-height: 420px;
-      overflow-y: auto;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: var(--r-md);
-      box-shadow: 0 12px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08);
-      z-index: 100;
-    }
-    @media (max-width: 720px) {
-      .notif-panel {
-        position: fixed !important;
-        top: 5rem !important;
-        right: .5rem !important;
-        left: auto !important;
-        width: min(320px, calc(100vw - 1rem)) !important;
-        max-width: calc(100vw - 1rem) !important;
-        max-height: 60vh;
-      }
-    }
-    /* Backdrop dims the page when the notif panel is open on mobile. */
-    .notif-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, .25);
-      z-index: 95;
-    }
-    .notif-backdrop.open { display: block; }
-
-    /* Mobile bottom tab bar — REMOVED. Top tabs are used on every screen. */
-    .mobile-tab-bar { display: none !important; }
-
-    /* Aggressive mobile compaction so the whole dashboard fits a phone
-       viewport without absurd font sizes and oversized cards. */
-    @media (max-width: 720px) {
-      .dash-wrap { padding: 0 .25rem; }
-      .dash-header { gap: .5rem !important; margin-bottom: .5rem !important; }
-      .dash-brand-info h2 { font-size: 1rem; line-height: 1.2; }
-      .dash-brand-info p { font-size: .72rem; }
-      .status-badge { padding: .15rem .5rem; font-size: .62rem; }
-      /* Smaller brand logo */
-      #dashBrandLogo { width: 36px !important; height: 36px !important; }
-      /* Hide profile-details / website on the header — they live in Profile tab */
-      #dashWebsite,
-      #profileToggleBtn,
-      #dashProfileGrid { display: none !important; }
-      /* Compact top tabs */
-      .dash-tab-nav {
-        margin-bottom: .85rem;
-        gap: .15rem;
-        justify-content: space-around;
-        border-bottom-width: 1px;
-      }
-      .dash-tab-nav .tab-btn {
-        flex: 1;
-        padding: .5rem .15rem;
-        font-size: .72rem;
-        text-align: center;
-      }
-      .dash-tab-nav .tab-btn .tab-label { display: block; font-size: .7rem; margin-top: .15rem; }
-
-      /* Credits widget — much tighter on mobile */
-      .credits-widget {
-        padding: .85rem 1rem !important;
-        gap: .6rem !important;
-        margin-bottom: .85rem !important;
-      }
-      .credits-label { font-size: .6rem !important; letter-spacing: .04em; margin-bottom: .15rem !important; }
-      .credits-balance { font-size: 1.5rem !important; line-height: 1; }
-      .credits-of { font-size: .85rem !important; }
-      .credits-meta { font-size: .72rem !important; line-height: 1.4; }
-      .credits-bar-labels { font-size: .68rem !important; }
-      .credits-actions .btn { font-size: .82rem; padding: .55rem .85rem; }
-
-      /* Stat cards — smaller numbers, smaller padding, 2-up grid */
-      .stat-grid { gap: .5rem; margin-bottom: 1rem; grid-template-columns: 1fr 1fr !important; }
-      .stat-card { padding: .65rem .75rem !important; border-radius: 12px !important; }
-      .stat-card::before { display: none; }
-      .stat-label { font-size: .58rem !important; letter-spacing: .04em; margin-bottom: .15rem !important; }
-      .stat-value { font-size: 1.25rem !important; line-height: 1; margin-bottom: .15rem !important; }
-      .stat-sub { font-size: .65rem !important; color: var(--muted); }
-
-      /* Section heads inside Products / Codes / Profile tabs */
-      .sw-section { padding: .75rem !important; margin-bottom: .85rem; border-radius: 12px; }
-      .sw-section-head { gap: .5rem; }
-      .sw-section-head h3 { font-size: .95rem !important; }
-      .sw-section-head p { font-size: .72rem !important; }
-
-      /* Page padding */
-      section.section { padding-top: 3rem !important; padding-bottom: 1rem !important; }
-    }
-
     /* Coming Soon overlay for upcoming tabs */
     .upcoming-card {
       background: linear-gradient(135deg, #0f1e3d 0%, #1a2f5a 100%);
@@ -1447,16 +1137,12 @@
             <div id="dashProfileGrid" style="display:none; margin-top: .75rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .35rem .9rem; font-size: .82rem; color: var(--muted);"></div>
           </div>
           <div style="display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; flex-shrink: 0;">
-            <span id="liveIndicator" title="Dashboard updates automatically — no manual refresh needed." style="display:none; font-size:.72rem; color: var(--muted); font-weight:600; align-self:center;">
-              <span style="display:inline-block; width:.45rem; height:.45rem; border-radius:50%; background:#10b981; margin-right:.3rem; vertical-align:.05rem; box-shadow: 0 0 0 0 rgba(16,185,129,.5); animation: livePulse 2s infinite;"></span>
-              <span id="liveLabel">Live</span>
-            </span>
+            <button class="refresh-btn" onclick="refreshDashboard()">↻ Refresh</button>
             <div style="position: relative;">
               <button class="refresh-btn" id="notifBtn" onclick="toggleNotifications(event)" style="position: relative;">
                 🔔 <span id="notifCount" style="display:none; position:absolute; top:-4px; right:-4px; background:#ef4444; color:#fff; font-size:.6rem; font-weight:700; padding:2px 5px; border-radius:9999px; min-width: 16px; text-align:center;"></span>
               </button>
-              <div id="notifBackdrop" class="notif-backdrop" onclick="closeNotifications()"></div>
-              <div id="notifPanel" class="notif-panel" style="display:none;">
+              <div id="notifPanel" style="display:none; position:absolute; right:0; top:calc(100% + .5rem); width:340px; max-width: calc(100vw - 2rem); max-height:420px; overflow-y:auto; background:#fff; border:1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--sh2); z-index: 100;">
                 <div style="padding:.75rem 1rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                   <strong style="font-size:.9rem;">Notifications</strong>
                   <button onclick="markAllNotificationsRead()" style="background:none; border:none; color:var(--cyan); font-size:.78rem; font-weight:600; cursor:pointer;">Mark all read</button>
@@ -1464,22 +1150,73 @@
                 <div id="notifList"><div style="padding:1.5rem; text-align:center; color:var(--muted); font-size:.85rem;">No notifications.</div></div>
               </div>
             </div>
-            <!-- Account menu replaced by the dedicated Profile tab. -->
-            <div id="accountMenuPanel" style="display:none;"></div>
+            <div style="position: relative;">
+              <button class="btn btn-outline-dark btn-sm" id="accountMenuBtn" onclick="toggleAccountMenu(event)">Account ▾</button>
+              <div id="accountMenuPanel" style="display:none; position:absolute; right:0; top:calc(100% + .5rem); min-width: 200px; background:#fff; border:1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--sh2); z-index: 100; overflow:hidden;">
+                <button class="acct-menu-item" onclick="closeAccountMenu(); openEditProfile();">✎ Edit Profile</button>
+                <button class="acct-menu-item" onclick="closeAccountMenu(); openTopupModal();">💳 Top Up Credits</button>
+                <button class="acct-menu-item" onclick="closeAccountMenu(); logout();" style="color:#991b1b;">↩ Switch Account</button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Tab navigation (top — visible on all screens, Facebook-style) -->
-        <nav class="tab-nav dash-tab-nav" role="tablist" aria-label="Dashboard sections">
-          <button class="tab-btn active" role="tab" data-tab="analytics" onclick="switchTab('analytics')">📊 <span class="tab-label">Analytics</span></button>
-          <button class="tab-btn" role="tab" data-tab="products"  onclick="switchTab('products')">👕 <span class="tab-label">Products</span></button>
-          <button class="tab-btn" role="tab" data-tab="code"      onclick="switchTab('code')">🔑 <span class="tab-label">Codes</span></button>
-          <button class="tab-btn" role="tab" data-tab="profile"   onclick="switchTab('profile')">👤 <span class="tab-label">Profile</span></button>
-        </nav>
+        <!-- Credits widget (always visible) -->
+        <div id="creditsWidget" class="credits-widget" style="display: none;">
+          <div class="credits-left">
+            <div class="credits-label">Try-On Credits</div>
+            <div class="credits-balance">
+              <span id="creditsRemaining">—</span>
+              <span class="credits-of" id="creditsOf"></span>
+            </div>
+            <div class="credits-meta" id="creditsMeta"></div>
+          </div>
+          <div class="credits-bar-wrap">
+            <div class="credits-bar"><div class="credits-bar-fill" id="creditsBarFill" style="width: 0;"></div></div>
+            <div class="credits-bar-labels">
+              <span id="creditsUsedLbl">0 used</span>
+              <span id="creditsRateLbl"></span>
+            </div>
+          </div>
+          <div class="credits-actions">
+            <button class="btn btn-primary btn-sm" onclick="openTopupModal()">💳 Top Up Credits</button>
+          </div>
+        </div>
+
+
+        <!-- Stat cards -->
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Try-Ons</div>
+            <div class="stat-value" id="statTotal">—</div>
+            <div class="stat-sub">All time</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Today</div>
+            <div class="stat-value" id="statToday">—</div>
+            <div class="stat-sub">Try-ons so far</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">This Week</div>
+            <div class="stat-value" id="statWeek">—</div>
+            <div class="stat-sub">Last 7 days</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">This Month</div>
+            <div class="stat-value" id="statMonth">—</div>
+            <div class="stat-sub">Current month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg AI Time</div>
+            <div class="stat-value" id="statAvg">—</div>
+            <div class="stat-sub">Per try-on</div>
+          </div>
+        </div>
 
         <!-- Hidden legacy DOM elements kept so JS that targets them by ID
              (ghostLayerStats, productsSection, productsGrid, productsSubtitle,
-             tableBody, tab-ghost-layer, tab-mirror, tab-scanwear) doesn't throw. -->
+             tableBody, tab-ghost-layer, tab-mirror) doesn't throw. The visible
+             "Coming Soon" tabs and tab-nav have been removed. -->
         <div id="tab-ghost-layer" class="tab-content" style="display:none;">
           <div class="source-stats" id="ghostLayerStats"></div>
           <div class="products-section" id="productsSection">
@@ -1489,73 +1226,34 @@
           <div id="tableBody"></div>
         </div>
         <div id="tab-mirror" class="tab-content" style="display:none;"></div>
-        <div id="tab-scanwear" class="tab-content" style="display:none;"></div>
 
-        <!-- Tab: Analytics -->
-        <div id="tab-analytics" class="tab-content active" role="tabpanel" aria-labelledby="tab-btn-analytics">
-          <!-- Credits widget (lives inside Analytics tab; was always-visible before) -->
-          <div id="creditsWidget" class="credits-widget" style="display: none; margin-bottom: 1.25rem;">
-            <div class="credits-left">
-              <div class="credits-label">Try-On Credits</div>
-              <div class="credits-balance">
-                <span id="creditsRemaining">—</span>
-                <span class="credits-of" id="creditsOf"></span>
-              </div>
-              <div class="credits-meta" id="creditsMeta"></div>
-            </div>
-            <div class="credits-bar-wrap">
-              <div class="credits-bar"><div class="credits-bar-fill" id="creditsBarFill" style="width: 0;"></div></div>
-              <div class="credits-bar-labels">
-                <span id="creditsUsedLbl">0 used</span>
-                <span id="creditsRateLbl"></span>
-              </div>
-            </div>
-            <div class="credits-actions">
-              <button class="btn btn-primary btn-sm" onclick="openTopupModal()">💳 Top Up Credits</button>
-            </div>
-          </div>
-
-          <!-- Stat cards -->
-          <div class="stat-grid">
-            <div class="stat-card">
-              <div class="stat-label">Total Try-Ons</div>
-              <div class="stat-value" id="statTotal">—</div>
-              <div class="stat-sub">All time</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Today</div>
-              <div class="stat-value" id="statToday">—</div>
-              <div class="stat-sub">Try-ons so far</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">This Week</div>
-              <div class="stat-value" id="statWeek">—</div>
-              <div class="stat-sub">Last 7 days</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">This Month</div>
-              <div class="stat-value" id="statMonth">—</div>
-              <div class="stat-sub">Current month</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Avg AI Time</div>
-              <div class="stat-value" id="statAvg">—</div>
-              <div class="stat-sub">Per try-on</div>
-            </div>
-          </div>
-
+        <!-- Tab: Scan & Wear (only product) -->
+        <div id="tab-scanwear" class="tab-content active">
           <!-- Per-source stat strip -->
           <div class="source-stats" id="scanWearStats"></div>
-        </div>
 
-        <!-- Tab: Products & QRs -->
-        <div id="tab-products" class="tab-content" role="tabpanel">
+          <!-- ── Section: Brand-wide Passcodes ── -->
           <div class="sw-section">
-            <div class="sticky-list-header">
-              <div style="display:flex; gap:.5rem; align-items:center; margin-bottom:.5rem;">
-                <input type="search" id="productSearch" placeholder="🔎  Search products…" oninput="renderUnified()" style="flex:1; padding:.55rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:16px; font-family: inherit;">
-                <button class="btn btn-primary btn-sm" onclick="openAddProduct()" style="white-space:nowrap;">+ Add</button>
+            <div class="sw-section-head">
+              <div>
+                <h3>🔑 Passcodes</h3>
+                <p>One passcode works across <strong>all your QR codes</strong>. Issue per-customer try-on limits.</p>
               </div>
+              <button class="btn btn-primary btn-sm" onclick="openAddPasscode()">+ Add Passcode</button>
+            </div>
+            <div id="brandPasscodesList" class="passcodes-list">
+              <div class="empty-state-mini">Loading passcodes…</div>
+            </div>
+          </div>
+
+          <!-- ── Section: Products & QRs (unified) ── -->
+          <div class="sw-section">
+            <div class="sw-section-head">
+              <div>
+                <h3>👕 Products & QRs</h3>
+                <p>Each product comes with its own printable QR. Add a product → QR auto-generated.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openAddProduct()">+ Add Product</button>
             </div>
             <div id="unifiedList" class="unified-list">
               <div class="empty-state-mini">Loading…</div>
@@ -1565,54 +1263,6 @@
             <div id="qrGrid" style="display:none;"></div>
           </div>
         </div>
-
-        <!-- Tab: Codes (Passcodes) -->
-        <div id="tab-code" class="tab-content" role="tabpanel">
-          <div class="sw-section">
-            <div class="sticky-list-header">
-              <div style="display:flex; gap:.5rem; align-items:center; margin-bottom:.5rem;">
-                <input type="search" id="passcodeSearch" placeholder="🔎  Search codes…" oninput="renderBrandPasscodes()" style="flex:1; padding:.55rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:16px; font-family: inherit;">
-                <button class="btn btn-primary btn-sm" onclick="openAddPasscode()" style="white-space:nowrap;">+ Add</button>
-              </div>
-            </div>
-            <div id="brandPasscodesList" class="passcodes-list">
-              <div class="empty-state-mini">Loading passcodes…</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tab: Profile (brand info + edit + top up + sign out) -->
-        <div id="tab-profile" class="tab-content" role="tabpanel">
-          <div class="sw-section profile-section">
-            <!-- Hero: logo + name + status, compact single row -->
-            <div class="profile-hero">
-              <img id="profileBrandLogo" src="" alt="" style="display:none;">
-              <div id="profileBrandLogoPlaceholder" class="profile-logo-placeholder" style="display:none;">🎨</div>
-              <div class="profile-hero-info">
-                <h2 id="profileBrandName">Loading…</h2>
-                <div class="profile-hero-meta">
-                  <span class="status-badge status-pending" id="profileStatus">Pending</span>
-                  <a id="profileWebsite" href="#" target="_blank" rel="noopener" class="profile-website-link"></a>
-                </div>
-              </div>
-            </div>
-            <!-- Profile detail grid -->
-            <div id="profileGrid" class="profile-detail-grid"></div>
-            <!-- Action buttons -->
-            <div class="profile-actions">
-              <button class="btn btn-primary btn-sm" onclick="openEditProfile()">✎ Edit Profile</button>
-              <button class="btn btn-primary btn-sm" onclick="openTopupModal()">💳 Top Up</button>
-              <button class="btn btn-secondary btn-sm profile-signout" onclick="logout()">↩ Sign Out</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mobile bottom tab bar (visible on small screens only) -->
-        <nav class="mobile-tab-bar" role="tablist" aria-label="Dashboard sections (mobile)">
-          <button class="mtab-btn active" data-tab="analytics" onclick="switchTab('analytics')"><span class="mtab-icon">📊</span><span class="mtab-label">Analytics</span></button>
-          <button class="mtab-btn" data-tab="products"  onclick="switchTab('products')"><span class="mtab-icon">👕</span><span class="mtab-label">Products</span></button>
-          <button class="mtab-btn" data-tab="code"      onclick="switchTab('code')"><span class="mtab-icon">🔑</span><span class="mtab-label">Codes</span></button>
-        </nav>
 
         <!-- Lightbox -->
         <div class="lightbox" id="lightbox" onclick="closeLightbox()">
@@ -1919,7 +1569,6 @@
         <button class="modal-close" onclick="closeTopupModal()">&times;</button>
         <h3>Top Up Credits</h3>
         <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.25rem;">Pick how many try-ons you need. We'll generate a receipt — pay via WhatsApp and we'll add the credits to your account.</p>
-        <div id="tuReason" style="display:none; background:#fef3c7; border:1px solid #fbbf24; color:#92400e; padding:.75rem 1rem; border-radius: var(--r-md); margin-bottom: 1rem; font-size:.9rem;"></div>
         <div class="alert" id="tuError"></div>
 
         <form onsubmit="return submitTopup(event);">
@@ -2090,7 +1739,7 @@
           <input type="text" id="qrSuccessUrl" readonly style="font-family: monospace; font-size: .85rem;">
         </div>
         <div style="display: flex; gap: .5rem;">
-          <button id="qrSuccessDownload" class="btn btn-primary" style="flex:1;">⬇ Download PNG</button>
+          <a id="qrSuccessDownload" download="" class="btn btn-primary" style="flex:1;">⬇ Download PNG</a>
           <button class="btn btn-secondary" style="flex:1;" onclick="copyText('qrSuccessUrl')">📋 Copy URL</button>
         </div>
       </div>
@@ -2336,7 +1985,6 @@
     // distinct error so we don't blame the network for a frontend bug.
     try {
       renderDashboard(data);
-      startLivePolling();
     } catch (err) {
       show('loginView');
       hide('loadingView');
@@ -2377,7 +2025,7 @@
     const profileRow = (label, value) => value
       ? `<div><span style="color: var(--text); font-weight: 600;">${escapeHtml(label)}:</span> ${escapeHtml(String(value))}</div>`
       : '';
-    const profileGridHtml = [
+    document.getElementById('dashProfileGrid').innerHTML = [
       profileRow('Email', brand.email),
       profileRow('Contact', brand.contact_name),
       profileRow('Position', brand.contact_position),
@@ -2390,43 +2038,6 @@
         ? `<div><span style="color: var(--text); font-weight: 600;">Member Since:</span> ${new Date(brand.created_at).toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' })}</div>`
         : '',
     ].filter(Boolean).join('');
-    // Legacy hidden grid (kept for any old JS) + new Profile tab grid
-    document.getElementById('dashProfileGrid').innerHTML = profileGridHtml;
-    const profileTabGrid = document.getElementById('profileGrid');
-    if (profileTabGrid) profileTabGrid.innerHTML = profileGridHtml;
-
-    // Profile tab hero (logo + name + status + website)
-    const profName = document.getElementById('profileBrandName');
-    if (profName) profName.textContent = brand.name || 'Brand';
-    const profStatus = document.getElementById('profileStatus');
-    if (profStatus) {
-      profStatus.textContent = (displayStatus || 'pending').replace(/^./, c => c.toUpperCase());
-      profStatus.className = `status-badge status-${displayStatus || 'pending'}`;
-    }
-    const profSite = document.getElementById('profileWebsite');
-    if (profSite) {
-      if (brand.website_url) {
-        profSite.textContent = `🌐 ${brand.website_url}`;
-        profSite.href = brand.website_url;
-        profSite.style.display = '';
-      } else {
-        profSite.textContent = '';
-        profSite.removeAttribute('href');
-        profSite.style.display = 'none';
-      }
-    }
-    const profLogo = document.getElementById('profileBrandLogo');
-    const profLogoPh = document.getElementById('profileBrandLogoPlaceholder');
-    if (profLogo && profLogoPh) {
-      if (brand.logo_url) {
-        profLogo.src = brand.logo_url;
-        profLogo.style.display = 'block';
-        profLogoPh.style.display = 'none';
-      } else {
-        profLogo.style.display = 'none';
-        profLogoPh.style.display = 'flex';
-      }
-    }
 
     // Top overall stats (across all sources)
     document.getElementById('statTotal').textContent = fmt(stats.total_tryons);
@@ -2650,72 +2261,8 @@
     if (activeBrandId) await fetchAndRender(activeBrandId);
   }
 
-  // ── Live (auto) refresh ──
-  // Polls /overview every 30s while the dashboard tab is visible. Quietly
-  // re-renders without flashing the loading view. Also reloads whichever
-  // tab is currently open so passcodes / products / QR usage update too.
-  let livePollInterval = null;
-  let lastLiveRefreshAt = 0;
-  const LIVE_REFRESH_MS = 30000;
-
-  async function refreshDashboardLive() {
-    if (!activeBrandId || document.hidden) return;
-    try {
-      const res = await fetch(`${API}/api/brands/${activeBrandId}/overview`);
-      if (!res.ok) return;
-      const data = await res.json();
-      renderDashboard(data);
-      // Refresh whichever tab the user is on so per-tab data stays live too.
-      const activeTab = document.querySelector('.tab-content.active')?.id;
-      if (activeTab === 'tab-products') {
-        loadProducts();
-        loadQrCodes();
-      } else if (activeTab === 'tab-code') {
-        loadBrandPasscodes();
-      }
-      lastLiveRefreshAt = Date.now();
-      const lbl = document.getElementById('liveLabel');
-      if (lbl) lbl.textContent = 'Live';
-    } catch (err) {
-      // Background refresh — never surface errors to the UI; the manual
-      // Refresh button still works if the user wants to retry.
-      console.warn('[dashboard] live refresh failed:', err);
-    }
-  }
-
-  function startLivePolling() {
-    if (livePollInterval) return;
-    const ind = document.getElementById('liveIndicator');
-    if (ind) ind.style.display = 'inline-flex';
-    livePollInterval = setInterval(refreshDashboardLive, LIVE_REFRESH_MS);
-  }
-
-  function stopLivePolling() {
-    if (livePollInterval) {
-      clearInterval(livePollInterval);
-      livePollInterval = null;
-    }
-    const ind = document.getElementById('liveIndicator');
-    if (ind) ind.style.display = 'none';
-  }
-
-  // Pause when the user switches away from the tab; resume + immediate
-  // refresh when they come back.
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      // Don't tear down the interval — just skip the refresh check inside.
-      // Browser already throttles setInterval in hidden tabs to ≥1 min.
-    } else if (activeBrandId) {
-      // Coming back: refresh now if it's been a while.
-      if (Date.now() - lastLiveRefreshAt > LIVE_REFRESH_MS) {
-        refreshDashboardLive();
-      }
-    }
-  });
-
   function logout() {
     activeBrandId = null;
-    stopLivePolling();
     localStorage.removeItem('tif_brand_id');
     localStorage.removeItem('tif_brand_email');
     hide('dashView');
@@ -2793,26 +2340,14 @@
   });
 
   // ── Tab switching ──
-  // Tabs: 'analytics' | 'products' | 'code'
-  // Loads only the data the tab actually needs (lazy) but keeps results
-  // cached across switches via the existing module-level arrays.
   function switchTab(tabName) {
-    // Sync active state on both the desktop tab nav and mobile bottom bar.
-    document.querySelectorAll('.tab-btn, .mtab-btn').forEach(b =>
-      b.classList.toggle('active', b.dataset.tab === tabName)
-    );
-    document.querySelectorAll('.tab-content').forEach(c =>
-      c.classList.toggle('active', c.id === 'tab-' + tabName)
-    );
-    if (!activeBrandId) return;
-    if (tabName === 'products') {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabName));
+    if (tabName === 'scanwear' && activeBrandId) {
+      loadBrandPasscodes();
       loadProducts();
       loadQrCodes();
-    } else if (tabName === 'code') {
-      loadBrandPasscodes();
     }
-    // Analytics tab gets its data from the main loadDashboard() call —
-    // no per-switch reload needed.
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -2836,21 +2371,11 @@
 
   function renderBrandPasscodes() {
     const list = document.getElementById('brandPasscodesList');
-    const search = (document.getElementById('passcodeSearch')?.value || '').trim().toLowerCase();
-    let rows = allBrandPasscodes;
-    if (search) {
-      rows = rows.filter(p => {
-        const blob = `${p.code || ''} ${p.customer_label || ''} ${p.use_limit || ''}`.toLowerCase();
-        return blob.includes(search);
-      });
-    }
-    if (rows.length === 0) {
-      list.innerHTML = allBrandPasscodes.length === 0
-        ? `<div class="empty-state-mini">No passcodes yet. Add one to control how many try-ons each customer gets.</div>`
-        : `<div class="empty-state-mini">No passcodes match "${escapeHtml(search)}".</div>`;
+    if (allBrandPasscodes.length === 0) {
+      list.innerHTML = `<div class="empty-state-mini">No passcodes yet. Add one to control how many try-ons each customer gets.</div>`;
       return;
     }
-    list.innerHTML = rows.map(p => {
+    list.innerHTML = allBrandPasscodes.map(p => {
       const remaining = p.use_limit - p.used_count;
       const exhausted = remaining <= 0;
       const inactive = !p.active;
@@ -3148,111 +2673,57 @@
       return;
     }
 
-    // Filter by search query (matches name, sku, price, currency)
-    const search = (document.getElementById('productSearch')?.value || '').trim().toLowerCase();
-    let products = allProducts;
-    if (search) {
-      products = products.filter(p => {
-        const blob = `${p.name || ''} ${p.sku || ''} ${p.price || ''} ${p.currency || ''}`.toLowerCase();
-        return blob.includes(search);
-      });
-      if (products.length === 0) {
-        list.innerHTML = `<div class="empty-state-mini" style="grid-column: 1 / -1;">No products match "${escapeHtml(search)}".</div>`;
-        return;
-      }
-    }
-
     // Index QRs by product_uuid for quick lookup
     const qrByProductUuid = {};
     allQrs.forEach(q => { if (q.product_uuid) qrByProductUuid[q.product_uuid] = q; });
 
-    // Index QRs by product_uuid for quick lookup
-    const qrByProductUuid = {};
-    allQrs.forEach(q => { if (q.product_uuid) qrByProductUuid[q.product_uuid] = q; });
-
-    // Compact list rows that scale to 1000s of products. Each row is one
-    // tap-target; a tap toggles an inline drawer with the full QR + actions.
-    list.innerHTML = `<div class="product-list">${products.map(p => {
+    list.innerHTML = allProducts.map(p => {
       const qr = qrByProductUuid[p.id];
-      const qNameEsc  = JSON.stringify(p.name).replace(/"/g, '&quot;');
-      const qScanEsc  = qr ? JSON.stringify(qr.scan_url).replace(/"/g, '&quot;') : '""';
-      const priceTxt  = p.price ? formatPrice(p.price, p.currency) : '—';
-      const tryonsTxt = qr ? `${fmt(qr.total_used || 0)}${qr.total_limit !== null ? '/' + fmt(qr.total_limit) : ''}` : '—';
-      const statusBadge = !p.active
-        ? '<span class="pl-status pl-status-off">Off</span>'
-        : qr && !qr.active
-          ? '<span class="pl-status pl-status-off">QR off</span>'
-          : qr
-            ? '<span class="pl-status pl-status-on">Active</span>'
-            : '<span class="pl-status pl-status-warn">No QR</span>';
       return `
-        <div class="product-list-row" id="plrow-${p.id}">
-          <div class="product-list-summary" onclick="toggleProductRow('${p.id}', event)">
+        <div class="unified-tile">
+          <div class="unified-tile-head">
             ${p.image_url
-              ? `<img class="pl-thumb" src="${escapeHtml(p.image_url)}" alt="" loading="lazy">`
-              : '<div class="pl-thumb pl-thumb-ph">👕</div>'}
-            <div class="pl-info">
-              <div class="pl-name">${escapeHtml(p.name)}</div>
-              <div class="pl-meta">${escapeHtml(p.sku)} · ${escapeHtml(priceTxt)} · ${tryonsTxt} try-on${tryonsTxt === '1' ? '' : 's'}</div>
+              ? `<img class="unified-tile-img" src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.name)}" loading="lazy">`
+              : '<div class="unified-tile-img-placeholder">👕</div>'}
+            <div class="unified-tile-info">
+              <div class="unified-tile-name">${escapeHtml(p.name)}</div>
+              <div class="unified-tile-sku">${escapeHtml(p.sku)}${!p.active ? ' · disabled' : ''}</div>
+              <div class="unified-tile-price ${p.price ? '' : 'empty'}">${p.price ? formatPrice(p.price, p.currency) : 'No price set'}</div>
             </div>
-            ${statusBadge}
-            <span class="pl-chevron">›</span>
           </div>
-          <div class="product-list-drawer" hidden>
-            ${qr ? `
-              <div class="pl-drawer-grid">
-                <img class="pl-drawer-qr" src="${qrImageUrl(qr.scan_url, 220)}" alt="QR for ${escapeHtml(p.name)}">
-                <div class="pl-drawer-meta">
-                  <div><span>Try-Ons</span><strong>${fmt(qr.total_used || 0)}${qr.total_limit !== null ? ' / ' + fmt(qr.total_limit) : ''}</strong></div>
-                  <div><span>Passcode</span><strong>${qr.requires_passcode ? '🔑 Required' : 'Open'}</strong></div>
-                  <div><span>QR Status</span>${qr.active ? '<span class="status-badge pill-active">Active</span>' : '<span class="status-badge pill-inactive">Disabled</span>'}</div>
-                </div>
+          ${qr ? `
+            <div class="unified-tile-qr">
+              <div class="unified-tile-qr-img">
+                <img src="${qrImageUrl(qr.scan_url, 200)}" alt="QR for ${escapeHtml(p.name)}">
               </div>
-              <div class="pl-drawer-actions">
-                <button class="btn btn-primary btn-sm" onclick="viewQrImage(${qScanEsc}, ${qNameEsc})">📱 QR</button>
-                <button class="btn btn-secondary btn-sm" onclick="copyScanUrl(${qScanEsc}, this)">🔗 URL</button>
-                <button class="btn btn-secondary btn-sm" onclick="downloadQr(${qScanEsc}, ${qNameEsc}, this)">⬇ PNG</button>
-                ${(p.image_url || p.isolated_garment_url)
-                  ? `<button class="btn btn-secondary btn-sm" onclick="viewProductImages(${qNameEsc}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')})">Images</button>`
-                  : ''}
-                <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">✏️ Edit</button>
-                ${qr.active
-                  ? `<button class="btn btn-secondary btn-sm" style="color:#92400e; border-color:#fcd34d;" onclick="toggleQrActive('${qr.id}', false, ${qNameEsc})">Disable</button>`
-                  : `<button class="btn btn-primary btn-sm" onclick="toggleQrActive('${qr.id}', true, ${qNameEsc})">Enable</button>`}
-                <button class="btn btn-secondary btn-sm" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteProduct('${p.id}', ${qNameEsc}, '${qr.id}')">🗑 Delete</button>
+              <div class="unified-tile-qr-info">
+                <div class="row"><span class="muted">Try-Ons</span><strong>${fmt(qr.total_used || 0)}${qr.total_limit !== null ? ' / ' + fmt(qr.total_limit) : ''}</strong></div>
+                <div class="row"><span class="muted">Passcode</span><strong>${qr.requires_passcode ? '🔑 Required' : 'Open'}</strong></div>
+                <div class="row"><span class="muted">Status</span>${qr.active ? '<span class="status-badge pill-active">Active</span>' : '<span class="status-badge pill-inactive">Disabled</span>'}</div>
               </div>
-            ` : `
-              <div class="pl-drawer-warn">
-                ⚠️ No QR code yet — <button class="btn btn-primary btn-sm" onclick="generateQrForProduct('${p.id}')">Generate QR</button>
-              </div>
-              <div class="pl-drawer-actions">
-                <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">✏️ Edit</button>
-                <button class="btn btn-secondary btn-sm" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteProduct('${p.id}', ${qNameEsc})">🗑 Delete</button>
-              </div>
-            `}
-          </div>
+            </div>
+            <div class="unified-tile-actions">
+              <button class="btn btn-primary" onclick="viewQrImage(${JSON.stringify(qr.scan_url).replace(/"/g, '&quot;')}, ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">📱 View QR</button>
+              ${(p.image_url || p.isolated_garment_url)
+                ? `<button class="btn btn-secondary" onclick="viewProductImages(${JSON.stringify(p.name).replace(/"/g, '&quot;')}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')})">View Processed</button>`
+                : '<span></span>'}
+              <button class="btn btn-secondary" onclick="editProduct('${p.id}')">✏️ Edit</button>
+              ${qr.active
+                ? `<button class="btn btn-secondary" style="color:#92400e; border-color:#fcd34d;" onclick="toggleQrActive('${qr.id}', false, ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">Disable QR</button>`
+                : `<button class="btn btn-primary" onclick="toggleQrActive('${qr.id}', true, ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">Re-enable QR</button>`}
+              <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteProduct('${p.id}', ${JSON.stringify(p.name).replace(/"/g, '&quot;')}, '${qr.id}')">Delete</button>
+            </div>
+          ` : `
+            <div class="unified-tile-no-qr">
+              ⚠️ No QR code yet. <button class="btn btn-primary btn-sm" style="margin-left: .5rem;" onclick="generateQrForProduct('${p.id}')">Generate QR</button>
+            </div>
+            <div class="unified-tile-actions">
+              <button class="btn btn-secondary" onclick="editProduct('${p.id}')">Edit Product</button>
+              <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteProduct('${p.id}', ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">Delete</button>
+            </div>
+          `}
         </div>`;
-    }).join('')}</div>`;
-  }
-
-  // Tap a product row to expand/collapse its detail drawer.
-  function toggleProductRow(productId, event) {
-    if (event && event.target.closest('button, a, input')) return;
-    const row = document.getElementById('plrow-' + productId);
-    if (!row) return;
-    const drawer = row.querySelector('.product-list-drawer');
-    const chevron = row.querySelector('.pl-chevron');
-    if (!drawer) return;
-    const isOpen = !drawer.hasAttribute('hidden');
-    if (isOpen) {
-      drawer.setAttribute('hidden', '');
-      row.classList.remove('open');
-      if (chevron) chevron.textContent = '›';
-    } else {
-      drawer.removeAttribute('hidden');
-      row.classList.add('open');
-      if (chevron) chevron.textContent = '⌃';
-    }
+    }).join('');
   }
 
   // Generate a QR for a product that doesn't have one yet
@@ -3282,16 +2753,6 @@
   }
 
   function openAddProduct() {
-    // Gate: brands without credits should top up before adding products,
-    // otherwise customers who scan the QR will hit "out of credits" anyway.
-    const brand = lastDashboardData?.brand;
-    if (brand && !brand.unlimited) {
-      const remaining = Math.max(0, (brand.tryon_credits || 0) - (brand.tryon_credits_used || 0));
-      if (remaining === 0) {
-        openTopupModal('You need credits before adding products. Top up to keep customers trying on.');
-        return;
-      }
-    }
     document.getElementById('apError').className = 'alert';
     ['apSku','apName','apPrice','apDesc','apQrLimit'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('apCurrency').value = 'PKR';
@@ -3538,62 +2999,6 @@
     return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=10&data=${encodeURIComponent(scanUrl)}`;
   }
 
-  // Build a safe filename for a QR download from the product name.
-  function qrFilename(productName) {
-    const slug = (productName || '').toString().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    return `${slug || 'product'}-QR.png`;
-  }
-
-  // Copy a scan URL to clipboard with brief button feedback.
-  async function copyScanUrl(scanUrl, btn) {
-    try {
-      await navigator.clipboard.writeText(scanUrl);
-    } catch {
-      // Fallback for older browsers / non-secure contexts
-      const ta = document.createElement('textarea');
-      ta.value = scanUrl;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand('copy'); } catch {}
-      document.body.removeChild(ta);
-    }
-    if (btn) {
-      const original = btn.textContent;
-      btn.textContent = '✓ Copied';
-      btn.disabled = true;
-      setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
-    }
-  }
-
-  // Download the QR for a scan URL as a high-resolution PNG with the
-  // product name in the filename. Fetches as a blob so iOS Safari saves
-  // it directly instead of opening qrserver.com in a new tab.
-  async function downloadQr(scanUrl, productName, btn) {
-    const url = qrImageUrl(scanUrl, 800);
-    const original = btn ? btn.textContent : null;
-    if (btn) { btn.disabled = true; btn.textContent = '⬇ …'; }
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('QR fetch failed');
-      const blob = await res.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = objectUrl;
-      a.download = qrFilename(productName);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
-    } catch (err) {
-      // Fallback: navigate to the QR image so the user can long-press save.
-      window.location.href = url;
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = original; }
-    }
-  }
-
   async function loadQrCodes() {
     if (!activeBrandId) return;
     try {
@@ -3779,7 +3184,8 @@
     img.src = imgUrl;
     document.getElementById('qrSuccessUrl').value = scanUrl;
     const dl = document.getElementById('qrSuccessDownload');
-    dl.onclick = () => downloadQr(scanUrl, productName, dl);
+    dl.href = imgUrl;
+    dl.download = `qr-${productName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.png`;
 
     // Status banner about garment processing. The backend now refuses
     // to issue the QR until isolation succeeds, so the only state that
@@ -4107,50 +3513,6 @@
       }
     } catch (e) { console.warn('[notif] failed to load topups:', e); }
 
-    // Try-on reports — show recent customer reports about this brand's QRs
-    // (pending = "we're reviewing", approved = "you got a credit back",
-    // denied = "we reviewed and decided no refund").
-    try {
-      const res = await fetch(`${API}/api/brands/${activeBrandId}/reports?limit=20`);
-      if (res.ok) {
-        const data = await safeJson(res);
-        const reports = (data.reports || []);
-        for (const r of reports) {
-          const typeLabel = ({
-            tryon_bad: 'bad try-on',
-            image_bad: 'bad image processing',
-            feedback:  'feedback',
-            difficulty: 'platform issue',
-          })[r.type] || r.type;
-          if (r.status === 'approved' && r.credit_refunded) {
-            notifications.push({
-              id: `report-refunded-${r.id}`,
-              icon: '✅',
-              title: '1 credit refunded',
-              body:  `Customer reported a ${typeLabel} — we approved it and refunded your credit.`,
-              ts:    r.refund_at || r.resolved_at || r.created_at,
-            });
-          } else if (r.status === 'pending') {
-            notifications.push({
-              id: `report-pending-${r.id}`,
-              icon: '🚩',
-              title: `Customer report under review`,
-              body:  `A customer flagged a ${typeLabel}. We'll review and refund your credit if it was our fault — usually within 24h.`,
-              ts:    r.created_at,
-            });
-          } else if (r.status === 'denied') {
-            notifications.push({
-              id: `report-denied-${r.id}`,
-              icon: '↩️',
-              title: 'Report reviewed — no refund issued',
-              body:  r.resolution_note || `We reviewed the customer's ${typeLabel} report and didn't issue a refund.`,
-              ts:    r.resolved_at || r.created_at,
-            });
-          }
-        }
-      }
-    } catch (e) { console.warn('[notif] failed to load reports:', e); }
-
     // Low-credit warning, derived from current dashboard state.
     const brand = lastDashboardData?.brand;
     if (brand && !brand.unlimited) {
@@ -4204,22 +3566,9 @@
   function toggleNotifications(e) {
     if (e) e.stopPropagation();
     const panel = document.getElementById('notifPanel');
-    const backdrop = document.getElementById('notifBackdrop');
     const isOpen = panel.style.display === 'block';
-    if (isOpen) {
-      panel.style.display = 'none';
-      if (backdrop) backdrop.classList.remove('open');
-    } else {
-      panel.style.display = 'block';
-      if (backdrop) backdrop.classList.add('open');
-      refreshNotifications();
-    }
-  }
-  function closeNotifications() {
-    const panel = document.getElementById('notifPanel');
-    const backdrop = document.getElementById('notifBackdrop');
-    if (panel) panel.style.display = 'none';
-    if (backdrop) backdrop.classList.remove('open');
+    panel.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) refreshNotifications();
   }
   function markAllNotificationsRead() {
     const read = getReadIds();
@@ -4227,16 +3576,14 @@
     saveReadIds(read);
     renderNotifications();
   }
-  // Close notifications when tapping outside (works for mouse + touch).
-  ['click', 'touchstart'].forEach(evt => {
-    document.addEventListener(evt, (e) => {
-      const panel = document.getElementById('notifPanel');
-      const btn   = document.getElementById('notifBtn');
-      if (!panel || !btn) return;
-      if (panel.style.display === 'block' && !panel.contains(e.target) && !btn.contains(e.target)) {
-        closeNotifications();
-      }
-    });
+  // Close notifications when clicking outside.
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('notifPanel');
+    const btn   = document.getElementById('notifBtn');
+    if (!panel || !btn) return;
+    if (panel.style.display === 'block' && !panel.contains(e.target) && !btn.contains(e.target)) {
+      panel.style.display = 'none';
+    }
   });
 
   // ── Account dropdown ──
@@ -4301,18 +3648,11 @@
     return `TIF-${yy}${mm}${dd}-${rand}`;
   }
 
-  function openTopupModal(reason) {
+  function openTopupModal() {
     document.getElementById('tuError').className = 'alert';
     document.getElementById('tuCreditsInput').value = '';
     document.querySelectorAll('.topup-preset').forEach(p => p.classList.remove('active'));
     document.getElementById('tuConversion').style.display = 'none';
-    const reasonEl = document.getElementById('tuReason');
-    if (reason) {
-      reasonEl.textContent = reason;
-      reasonEl.style.display = 'block';
-    } else {
-      reasonEl.style.display = 'none';
-    }
     // Pre-generate a receipt ID so customer sees it as soon as they pick credits
     document.getElementById('tuReceiptId').textContent = genReceiptId();
     document.getElementById('topupModal').classList.add('open');
