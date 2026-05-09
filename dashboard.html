@@ -418,30 +418,44 @@
     }
 
     /* ── Sticky-on-scroll layering ──
-       Stack: dash-header (top:0) → dash-tab-nav (below header) →
-       per-tab frozen zone (section heading + search + Add button).
+       Stack (top → bottom):
+         site nav .navbar  (already sticky at top:0, see styles.css)
+         dash-header       (sticky just below navbar)
+         dash-tab-nav      (sticky just below dash-header)
+         sw-section-head   (sticky just below tab nav)
+         sticky-list-bar   (sticky just below section head)
        Heights are CSS variables so we can tweak without JS. */
-    :root { --dash-hdr-h: 4.5rem; --dash-tabs-h: 3.25rem; --dash-frz-top: 7.75rem; }
+    :root {
+      --nav-h: 4rem;          /* site navbar */
+      --dash-hdr-h: 3rem;     /* dashboard header row */
+      --dash-tabs-h: 3rem;    /* tab nav */
+      --dash-frz-top: calc(var(--nav-h) + var(--dash-hdr-h) + var(--dash-tabs-h));
+    }
     @media (max-width: 720px) {
-      :root { --dash-hdr-h: 3.5rem; --dash-tabs-h: 2.85rem; --dash-frz-top: 6.35rem; }
+      :root {
+        --nav-h: 3.25rem;
+        --dash-hdr-h: 2.85rem;
+        --dash-tabs-h: 2.85rem;
+      }
     }
     .dash-header {
       position: sticky;
-      top: 0;
+      top: var(--nav-h);
       z-index: 12;
       background: white;
       padding: .35rem 0 .5rem;
+      margin-bottom: .5rem !important;
     }
 
     /* ── Top tab nav (Facebook-style) ── */
     .dash-tab-nav {
       display: flex;
       gap: .35rem;
-      margin-bottom: 1.25rem;
+      margin-bottom: .85rem;
       border-bottom: 2px solid var(--border);
       flex-wrap: wrap;
       position: sticky;
-      top: var(--dash-hdr-h);
+      top: calc(var(--nav-h) + var(--dash-hdr-h));
       z-index: 11;
       background: white;
     }
@@ -1417,7 +1431,7 @@
 </nav>
 
 <!-- ── Section ── -->
-<section class="section" style="padding-top: 4rem;">
+<section class="section" style="padding-top: 1.5rem; padding-bottom: 1rem;">
   <div class="container">
 
     <!-- ── LOGIN VIEW ── -->
