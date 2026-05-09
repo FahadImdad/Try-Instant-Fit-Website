@@ -1569,6 +1569,7 @@
         <button class="modal-close" onclick="closeTopupModal()">&times;</button>
         <h3>Top Up Credits</h3>
         <p style="color:var(--muted); font-size:.9rem; margin:0 0 1.25rem;">Pick how many try-ons you need. We'll generate a receipt — pay via WhatsApp and we'll add the credits to your account.</p>
+        <div id="tuReason" style="display:none; background:#fef3c7; border:1px solid #fbbf24; color:#92400e; padding:.75rem 1rem; border-radius: var(--r-md); margin-bottom: 1rem; font-size:.9rem;"></div>
         <div class="alert" id="tuError"></div>
 
         <form onsubmit="return submitTopup(event);">
@@ -2753,6 +2754,16 @@
   }
 
   function openAddProduct() {
+    // Gate: brands without credits should top up before adding products,
+    // otherwise customers who scan the QR will hit "out of credits" anyway.
+    const brand = lastDashboardData?.brand;
+    if (brand && !brand.unlimited) {
+      const remaining = Math.max(0, (brand.tryon_credits || 0) - (brand.tryon_credits_used || 0));
+      if (remaining === 0) {
+        openTopupModal('You need credits before adding products. Top up to keep customers trying on.');
+        return;
+      }
+    }
     document.getElementById('apError').className = 'alert';
     ['apSku','apName','apPrice','apDesc','apQrLimit'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('apCurrency').value = 'PKR';
@@ -3648,11 +3659,18 @@
     return `TIF-${yy}${mm}${dd}-${rand}`;
   }
 
-  function openTopupModal() {
+  function openTopupModal(reason) {
     document.getElementById('tuError').className = 'alert';
     document.getElementById('tuCreditsInput').value = '';
     document.querySelectorAll('.topup-preset').forEach(p => p.classList.remove('active'));
     document.getElementById('tuConversion').style.display = 'none';
+    const reasonEl = document.getElementById('tuReason');
+    if (reason) {
+      reasonEl.textContent = reason;
+      reasonEl.style.display = 'block';
+    } else {
+      reasonEl.style.display = 'none';
+    }
     // Pre-generate a receipt ID so customer sees it as soon as they pick credits
     document.getElementById('tuReceiptId').textContent = genReceiptId();
     document.getElementById('topupModal').classList.add('open');
