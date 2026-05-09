@@ -374,6 +374,48 @@
     }
     .sw-section-head h3 { margin: 0 0 .15rem; font-size: 1.05rem; }
     .sw-section-head p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+    /* Notifications popover — desktop anchors to bell, mobile becomes a
+       compact sheet at the top with a dimmed backdrop behind it. */
+    .notif-panel {
+      position: absolute;
+      right: 0;
+      top: calc(100% + .5rem);
+      width: 320px;
+      max-width: calc(100vw - 2rem);
+      max-height: 420px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      box-shadow: 0 12px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08);
+      z-index: 100;
+    }
+    @media (max-width: 720px) {
+      .notif-panel {
+        position: fixed !important;
+        top: 5rem !important;
+        right: .5rem !important;
+        left: auto !important;
+        width: min(320px, calc(100vw - 1rem)) !important;
+        max-height: 60vh;
+      }
+    }
+    .notif-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .25);
+      z-index: 95;
+    }
+    .notif-backdrop.open { display: block; }
+
+    /* "Live" green-pulse indicator next to ↻ Refresh */
+    @keyframes livePulse {
+      0%   { box-shadow: 0 0 0 0 rgba(16,185,129,.55); }
+      70%  { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+      100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+    }
     /* Sticky search bar pinned to the top of each list section so users
        can search through 1000s of products / passcodes without scrolling
        back up. */
@@ -1156,12 +1198,17 @@
             <div id="dashProfileGrid" style="display:none; margin-top: .75rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .35rem .9rem; font-size: .82rem; color: var(--muted);"></div>
           </div>
           <div style="display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; flex-shrink: 0;">
+            <span id="liveIndicator" title="Auto-refreshes every 30 seconds while this tab is visible." style="display:none; font-size:.72rem; color: var(--muted); font-weight:600; align-self:center;">
+              <span style="display:inline-block; width:.45rem; height:.45rem; border-radius:50%; background:#10b981; margin-right:.3rem; vertical-align:.05rem; box-shadow: 0 0 0 0 rgba(16,185,129,.5); animation: livePulse 2s infinite;"></span>
+              Live
+            </span>
             <button class="refresh-btn" onclick="refreshDashboard()">↻ Refresh</button>
             <div style="position: relative;">
               <button class="refresh-btn" id="notifBtn" onclick="toggleNotifications(event)" style="position: relative;">
                 🔔 <span id="notifCount" style="display:none; position:absolute; top:-4px; right:-4px; background:#ef4444; color:#fff; font-size:.6rem; font-weight:700; padding:2px 5px; border-radius:9999px; min-width: 16px; text-align:center;"></span>
               </button>
-              <div id="notifPanel" style="display:none; position:absolute; right:0; top:calc(100% + .5rem); width:340px; max-width: calc(100vw - 2rem); max-height:420px; overflow-y:auto; background:#fff; border:1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--sh2); z-index: 100;">
+              <div id="notifBackdrop" class="notif-backdrop" onclick="closeNotifications()"></div>
+              <div id="notifPanel" class="notif-panel" style="display:none;">
                 <div style="padding:.75rem 1rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                   <strong style="font-size:.9rem;">Notifications</strong>
                   <button onclick="markAllNotificationsRead()" style="background:none; border:none; color:var(--cyan); font-size:.78rem; font-weight:600; cursor:pointer;">Mark all read</button>
@@ -2011,6 +2058,7 @@
     // distinct error so we don't blame the network for a frontend bug.
     try {
       renderDashboard(data);
+      startLivePolling();
     } catch (err) {
       show('loginView');
       hide('loadingView');
@@ -2287,8 +2335,59 @@
     if (activeBrandId) await fetchAndRender(activeBrandId);
   }
 
+  // ── Live (auto) refresh ──
+  // Polls /overview every 30s while the dashboard tab is visible. Quietly
+  // re-renders without flashing the loading view.
+  let livePollInterval = null;
+  let lastLiveRefreshAt = 0;
+  const LIVE_REFRESH_MS = 30000;
+
+  async function refreshDashboardLive() {
+    if (!activeBrandId || document.hidden) return;
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/overview`);
+      if (!res.ok) return;
+      const data = await res.json();
+      renderDashboard(data);
+      // Refresh per-section data so passcodes/products/QR usage stay live
+      if (typeof loadBrandPasscodes === 'function') loadBrandPasscodes();
+      if (typeof loadProducts === 'function')        loadProducts();
+      if (typeof loadQrCodes === 'function')         loadQrCodes();
+      lastLiveRefreshAt = Date.now();
+    } catch (err) {
+      // Background refresh — never surface errors to the UI.
+      console.warn('[dashboard] live refresh failed:', err);
+    }
+  }
+
+  function startLivePolling() {
+    if (livePollInterval) return;
+    const ind = document.getElementById('liveIndicator');
+    if (ind) ind.style.display = 'inline-flex';
+    livePollInterval = setInterval(refreshDashboardLive, LIVE_REFRESH_MS);
+  }
+
+  function stopLivePolling() {
+    if (livePollInterval) {
+      clearInterval(livePollInterval);
+      livePollInterval = null;
+    }
+    const ind = document.getElementById('liveIndicator');
+    if (ind) ind.style.display = 'none';
+  }
+
+  // Coming back to a stale tab triggers an immediate refresh.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && activeBrandId) {
+      if (Date.now() - lastLiveRefreshAt > LIVE_REFRESH_MS) {
+        refreshDashboardLive();
+      }
+    }
+  });
+
   function logout() {
     activeBrandId = null;
+    stopLivePolling();
     localStorage.removeItem('tif_brand_id');
     localStorage.removeItem('tif_brand_email');
     hide('dashView');
@@ -3727,9 +3826,22 @@
   function toggleNotifications(e) {
     if (e) e.stopPropagation();
     const panel = document.getElementById('notifPanel');
+    const backdrop = document.getElementById('notifBackdrop');
     const isOpen = panel.style.display === 'block';
-    panel.style.display = isOpen ? 'none' : 'block';
-    if (!isOpen) refreshNotifications();
+    if (isOpen) {
+      panel.style.display = 'none';
+      if (backdrop) backdrop.classList.remove('open');
+    } else {
+      panel.style.display = 'block';
+      if (backdrop) backdrop.classList.add('open');
+      refreshNotifications();
+    }
+  }
+  function closeNotifications() {
+    const panel = document.getElementById('notifPanel');
+    const backdrop = document.getElementById('notifBackdrop');
+    if (panel) panel.style.display = 'none';
+    if (backdrop) backdrop.classList.remove('open');
   }
   function markAllNotificationsRead() {
     const read = getReadIds();
@@ -3737,14 +3849,16 @@
     saveReadIds(read);
     renderNotifications();
   }
-  // Close notifications when clicking outside.
-  document.addEventListener('click', (e) => {
-    const panel = document.getElementById('notifPanel');
-    const btn   = document.getElementById('notifBtn');
-    if (!panel || !btn) return;
-    if (panel.style.display === 'block' && !panel.contains(e.target) && !btn.contains(e.target)) {
-      panel.style.display = 'none';
-    }
+  // Close notifications when tapping outside (mouse + touch).
+  ['click', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, (e) => {
+      const panel = document.getElementById('notifPanel');
+      const btn   = document.getElementById('notifBtn');
+      if (!panel || !btn) return;
+      if (panel.style.display === 'block' && !panel.contains(e.target) && !btn.contains(e.target)) {
+        closeNotifications();
+      }
+    });
   });
 
   // ── Account dropdown ──
