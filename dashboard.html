@@ -359,32 +359,64 @@
     /* Mobile bottom tab bar — REMOVED. Top tabs are used on every screen. */
     .mobile-tab-bar { display: none !important; }
 
-    /* Compact dashboard header + top-tab nav on mobile so the whole
-       dashboard fits without scrolling on a typical phone. */
+    /* Aggressive mobile compaction so the whole dashboard fits a phone
+       viewport without absurd font sizes and oversized cards. */
     @media (max-width: 720px) {
-      .dash-header { gap: .5rem !important; margin-bottom: .85rem !important; }
-      .dash-brand-info h2 { font-size: 1.15rem; }
-      .dash-brand-info p { font-size: .78rem; }
-      /* Hide brand website URL + profile-details toggle on small screens —
-         they live behind the Account menu instead, freeing vertical space. */
+      .dash-wrap { padding: 0 .25rem; }
+      .dash-header { gap: .5rem !important; margin-bottom: .5rem !important; }
+      .dash-brand-info h2 { font-size: 1rem; line-height: 1.2; }
+      .dash-brand-info p { font-size: .72rem; }
+      .status-badge { padding: .15rem .5rem; font-size: .62rem; }
+      /* Smaller brand logo */
+      #dashBrandLogo { width: 36px !important; height: 36px !important; }
+      /* Hide profile-details / website on the header — they live in Profile tab */
       #dashWebsite,
       #profileToggleBtn,
       #dashProfileGrid { display: none !important; }
-      /* Compact top tabs: full-width, no horizontal padding spillover */
+      /* Compact top tabs */
       .dash-tab-nav {
-        margin-bottom: 1rem;
-        gap: .25rem;
+        margin-bottom: .85rem;
+        gap: .15rem;
         justify-content: space-around;
+        border-bottom-width: 1px;
       }
       .dash-tab-nav .tab-btn {
         flex: 1;
-        padding: .65rem .35rem;
-        font-size: .82rem;
+        padding: .5rem .15rem;
+        font-size: .72rem;
         text-align: center;
       }
-      /* Smaller credits widget on mobile */
-      .credits-widget { padding: 1rem; }
-      .credits-balance { font-size: 1.6rem !important; }
+      .dash-tab-nav .tab-btn .tab-label { display: block; font-size: .7rem; margin-top: .15rem; }
+
+      /* Credits widget — much tighter on mobile */
+      .credits-widget {
+        padding: .85rem 1rem !important;
+        gap: .6rem !important;
+        margin-bottom: .85rem !important;
+      }
+      .credits-label { font-size: .6rem !important; letter-spacing: .04em; margin-bottom: .15rem !important; }
+      .credits-balance { font-size: 1.5rem !important; line-height: 1; }
+      .credits-of { font-size: .85rem !important; }
+      .credits-meta { font-size: .72rem !important; line-height: 1.4; }
+      .credits-bar-labels { font-size: .68rem !important; }
+      .credits-actions .btn { font-size: .82rem; padding: .55rem .85rem; }
+
+      /* Stat cards — smaller numbers, smaller padding, 2-up grid */
+      .stat-grid { gap: .5rem; margin-bottom: 1rem; grid-template-columns: 1fr 1fr !important; }
+      .stat-card { padding: .65rem .75rem !important; border-radius: 12px !important; }
+      .stat-card::before { display: none; }
+      .stat-label { font-size: .58rem !important; letter-spacing: .04em; margin-bottom: .15rem !important; }
+      .stat-value { font-size: 1.25rem !important; line-height: 1; margin-bottom: .15rem !important; }
+      .stat-sub { font-size: .65rem !important; color: var(--muted); }
+
+      /* Section heads inside Products / Codes / Profile tabs */
+      .sw-section { padding: .75rem !important; margin-bottom: .85rem; border-radius: 12px; }
+      .sw-section-head { gap: .5rem; }
+      .sw-section-head h3 { font-size: .95rem !important; }
+      .sw-section-head p { font-size: .72rem !important; }
+
+      /* Page padding */
+      section.section { padding-top: 3rem !important; padding-bottom: 1rem !important; }
     }
 
     /* Coming Soon overlay for upcoming tabs */
