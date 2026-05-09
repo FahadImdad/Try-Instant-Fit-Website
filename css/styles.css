@@ -469,3 +469,56 @@ textarea.form-control{min-height:110px;resize:vertical}
   .hero-cta,.cta-btns{flex-direction:column;align-items:center}
   .stats-grid{grid-template-columns:1fr 1fr}
 }
+
+/* ============================================================
+   GLOBAL MOBILE FRIENDLINESS
+   ============================================================ */
+/* Block horizontal scroll caused by overflowing children. */
+html, body { overflow-x: hidden; }
+
+/* Inputs and selects must be ≥16px to prevent iOS Safari from
+   auto-zooming when the user focuses them. We only enforce this
+   on small screens — desktop styles can use smaller fonts safely. */
+@media (max-width: 720px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
+  input[type="password"],
+  input[type="search"],
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="month"],
+  input[type="time"],
+  input[type="week"],
+  select,
+  textarea,
+  .form-control {
+    font-size: 16px !important;
+  }
+
+  /* Tap-target floor for buttons + clickable form-control siblings.
+     44px is Apple HIG / WCAG 2.5.5 minimum. */
+  button,
+  .btn,
+  [role="button"] {
+    min-height: 44px;
+  }
+
+  /* Modals on mobile: fill the viewport edge-to-edge with safe padding,
+     and allow vertical scroll for tall forms (Add Product etc). */
+  .modal-backdrop { padding: 0 !important; }
+  .modal {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 100vh;
+    margin: 0;
+    border-radius: 0;
+    overflow-y: auto;
+    padding: 1rem !important;
+  }
+}
+
+/* Generic image safety — never let a stray image push horizontal scroll. */
+img { max-width: 100%; height: auto; }
