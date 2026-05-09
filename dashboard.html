@@ -3723,6 +3723,50 @@
       }
     } catch (e) { console.warn('[notif] failed to load topups:', e); }
 
+    // Try-on reports — show recent customer reports about this brand's QRs
+    // (pending = "we're reviewing", approved = "you got a credit back",
+    // denied = "we reviewed and decided no refund").
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/reports?limit=20`);
+      if (res.ok) {
+        const data = await safeJson(res);
+        const reports = (data.reports || []);
+        for (const r of reports) {
+          const typeLabel = ({
+            tryon_bad: 'bad try-on',
+            image_bad: 'bad image processing',
+            feedback:  'feedback',
+            difficulty: 'platform issue',
+          })[r.type] || r.type;
+          if (r.status === 'approved' && r.credit_refunded) {
+            notifications.push({
+              id: `report-refunded-${r.id}`,
+              icon: '✅',
+              title: '1 credit refunded',
+              body:  `Customer reported a ${typeLabel} — we approved it and refunded your credit.`,
+              ts:    r.refund_at || r.resolved_at || r.created_at,
+            });
+          } else if (r.status === 'pending') {
+            notifications.push({
+              id: `report-pending-${r.id}`,
+              icon: '🚩',
+              title: `Customer report under review`,
+              body:  `A customer flagged a ${typeLabel}. We'll review and refund your credit if it was our fault — usually within 24h.`,
+              ts:    r.created_at,
+            });
+          } else if (r.status === 'denied') {
+            notifications.push({
+              id: `report-denied-${r.id}`,
+              icon: '↩️',
+              title: 'Report reviewed — no refund issued',
+              body:  r.resolution_note || `We reviewed the customer's ${typeLabel} report and didn't issue a refund.`,
+              ts:    r.resolved_at || r.created_at,
+            });
+          }
+        }
+      }
+    } catch (e) { console.warn('[notif] failed to load reports:', e); }
+
     // Low-credit warning, derived from current dashboard state.
     const brand = lastDashboardData?.brand;
     if (brand && !brand.unlimited) {

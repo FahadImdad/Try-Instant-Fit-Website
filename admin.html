@@ -290,6 +290,7 @@
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="analytics" onclick="switchAdminTab('analytics')">📊 Analytics</button>
       <button class="admin-tab" data-tab="topups" onclick="switchAdminTab('topups')">💳 Top-Up Requests <span class="count" id="cntTopups" style="background:#fef3c7; color:#92400e;">0</span></button>
+      <button class="admin-tab" data-tab="reports" onclick="switchAdminTab('reports')">🚩 Reports <span class="count" id="cntReports" style="background:#fee2e2; color:#991b1b;">0</span></button>
       <button class="admin-tab" data-tab="brands" onclick="switchAdminTab('brands')">🏢 Brands <span class="count" id="cntBrands">0</span></button>
     </div>
 
@@ -310,6 +311,19 @@
         <input type="search" id="topupSearch" placeholder="🔎  Search by brand, email, receipt, or amount…" oninput="renderTopups()" style="margin-left:auto; padding:.5rem .85rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:.85rem; min-width:280px; font-family: inherit;">
       </div>
       <div id="topupsList"></div>
+    </div>
+
+    <!-- ── REPORTS PANE ── -->
+    <div id="pane-reports" class="admin-pane">
+      <div class="filter-row">
+        <button class="filter-pill active" data-filter="" onclick="filterReports('')">All</button>
+        <button class="filter-pill" data-filter="pending"  onclick="filterReports('pending')">Pending</button>
+        <button class="filter-pill" data-filter="approved" onclick="filterReports('approved')">Approved (Refunded)</button>
+        <button class="filter-pill" data-filter="denied"   onclick="filterReports('denied')">Denied</button>
+        <button class="filter-pill" data-filter="closed"   onclick="filterReports('closed')">Closed</button>
+        <input type="search" id="reportSearch" placeholder="🔎  Search by brand, reason, or message…" oninput="renderReports()" style="margin-left:auto; padding:.5rem .85rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:.85rem; min-width:280px; font-family: inherit;">
+      </div>
+      <div id="reportsList"></div>
     </div>
 
     <!-- ── BRANDS PANE ── -->
@@ -472,9 +486,147 @@ function switchAdminTab(name) {
 }
 
 async function refreshAll() {
-  await Promise.all([loadBrands(), loadTopups()]);
-  // Analytics is derived from those two — re-render after both land.
+  await Promise.all([loadBrands(), loadTopups(), loadReports()]);
+  // Analytics is derived from those — re-render after all land.
   renderAnalytics();
+}
+
+// Tiny HTML-escape helper for any user-controlled string we render.
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',
+  })[c]);
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// REPORTS — admin queue, approve refund / deny / close
+// ──────────────────────────────────────────────────────────────────────
+let allReports = [];
+let reportFilter = '';
+
+async function loadReports() {
+  try {
+    const res = await adminFetch(`${API}/api/admin/reports`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to load reports');
+    allReports = data.reports || [];
+  } catch (err) {
+    console.error('[reports] load failed:', err);
+    allReports = [];
+  }
+  renderReports();
+}
+
+function filterReports(f) {
+  reportFilter = f;
+  document.querySelectorAll('#pane-reports .filter-pill').forEach(p =>
+    p.classList.toggle('active', p.dataset.filter === f)
+  );
+  renderReports();
+}
+
+function renderReports() {
+  const list = document.getElementById('reportsList');
+  if (!list) return;
+  const search = (document.getElementById('reportSearch')?.value || '').trim().toLowerCase();
+  let rows = allReports;
+  if (reportFilter) rows = rows.filter(r => r.status === reportFilter);
+  if (search) {
+    rows = rows.filter(r => {
+      const blob = [
+        r.brand?.name, r.brand?.email, r.reason, r.message, r.type, r.status,
+      ].filter(Boolean).join(' ').toLowerCase();
+      return blob.includes(search);
+    });
+  }
+
+  // Update tab count badge with the number of pending reports
+  const pendingCount = allReports.filter(r => r.status === 'pending').length;
+  const cnt = document.getElementById('cntReports');
+  if (cnt) cnt.textContent = pendingCount;
+
+  if (!rows.length) {
+    list.innerHTML = `<div class="empty"><p style="color:var(--muted); margin:0;">No reports${reportFilter ? ' in this filter' : ''}.</p></div>`;
+    return;
+  }
+
+  list.innerHTML = rows.map(r => {
+    const statusBadge = ({
+      pending:  '<span class="status-badge" style="background:#fef3c7; color:#92400e;">Pending</span>',
+      approved: '<span class="status-badge" style="background:#d1fae5; color:#065f46;">✓ Refunded</span>',
+      denied:   '<span class="status-badge" style="background:#fee2e2; color:#991b1b;">Denied</span>',
+      closed:   '<span class="status-badge" style="background:#e5e7eb; color:#374151;">Closed</span>',
+    })[r.status] || '';
+
+    const typeLabel = ({
+      tryon_bad: '🚩 Bad try-on',
+      image_bad: '🖼️ Bad image-process',
+      feedback:  '💬 Feedback',
+      difficulty: '⚠️ Platform difficulty',
+    })[r.type] || r.type;
+
+    const refundEligible = (r.type === 'tryon_bad' || r.type === 'image_bad');
+    const isPending = r.status === 'pending';
+
+    return `
+      <div class="topup-card" style="border-left: 4px solid ${r.status === 'pending' ? '#f59e0b' : 'transparent'};">
+        <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:.5rem;">
+          <div>
+            <strong style="font-size:.95rem;">${typeLabel}</strong>
+            ${statusBadge}
+            <span style="font-size:.78rem; color:var(--muted); margin-left:.5rem;">${new Date(r.created_at).toLocaleString()}</span>
+          </div>
+          <div style="font-size:.82rem; color:var(--muted);">
+            Brand: <strong style="color:var(--text);">${escapeHtml(r.brand?.name || r.brand_id || 'Unknown')}</strong>
+            ${r.brand?.email ? ` · ${escapeHtml(r.brand.email)}` : ''}
+          </div>
+        </div>
+        ${r.reason  ? `<div style="font-size:.85rem; margin-bottom:.25rem;"><strong>Reason:</strong> ${escapeHtml(r.reason)}</div>` : ''}
+        ${r.message ? `<div style="font-size:.85rem; margin-bottom:.5rem; white-space:pre-wrap;"><strong>Note:</strong> ${escapeHtml(r.message)}</div>` : ''}
+        <div style="display:flex; gap:.5rem; flex-wrap:wrap; font-size:.78rem; color:var(--muted); margin-bottom:.5rem;">
+          ${r.product_id  ? `<span>Product: <code>${escapeHtml(r.product_id)}</code></span>` : ''}
+          ${r.qr_id       ? `<span>QR: <code>${escapeHtml(r.qr_id.slice(0,8))}…</code></span>` : ''}
+          ${r.tryon_id    ? `<span>Try-on: <code>${escapeHtml(r.tryon_id.slice(0,8))}…</code></span>` : ''}
+        </div>
+        ${r.result_url ? `<div style="margin-bottom:.5rem;"><a href="${escapeHtml(r.result_url)}" target="_blank" rel="noopener" style="color: var(--cyan); font-size:.85rem;">↗ View try-on result image</a></div>` : ''}
+        ${r.screenshot_url ? `<div style="margin-bottom:.5rem;"><a href="${escapeHtml(r.screenshot_url)}" target="_blank" rel="noopener" style="color: var(--cyan); font-size:.85rem;">↗ View user screenshot</a></div>` : ''}
+        ${r.resolution_note ? `<div style="font-size:.82rem; color:var(--muted); padding:.5rem .75rem; background:var(--surface); border-radius: var(--r-md); margin-bottom:.5rem;"><strong>Resolution:</strong> ${escapeHtml(r.resolution_note)} ${r.resolved_by ? `· by ${escapeHtml(r.resolved_by)}` : ''}</div>` : ''}
+        ${isPending ? `
+          <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+            ${refundEligible ? `<button class="btn btn-primary btn-sm" onclick="resolveReport('${r.id}', 'approve')" style="background:#10b981; border-color:transparent;">✓ Approve & Refund $0.125</button>` : ''}
+            <button class="btn btn-secondary btn-sm" onclick="resolveReport('${r.id}', 'deny')" style="color:#991b1b; border-color:#fca5a5;">✕ Deny</button>
+            <button class="btn btn-secondary btn-sm" onclick="resolveReport('${r.id}', 'close')">Close (no action)</button>
+          </div>
+        ` : ''}
+      </div>`;
+  }).join('');
+}
+
+async function resolveReport(reportId, action) {
+  let note = null;
+  if (action === 'deny' || action === 'close') {
+    note = prompt(action === 'deny' ? 'Reason for denying (optional, shown to brand):' : 'Closing note (optional):');
+    if (note === null) return; // user cancelled
+  } else if (action === 'approve') {
+    if (!confirm('Approve this report and refund 1 credit ($0.125) to the brand?')) return;
+  }
+  try {
+    const res = await adminFetch(`${API}/api/admin/reports/${reportId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, resolution_note: note || null, resolved_by: getAdminEmail() || 'admin' }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    await loadReports();
+  } catch (err) {
+    alert('Could not resolve: ' + (err.message || err));
+  }
+}
+
+function getAdminEmail() {
+  try { return localStorage.getItem('tif_admin_email') || ''; } catch { return ''; }
 }
 
 // ── ANALYTICS ──
