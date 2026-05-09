@@ -1402,28 +1402,7 @@
           <div id="googleSignInWrap">
             <div id="googleSignInBtn" style="display: flex; justify-content: center; margin-bottom: 1rem;"></div>
             <p id="googleSignInLoading" style="font-size: .82rem; color: var(--muted); margin: 0;">Loading sign-in…</p>
-            <!-- Static fallback: shows immediately on page load. Hidden once
-                 GSI button renders. Lets users recover even if a JS error
-                 earlier in the page stops initGoogleSignIn() from ever
-                 running. -->
-            <div id="staticSignInFallback" style="display:none; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border);">
-              <p style="font-size:.78rem; color:var(--muted); margin: 0 0 .5rem;">Sign-in stuck or blocked? Try this:</p>
-              <button onclick="(window.initGoogleSignIn||function(){location.reload()})()" style="background:none; border:1px solid var(--cyan); color:var(--cyan); padding:.45rem 1rem; border-radius: var(--r-md); font-weight:700; cursor:pointer; font-family:inherit; margin-right:.35rem;">↻ Retry sign-in</button>
-              <button onclick="location.reload()" style="background:none; border:1px solid var(--border); color:var(--muted); padding:.45rem 1rem; border-radius: var(--r-md); font-weight:700; cursor:pointer; font-family:inherit;">Reload page</button>
-            </div>
           </div>
-          <script>
-            // Reveal the static fallback after 6s no matter what — even if
-            // a JS error earlier on the page kept initGoogleSignIn() from
-            // running, the user still sees a recovery button.
-            setTimeout(function () {
-              var btn = document.getElementById('googleSignInBtn');
-              var fb  = document.getElementById('staticSignInFallback');
-              if (btn && fb && !btn.querySelector('div')) {
-                fb.style.display = 'block';
-              }
-            }, 6000);
-          </script>
 
           <!-- Hidden fallback inputs (used by autoload-from-URL flow only) -->
           <input type="hidden" id="loginEmail">
@@ -2185,11 +2164,10 @@
   }
 
   async function initGoogleSignIn() {
-    console.log('[signin] init starting');
     const loadingEl = document.getElementById('googleSignInLoading');
     gisRendered = false;
-    // Hard 8s ceiling — beyond that we show a retry instead of a spinner.
-    const timeoutHandle = setTimeout(() => showSignInTimeout(loadingEl), 8000);
+    // Hard 12s ceiling — beyond that we show a retry instead of a spinner.
+    const timeoutHandle = setTimeout(() => showSignInTimeout(loadingEl), 12000);
     try {
       const res = await fetch(`${API}/api/auth/config`);
       const cfg = await res.json();
