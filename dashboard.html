@@ -321,6 +321,43 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
+    /* ── Mobile bottom tab bar ── */
+    .mobile-tab-bar { display: none; }
+    @media (max-width: 720px) {
+      .dash-tab-nav { display: none; }
+      .mobile-tab-bar {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -2px 12px rgba(0,0,0,.06);
+        padding: .35rem 0 calc(.35rem + env(safe-area-inset-bottom, 0));
+        z-index: 90;
+      }
+      .mtab-btn {
+        background: none;
+        border: none;
+        padding: .5rem .25rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .15rem;
+        font-family: inherit;
+        color: var(--muted);
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .mtab-btn .mtab-icon { font-size: 1.25rem; line-height: 1; }
+      .mtab-btn .mtab-label { font-size: .68rem; letter-spacing: .02em; }
+      .mtab-btn.active { color: var(--cyan); }
+      /* Avoid content being hidden behind the fixed bottom bar */
+      body { padding-bottom: 4.5rem; }
+    }
+
     /* Coming Soon overlay for upcoming tabs */
     .upcoming-card {
       background: linear-gradient(135deg, #0f1e3d 0%, #1a2f5a 100%);
@@ -1184,39 +1221,16 @@
         </div>
 
 
-        <!-- Stat cards -->
-        <div class="stat-grid">
-          <div class="stat-card">
-            <div class="stat-label">Total Try-Ons</div>
-            <div class="stat-value" id="statTotal">—</div>
-            <div class="stat-sub">All time</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Today</div>
-            <div class="stat-value" id="statToday">—</div>
-            <div class="stat-sub">Try-ons so far</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">This Week</div>
-            <div class="stat-value" id="statWeek">—</div>
-            <div class="stat-sub">Last 7 days</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">This Month</div>
-            <div class="stat-value" id="statMonth">—</div>
-            <div class="stat-sub">Current month</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Avg AI Time</div>
-            <div class="stat-value" id="statAvg">—</div>
-            <div class="stat-sub">Per try-on</div>
-          </div>
-        </div>
+        <!-- Tab navigation (top — desktop + tablet) -->
+        <nav class="tab-nav dash-tab-nav" role="tablist" aria-label="Dashboard sections">
+          <button class="tab-btn active" role="tab" data-tab="analytics" onclick="switchTab('analytics')">📊 <span class="tab-label">Analytics</span></button>
+          <button class="tab-btn" role="tab" data-tab="products"  onclick="switchTab('products')">👕 <span class="tab-label">Products</span></button>
+          <button class="tab-btn" role="tab" data-tab="code"      onclick="switchTab('code')">🔑 <span class="tab-label">Codes</span></button>
+        </nav>
 
         <!-- Hidden legacy DOM elements kept so JS that targets them by ID
              (ghostLayerStats, productsSection, productsGrid, productsSubtitle,
-             tableBody, tab-ghost-layer, tab-mirror) doesn't throw. The visible
-             "Coming Soon" tabs and tab-nav have been removed. -->
+             tableBody, tab-ghost-layer, tab-mirror, tab-scanwear) doesn't throw. -->
         <div id="tab-ghost-layer" class="tab-content" style="display:none;">
           <div class="source-stats" id="ghostLayerStats"></div>
           <div class="products-section" id="productsSection">
@@ -1226,27 +1240,45 @@
           <div id="tableBody"></div>
         </div>
         <div id="tab-mirror" class="tab-content" style="display:none;"></div>
+        <div id="tab-scanwear" class="tab-content" style="display:none;"></div>
 
-        <!-- Tab: Scan & Wear (only product) -->
-        <div id="tab-scanwear" class="tab-content active">
-          <!-- Per-source stat strip -->
-          <div class="source-stats" id="scanWearStats"></div>
-
-          <!-- ── Section: Brand-wide Passcodes ── -->
-          <div class="sw-section">
-            <div class="sw-section-head">
-              <div>
-                <h3>🔑 Passcodes</h3>
-                <p>One passcode works across <strong>all your QR codes</strong>. Issue per-customer try-on limits.</p>
-              </div>
-              <button class="btn btn-primary btn-sm" onclick="openAddPasscode()">+ Add Passcode</button>
+        <!-- Tab: Analytics -->
+        <div id="tab-analytics" class="tab-content active" role="tabpanel" aria-labelledby="tab-btn-analytics">
+          <!-- Stat cards -->
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-label">Total Try-Ons</div>
+              <div class="stat-value" id="statTotal">—</div>
+              <div class="stat-sub">All time</div>
             </div>
-            <div id="brandPasscodesList" class="passcodes-list">
-              <div class="empty-state-mini">Loading passcodes…</div>
+            <div class="stat-card">
+              <div class="stat-label">Today</div>
+              <div class="stat-value" id="statToday">—</div>
+              <div class="stat-sub">Try-ons so far</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">This Week</div>
+              <div class="stat-value" id="statWeek">—</div>
+              <div class="stat-sub">Last 7 days</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">This Month</div>
+              <div class="stat-value" id="statMonth">—</div>
+              <div class="stat-sub">Current month</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Avg AI Time</div>
+              <div class="stat-value" id="statAvg">—</div>
+              <div class="stat-sub">Per try-on</div>
             </div>
           </div>
 
-          <!-- ── Section: Products & QRs (unified) ── -->
+          <!-- Per-source stat strip -->
+          <div class="source-stats" id="scanWearStats"></div>
+        </div>
+
+        <!-- Tab: Products & QRs -->
+        <div id="tab-products" class="tab-content" role="tabpanel">
           <div class="sw-section">
             <div class="sw-section-head">
               <div>
@@ -1263,6 +1295,29 @@
             <div id="qrGrid" style="display:none;"></div>
           </div>
         </div>
+
+        <!-- Tab: Codes (Passcodes) -->
+        <div id="tab-code" class="tab-content" role="tabpanel">
+          <div class="sw-section">
+            <div class="sw-section-head">
+              <div>
+                <h3>🔑 Passcodes</h3>
+                <p>One passcode works across <strong>all your QR codes</strong>. Issue per-customer try-on limits.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openAddPasscode()">+ Add Passcode</button>
+            </div>
+            <div id="brandPasscodesList" class="passcodes-list">
+              <div class="empty-state-mini">Loading passcodes…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile bottom tab bar (visible on small screens only) -->
+        <nav class="mobile-tab-bar" role="tablist" aria-label="Dashboard sections (mobile)">
+          <button class="mtab-btn active" data-tab="analytics" onclick="switchTab('analytics')"><span class="mtab-icon">📊</span><span class="mtab-label">Analytics</span></button>
+          <button class="mtab-btn" data-tab="products"  onclick="switchTab('products')"><span class="mtab-icon">👕</span><span class="mtab-label">Products</span></button>
+          <button class="mtab-btn" data-tab="code"      onclick="switchTab('code')"><span class="mtab-icon">🔑</span><span class="mtab-label">Codes</span></button>
+        </nav>
 
         <!-- Lightbox -->
         <div class="lightbox" id="lightbox" onclick="closeLightbox()">
@@ -2341,14 +2396,26 @@
   });
 
   // ── Tab switching ──
+  // Tabs: 'analytics' | 'products' | 'code'
+  // Loads only the data the tab actually needs (lazy) but keeps results
+  // cached across switches via the existing module-level arrays.
   function switchTab(tabName) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabName));
-    if (tabName === 'scanwear' && activeBrandId) {
-      loadBrandPasscodes();
+    // Sync active state on both the desktop tab nav and mobile bottom bar.
+    document.querySelectorAll('.tab-btn, .mtab-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.tab === tabName)
+    );
+    document.querySelectorAll('.tab-content').forEach(c =>
+      c.classList.toggle('active', c.id === 'tab-' + tabName)
+    );
+    if (!activeBrandId) return;
+    if (tabName === 'products') {
       loadProducts();
       loadQrCodes();
+    } else if (tabName === 'code') {
+      loadBrandPasscodes();
     }
+    // Analytics tab gets its data from the main loadDashboard() call —
+    // no per-switch reload needed.
   }
 
   // ════════════════════════════════════════════════════════════════
