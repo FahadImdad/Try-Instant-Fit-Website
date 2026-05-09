@@ -374,6 +374,25 @@
     }
     .sw-section-head h3 { margin: 0 0 .15rem; font-size: 1.05rem; }
     .sw-section-head p { margin: 0; font-size: .82rem; color: var(--muted); }
+    /* Sticky search bar pinned to the top of each list section so users
+       can search through 1000s of products / passcodes without scrolling
+       back up. */
+    .sticky-list-bar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: white;
+      padding: .5rem 0 .75rem;
+      margin-bottom: .35rem;
+    }
+    .sticky-list-bar input[type="search"] {
+      width: 100%;
+      padding: .55rem .85rem;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      font-size: 16px;
+      font-family: inherit;
+    }
     .empty-state-mini {
       text-align: center;
       padding: 2rem 1rem;
@@ -1241,6 +1260,9 @@
               </div>
               <button class="btn btn-primary btn-sm" onclick="openAddPasscode()">+ Add Passcode</button>
             </div>
+            <div class="sticky-list-bar">
+              <input type="search" id="passcodeSearch" placeholder="🔎  Search by code or label…" oninput="renderBrandPasscodes()">
+            </div>
             <div id="brandPasscodesList" class="passcodes-list">
               <div class="empty-state-mini">Loading passcodes…</div>
             </div>
@@ -1254,6 +1276,9 @@
                 <p>Each product comes with its own printable QR. Add a product → QR auto-generated.</p>
               </div>
               <button class="btn btn-primary btn-sm" onclick="openAddProduct()">+ Add Product</button>
+            </div>
+            <div class="sticky-list-bar">
+              <input type="search" id="productSearch" placeholder="🔎  Search by name, SKU, or price…" oninput="renderUnified()">
             </div>
             <div id="unifiedList" class="unified-list">
               <div class="empty-state-mini">Loading…</div>
@@ -2376,7 +2401,19 @@
       list.innerHTML = `<div class="empty-state-mini">No passcodes yet. Add one to control how many try-ons each customer gets.</div>`;
       return;
     }
-    list.innerHTML = allBrandPasscodes.map(p => {
+    const search = (document.getElementById('passcodeSearch')?.value || '').trim().toLowerCase();
+    let rows = allBrandPasscodes;
+    if (search) {
+      rows = rows.filter(p => {
+        const blob = `${p.code || ''} ${p.customer_label || ''} ${p.use_limit || ''}`.toLowerCase();
+        return blob.includes(search);
+      });
+      if (rows.length === 0) {
+        list.innerHTML = `<div class="empty-state-mini">No passcodes match "${escapeHtml(search)}".</div>`;
+        return;
+      }
+    }
+    list.innerHTML = rows.map(p => {
       const remaining = p.use_limit - p.used_count;
       const exhausted = remaining <= 0;
       const inactive = !p.active;
@@ -2674,11 +2711,25 @@
       return;
     }
 
+    // Filter by search query (matches name, sku, price, currency)
+    const search = (document.getElementById('productSearch')?.value || '').trim().toLowerCase();
+    let products = allProducts;
+    if (search) {
+      products = products.filter(p => {
+        const blob = `${p.name || ''} ${p.sku || ''} ${p.price || ''} ${p.currency || ''}`.toLowerCase();
+        return blob.includes(search);
+      });
+      if (products.length === 0) {
+        list.innerHTML = `<div class="empty-state-mini" style="grid-column: 1 / -1;">No products match "${escapeHtml(search)}".</div>`;
+        return;
+      }
+    }
+
     // Index QRs by product_uuid for quick lookup
     const qrByProductUuid = {};
     allQrs.forEach(q => { if (q.product_uuid) qrByProductUuid[q.product_uuid] = q; });
 
-    list.innerHTML = allProducts.map(p => {
+    list.innerHTML = products.map(p => {
       const qr = qrByProductUuid[p.id];
       return `
         <div class="unified-tile">
@@ -3578,6 +3629,50 @@
         }
       }
     } catch (e) { console.warn('[notif] failed to load topups:', e); }
+
+    // Try-on reports — show recent customer reports about this brand's QRs.
+    // Pending → "we're reviewing", approved+credit_refunded → "you got 1
+    // credit back", denied → "we reviewed and decided not to refund".
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/reports?limit=20`);
+      if (res.ok) {
+        const data = await safeJson(res);
+        const reports = (data.reports || []);
+        for (const r of reports) {
+          const typeLabel = ({
+            tryon_bad: 'bad try-on',
+            image_bad: 'bad image processing',
+            feedback:  'feedback',
+            difficulty: 'platform issue',
+          })[r.type] || r.type;
+          if (r.status === 'approved' && r.credit_refunded) {
+            notifications.push({
+              id: `report-refunded-${r.id}`,
+              icon: '✅',
+              title: '1 credit refunded',
+              body:  `Customer reported a ${typeLabel} — we approved it and refunded your credit.`,
+              ts:    r.refund_at || r.resolved_at || r.created_at,
+            });
+          } else if (r.status === 'pending') {
+            notifications.push({
+              id: `report-pending-${r.id}`,
+              icon: '🚩',
+              title: 'Customer report under review',
+              body:  `A customer flagged a ${typeLabel}. We'll review and refund your credit if it was our fault — usually within 24h.`,
+              ts:    r.created_at,
+            });
+          } else if (r.status === 'denied') {
+            notifications.push({
+              id: `report-denied-${r.id}`,
+              icon: '↩️',
+              title: 'Report reviewed — no refund issued',
+              body:  r.resolution_note || `We reviewed the customer's ${typeLabel} report and didn't issue a refund.`,
+              ts:    r.resolved_at || r.created_at,
+            });
+          }
+        }
+      }
+    } catch (e) { console.warn('[notif] failed to load reports:', e); }
 
     // Low-credit warning, derived from current dashboard state.
     const brand = lastDashboardData?.brand;
