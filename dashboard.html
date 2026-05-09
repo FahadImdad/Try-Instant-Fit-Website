@@ -417,6 +417,22 @@
       100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
     }
 
+    /* ── Sticky-on-scroll layering ──
+       Stack: dash-header (top:0) → dash-tab-nav (below header) →
+       per-tab frozen zone (section heading + search + Add button).
+       Heights are CSS variables so we can tweak without JS. */
+    :root { --dash-hdr-h: 4.5rem; --dash-tabs-h: 3.25rem; --dash-frz-top: 7.75rem; }
+    @media (max-width: 720px) {
+      :root { --dash-hdr-h: 3.5rem; --dash-tabs-h: 2.85rem; --dash-frz-top: 6.35rem; }
+    }
+    .dash-header {
+      position: sticky;
+      top: 0;
+      z-index: 12;
+      background: white;
+      padding: .35rem 0 .5rem;
+    }
+
     /* ── Top tab nav (Facebook-style) ── */
     .dash-tab-nav {
       display: flex;
@@ -424,6 +440,10 @@
       margin-bottom: 1.25rem;
       border-bottom: 2px solid var(--border);
       flex-wrap: wrap;
+      position: sticky;
+      top: var(--dash-hdr-h);
+      z-index: 11;
+      background: white;
     }
     .dash-tab-nav .tab-btn {
       background: none;
@@ -650,16 +670,44 @@
       color: #78350f;
       margin-bottom: .65rem;
     }
-    /* Sticky search bar pinned to the top of each list section so users
-       can search through 1000s of products / passcodes without scrolling
-       back up. */
+    /* Sticky search bar — pinned just below the tab nav so users can
+       search through 1000s of products / passcodes without losing
+       context while they scroll. */
     .sticky-list-bar {
       position: sticky;
-      top: 0;
-      z-index: 5;
+      top: var(--dash-frz-top);
+      z-index: 9;
       background: white;
       padding: .5rem 0 .75rem;
       margin-bottom: .35rem;
+    }
+    /* Section heading (with title + + Add button) sticks above the
+       search bar so the heading + Add CTA stay visible during scroll. */
+    .sw-section .sw-section-head {
+      position: sticky;
+      top: var(--dash-frz-top);
+      z-index: 10;
+      background: white;
+      padding-bottom: .35rem;
+    }
+    /* When BOTH a section-head and a sticky-list-bar are present, the
+       search bar should sit *below* the heading — bump it down by the
+       heading's approximate height. */
+    .sw-section .sw-section-head + .sticky-list-bar {
+      top: calc(var(--dash-frz-top) + 3rem);
+    }
+    @media (max-width: 720px) {
+      .sw-section .sw-section-head + .sticky-list-bar {
+        top: calc(var(--dash-frz-top) + 2.5rem);
+      }
+    }
+    /* Credits widget on Analytics tab + Profile hero on Profile tab
+       also stick below the tab nav. */
+    #tab-analytics > #creditsWidget,
+    #tab-profile .profile-hero {
+      position: sticky;
+      top: var(--dash-frz-top);
+      z-index: 9;
     }
     .sticky-list-bar input[type="search"] {
       width: 100%;
