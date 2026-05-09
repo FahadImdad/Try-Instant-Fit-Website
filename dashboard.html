@@ -327,6 +327,133 @@
       100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
     }
 
+    /* ── Compact product list (scales to 1000s of products) ── */
+    .product-list { display: flex; flex-direction: column; gap: .35rem; }
+    .product-list-row {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color .15s;
+    }
+    .product-list-row.open { border-color: var(--cyan); }
+    .product-list-summary {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      padding: .55rem .65rem;
+      cursor: pointer;
+    }
+    .pl-thumb {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .pl-thumb-ph { display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .pl-info { flex: 1; min-width: 0; }
+    .pl-name {
+      font-weight: 700;
+      font-size: .9rem;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .pl-meta {
+      font-size: .72rem;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-top: .1rem;
+    }
+    .pl-status {
+      display: inline-block;
+      padding: .15rem .5rem;
+      border-radius: 999px;
+      font-size: .62rem;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .pl-status-on   { background: #d1fae5; color: #065f46; }
+    .pl-status-off  { background: #e5e7eb; color: #4b5563; }
+    .pl-status-warn { background: #fef3c7; color: #92400e; }
+    .pl-chevron {
+      color: var(--muted);
+      font-size: 1rem;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+      transition: transform .15s;
+    }
+    .product-list-drawer {
+      border-top: 1px solid var(--border);
+      padding: .75rem;
+      background: var(--surface);
+    }
+    .pl-drawer-grid {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: .85rem;
+      align-items: start;
+      margin-bottom: .65rem;
+    }
+    @media (max-width: 480px) {
+      .pl-drawer-grid { grid-template-columns: 100px 1fr; gap: .65rem; }
+    }
+    .pl-drawer-qr {
+      width: 100%;
+      aspect-ratio: 1;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: white;
+    }
+    .pl-drawer-meta {
+      display: grid;
+      gap: .35rem;
+      font-size: .78rem;
+    }
+    .pl-drawer-meta > div {
+      display: flex;
+      justify-content: space-between;
+      gap: .5rem;
+      padding: .25rem 0;
+      border-bottom: 1px dashed var(--border);
+    }
+    .pl-drawer-meta > div:last-child { border-bottom: 0; }
+    .pl-drawer-meta span { color: var(--muted); }
+    .pl-drawer-meta strong { color: var(--text); font-weight: 700; }
+    .pl-drawer-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+      gap: .35rem;
+    }
+    .pl-drawer-actions .btn { font-size: .75rem; padding: .45rem .5rem; min-height: 36px; }
+    .pl-drawer-warn {
+      padding: .65rem .85rem;
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      font-size: .82rem;
+      color: #78350f;
+      margin-bottom: .65rem;
+    }
+
+    /* Sticky search + Add button at the top of Products / Codes tabs.
+       Pinned so users can search/add while scrolling through 1000s of rows. */
+    .sticky-list-header {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: white;
+      padding: .75rem 0;
+      margin: -.75rem 0 .5rem;
+    }
+
     /* ── Profile tab layout ── */
     .profile-section { padding: 1rem !important; }
     .profile-hero {
@@ -1424,14 +1551,12 @@
         <!-- Tab: Products & QRs -->
         <div id="tab-products" class="tab-content" role="tabpanel">
           <div class="sw-section">
-            <div class="sw-section-head">
-              <div>
-                <h3>👕 Products & QRs</h3>
-                <p>Each product comes with its own printable QR. Add a product → QR auto-generated.</p>
+            <div class="sticky-list-header">
+              <div style="display:flex; gap:.5rem; align-items:center; margin-bottom:.5rem;">
+                <input type="search" id="productSearch" placeholder="🔎  Search products…" oninput="renderUnified()" style="flex:1; padding:.55rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:16px; font-family: inherit;">
+                <button class="btn btn-primary btn-sm" onclick="openAddProduct()" style="white-space:nowrap;">+ Add</button>
               </div>
-              <button class="btn btn-primary btn-sm" onclick="openAddProduct()">+ Add Product</button>
             </div>
-            <input type="search" id="productSearch" placeholder="🔎  Search by product name, SKU, or price…" oninput="renderUnified()" style="width:100%; padding:.65rem .85rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:.95rem; font-family: inherit; margin-bottom: 1rem;">
             <div id="unifiedList" class="unified-list">
               <div class="empty-state-mini">Loading…</div>
             </div>
@@ -1444,14 +1569,12 @@
         <!-- Tab: Codes (Passcodes) -->
         <div id="tab-code" class="tab-content" role="tabpanel">
           <div class="sw-section">
-            <div class="sw-section-head">
-              <div>
-                <h3>🔑 Passcodes</h3>
-                <p>One passcode works across <strong>all your QR codes</strong>. Issue per-customer try-on limits.</p>
+            <div class="sticky-list-header">
+              <div style="display:flex; gap:.5rem; align-items:center; margin-bottom:.5rem;">
+                <input type="search" id="passcodeSearch" placeholder="🔎  Search codes…" oninput="renderBrandPasscodes()" style="flex:1; padding:.55rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:16px; font-family: inherit;">
+                <button class="btn btn-primary btn-sm" onclick="openAddPasscode()" style="white-space:nowrap;">+ Add</button>
               </div>
-              <button class="btn btn-primary btn-sm" onclick="openAddPasscode()">+ Add Passcode</button>
             </div>
-            <input type="search" id="passcodeSearch" placeholder="🔎  Search by code or limit…" oninput="renderBrandPasscodes()" style="width:100%; padding:.65rem .85rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:.95rem; font-family: inherit; margin-bottom: 1rem;">
             <div id="brandPasscodesList" class="passcodes-list">
               <div class="empty-state-mini">Loading passcodes…</div>
             </div>
@@ -3043,55 +3166,93 @@
     const qrByProductUuid = {};
     allQrs.forEach(q => { if (q.product_uuid) qrByProductUuid[q.product_uuid] = q; });
 
-    list.innerHTML = products.map(p => {
+    // Index QRs by product_uuid for quick lookup
+    const qrByProductUuid = {};
+    allQrs.forEach(q => { if (q.product_uuid) qrByProductUuid[q.product_uuid] = q; });
+
+    // Compact list rows that scale to 1000s of products. Each row is one
+    // tap-target; a tap toggles an inline drawer with the full QR + actions.
+    list.innerHTML = `<div class="product-list">${products.map(p => {
       const qr = qrByProductUuid[p.id];
+      const qNameEsc  = JSON.stringify(p.name).replace(/"/g, '&quot;');
+      const qScanEsc  = qr ? JSON.stringify(qr.scan_url).replace(/"/g, '&quot;') : '""';
+      const priceTxt  = p.price ? formatPrice(p.price, p.currency) : '—';
+      const tryonsTxt = qr ? `${fmt(qr.total_used || 0)}${qr.total_limit !== null ? '/' + fmt(qr.total_limit) : ''}` : '—';
+      const statusBadge = !p.active
+        ? '<span class="pl-status pl-status-off">Off</span>'
+        : qr && !qr.active
+          ? '<span class="pl-status pl-status-off">QR off</span>'
+          : qr
+            ? '<span class="pl-status pl-status-on">Active</span>'
+            : '<span class="pl-status pl-status-warn">No QR</span>';
       return `
-        <div class="unified-tile">
-          <div class="unified-tile-head">
+        <div class="product-list-row" id="plrow-${p.id}">
+          <div class="product-list-summary" onclick="toggleProductRow('${p.id}', event)">
             ${p.image_url
-              ? `<img class="unified-tile-img" src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.name)}" loading="lazy">`
-              : '<div class="unified-tile-img-placeholder">👕</div>'}
-            <div class="unified-tile-info">
-              <div class="unified-tile-name">${escapeHtml(p.name)}</div>
-              <div class="unified-tile-sku">${escapeHtml(p.sku)}${!p.active ? ' · disabled' : ''}</div>
-              <div class="unified-tile-price ${p.price ? '' : 'empty'}">${p.price ? formatPrice(p.price, p.currency) : 'No price set'}</div>
+              ? `<img class="pl-thumb" src="${escapeHtml(p.image_url)}" alt="" loading="lazy">`
+              : '<div class="pl-thumb pl-thumb-ph">👕</div>'}
+            <div class="pl-info">
+              <div class="pl-name">${escapeHtml(p.name)}</div>
+              <div class="pl-meta">${escapeHtml(p.sku)} · ${escapeHtml(priceTxt)} · ${tryonsTxt} try-on${tryonsTxt === '1' ? '' : 's'}</div>
             </div>
+            ${statusBadge}
+            <span class="pl-chevron">›</span>
           </div>
-          ${qr ? `
-            <div class="unified-tile-qr">
-              <div class="unified-tile-qr-img">
-                <img src="${qrImageUrl(qr.scan_url, 200)}" alt="QR for ${escapeHtml(p.name)}">
+          <div class="product-list-drawer" hidden>
+            ${qr ? `
+              <div class="pl-drawer-grid">
+                <img class="pl-drawer-qr" src="${qrImageUrl(qr.scan_url, 220)}" alt="QR for ${escapeHtml(p.name)}">
+                <div class="pl-drawer-meta">
+                  <div><span>Try-Ons</span><strong>${fmt(qr.total_used || 0)}${qr.total_limit !== null ? ' / ' + fmt(qr.total_limit) : ''}</strong></div>
+                  <div><span>Passcode</span><strong>${qr.requires_passcode ? '🔑 Required' : 'Open'}</strong></div>
+                  <div><span>QR Status</span>${qr.active ? '<span class="status-badge pill-active">Active</span>' : '<span class="status-badge pill-inactive">Disabled</span>'}</div>
+                </div>
               </div>
-              <div class="unified-tile-qr-info">
-                <div class="row"><span class="muted">Try-Ons</span><strong>${fmt(qr.total_used || 0)}${qr.total_limit !== null ? ' / ' + fmt(qr.total_limit) : ''}</strong></div>
-                <div class="row"><span class="muted">Passcode</span><strong>${qr.requires_passcode ? '🔑 Required' : 'Open'}</strong></div>
-                <div class="row"><span class="muted">Status</span>${qr.active ? '<span class="status-badge pill-active">Active</span>' : '<span class="status-badge pill-inactive">Disabled</span>'}</div>
+              <div class="pl-drawer-actions">
+                <button class="btn btn-primary btn-sm" onclick="viewQrImage(${qScanEsc}, ${qNameEsc})">📱 QR</button>
+                <button class="btn btn-secondary btn-sm" onclick="copyScanUrl(${qScanEsc}, this)">🔗 URL</button>
+                <button class="btn btn-secondary btn-sm" onclick="downloadQr(${qScanEsc}, ${qNameEsc}, this)">⬇ PNG</button>
+                ${(p.image_url || p.isolated_garment_url)
+                  ? `<button class="btn btn-secondary btn-sm" onclick="viewProductImages(${qNameEsc}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')})">Images</button>`
+                  : ''}
+                <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">✏️ Edit</button>
+                ${qr.active
+                  ? `<button class="btn btn-secondary btn-sm" style="color:#92400e; border-color:#fcd34d;" onclick="toggleQrActive('${qr.id}', false, ${qNameEsc})">Disable</button>`
+                  : `<button class="btn btn-primary btn-sm" onclick="toggleQrActive('${qr.id}', true, ${qNameEsc})">Enable</button>`}
+                <button class="btn btn-secondary btn-sm" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteProduct('${p.id}', ${qNameEsc}, '${qr.id}')">🗑 Delete</button>
               </div>
-            </div>
-            <div class="unified-tile-actions">
-              <button class="btn btn-primary" onclick="viewQrImage(${JSON.stringify(qr.scan_url).replace(/"/g, '&quot;')}, ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">📱 View QR</button>
-              <button class="btn btn-secondary" onclick="copyScanUrl(${JSON.stringify(qr.scan_url).replace(/"/g, '&quot;')}, this)">🔗 Copy URL</button>
-              <button class="btn btn-secondary" onclick="downloadQr(${JSON.stringify(qr.scan_url).replace(/"/g, '&quot;')}, ${JSON.stringify(p.name).replace(/"/g, '&quot;')}, this)">⬇ Download QR</button>
-              ${(p.image_url || p.isolated_garment_url)
-                ? `<button class="btn btn-secondary" onclick="viewProductImages(${JSON.stringify(p.name).replace(/"/g, '&quot;')}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')})">View Processed</button>`
-                : '<span></span>'}
-              <button class="btn btn-secondary" onclick="editProduct('${p.id}')">✏️ Edit</button>
-              ${qr.active
-                ? `<button class="btn btn-secondary" style="color:#92400e; border-color:#fcd34d;" onclick="toggleQrActive('${qr.id}', false, ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">Disable QR</button>`
-                : `<button class="btn btn-primary" onclick="toggleQrActive('${qr.id}', true, ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">Re-enable QR</button>`}
-              <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteProduct('${p.id}', ${JSON.stringify(p.name).replace(/"/g, '&quot;')}, '${qr.id}')">Delete</button>
-            </div>
-          ` : `
-            <div class="unified-tile-no-qr">
-              ⚠️ No QR code yet. <button class="btn btn-primary btn-sm" style="margin-left: .5rem;" onclick="generateQrForProduct('${p.id}')">Generate QR</button>
-            </div>
-            <div class="unified-tile-actions">
-              <button class="btn btn-secondary" onclick="editProduct('${p.id}')">Edit Product</button>
-              <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteProduct('${p.id}', ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">Delete</button>
-            </div>
-          `}
+            ` : `
+              <div class="pl-drawer-warn">
+                ⚠️ No QR code yet — <button class="btn btn-primary btn-sm" onclick="generateQrForProduct('${p.id}')">Generate QR</button>
+              </div>
+              <div class="pl-drawer-actions">
+                <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">✏️ Edit</button>
+                <button class="btn btn-secondary btn-sm" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteProduct('${p.id}', ${qNameEsc})">🗑 Delete</button>
+              </div>
+            `}
+          </div>
         </div>`;
-    }).join('');
+    }).join('')}</div>`;
+  }
+
+  // Tap a product row to expand/collapse its detail drawer.
+  function toggleProductRow(productId, event) {
+    if (event && event.target.closest('button, a, input')) return;
+    const row = document.getElementById('plrow-' + productId);
+    if (!row) return;
+    const drawer = row.querySelector('.product-list-drawer');
+    const chevron = row.querySelector('.pl-chevron');
+    if (!drawer) return;
+    const isOpen = !drawer.hasAttribute('hidden');
+    if (isOpen) {
+      drawer.setAttribute('hidden', '');
+      row.classList.remove('open');
+      if (chevron) chevron.textContent = '›';
+    } else {
+      drawer.removeAttribute('hidden');
+      row.classList.add('open');
+      if (chevron) chevron.textContent = '⌃';
+    }
   }
 
   // Generate a QR for a product that doesn't have one yet
