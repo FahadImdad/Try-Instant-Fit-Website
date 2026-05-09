@@ -461,10 +461,6 @@
       margin-bottom: .85rem;
       border-bottom: 2px solid var(--border);
       flex-wrap: wrap;
-      position: sticky;
-      top: calc(var(--nav-h) + var(--dash-hdr-h));
-      z-index: 11;
-      background: white;
     }
     .dash-tab-nav .tab-btn {
       background: none;
@@ -691,44 +687,11 @@
       color: #78350f;
       margin-bottom: .65rem;
     }
-    /* Sticky search bar — pinned just below the tab nav so users can
-       search through 1000s of products / passcodes without losing
-       context while they scroll. */
+    /* Search bar — non-sticky simple input. */
     .sticky-list-bar {
-      position: sticky;
-      top: var(--dash-frz-top);
-      z-index: 9;
       background: white;
       padding: .5rem 0 .75rem;
       margin-bottom: .35rem;
-    }
-    /* Section heading (with title + + Add button) sticks above the
-       search bar so the heading + Add CTA stay visible during scroll. */
-    .sw-section .sw-section-head {
-      position: sticky;
-      top: var(--dash-frz-top);
-      z-index: 10;
-      background: white;
-      padding-bottom: .35rem;
-    }
-    /* When BOTH a section-head and a sticky-list-bar are present, the
-       search bar should sit *below* the heading — bump it down by the
-       heading's approximate height. */
-    .sw-section .sw-section-head + .sticky-list-bar {
-      top: calc(var(--dash-frz-top) + 3rem);
-    }
-    @media (max-width: 720px) {
-      .sw-section .sw-section-head + .sticky-list-bar {
-        top: calc(var(--dash-frz-top) + 2.5rem);
-      }
-    }
-    /* Credits widget on Analytics tab + Profile hero on Profile tab
-       also stick below the tab nav. */
-    #tab-analytics > #creditsWidget,
-    #tab-profile .profile-hero {
-      position: sticky;
-      top: var(--dash-frz-top);
-      z-index: 9;
     }
     .sticky-list-bar input[type="search"] {
       width: 100%;
@@ -1438,7 +1401,7 @@
 </nav>
 
 <!-- ── Section ── -->
-<section class="section" style="padding-top: 1.5rem; padding-bottom: 1rem;">
+<section class="section" style="padding-top: .5rem; padding-bottom: 1rem;">
   <div class="container">
 
     <!-- ── LOGIN VIEW ── -->
