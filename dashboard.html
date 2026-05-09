@@ -1423,20 +1423,19 @@
               <img id="dashBrandLogo" src="" alt="" style="display:none; width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border);">
               <div>
                 <h2 id="dashBrandName">Brand Name <span class="status-badge status-pending" id="dashStatus">Pending</span></h2>
-                <p id="dashWebsite"></p>
               </div>
             </div>
-            <button type="button" id="profileToggleBtn" onclick="toggleProfileDetails()" style="margin-top:.75rem; background:none; border:none; padding:0; color: var(--cyan); font-size:.82rem; font-weight:700; cursor:pointer; font-family:inherit;">
-              <span id="profileToggleArrow">▾</span> <span id="profileToggleLabel">Show profile details</span>
-            </button>
-            <div id="dashProfileGrid" style="display:none; margin-top: .75rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .35rem .9rem; font-size: .82rem; color: var(--muted);"></div>
+            <!-- Hidden legacy elements (kept so old JS that targets them by
+                 ID doesn't throw — full profile lives in the Profile tab). -->
+            <p id="dashWebsite" style="display:none;"></p>
+            <button type="button" id="profileToggleBtn" style="display:none;"></button>
+            <div id="dashProfileGrid" style="display:none;"></div>
           </div>
           <div style="display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; flex-shrink: 0;">
             <span id="liveIndicator" title="Auto-refreshes every 30 seconds while this tab is visible." style="display:none; font-size:.72rem; color: var(--muted); font-weight:600; align-self:center;">
               <span style="display:inline-block; width:.45rem; height:.45rem; border-radius:50%; background:#10b981; margin-right:.3rem; vertical-align:.05rem; box-shadow: 0 0 0 0 rgba(16,185,129,.5); animation: livePulse 2s infinite;"></span>
               Live
             </span>
-            <button class="refresh-btn" onclick="refreshDashboard()">↻ Refresh</button>
             <div style="position: relative;">
               <button class="refresh-btn" id="notifBtn" onclick="toggleNotifications(event)" style="position: relative;">
                 🔔 <span id="notifCount" style="display:none; position:absolute; top:-4px; right:-4px; background:#ef4444; color:#fff; font-size:.6rem; font-weight:700; padding:2px 5px; border-radius:9999px; min-width: 16px; text-align:center;"></span>
