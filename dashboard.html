@@ -1398,31 +1398,39 @@
         <div class="card" style="box-shadow: var(--sh2); padding: 2.25rem; text-align: center;">
           <div class="alert" id="loginError" style="text-align: left;"></div>
 
-          <!-- Google Sign-In button (only auth method) -->
+          <!-- Google Sign-In button (primary auth method) -->
           <div id="googleSignInWrap">
             <div id="googleSignInBtn" style="display: flex; justify-content: center; margin-bottom: 1rem;"></div>
-            <p id="googleSignInLoading" style="font-size: .82rem; color: var(--muted); margin: 0;">Loading sign-in…</p>
-            <!-- Static fallback: shows immediately on page load. Hidden once
-                 GSI button renders. Lets users recover even if a JS error
-                 earlier in the page stops initGoogleSignIn() from ever
-                 running. -->
-            <div id="staticSignInFallback" style="display:none; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border);">
-              <p style="font-size:.78rem; color:var(--muted); margin: 0 0 .5rem;">Sign-in stuck or blocked? Try this:</p>
-              <button onclick="(window.initGoogleSignIn||function(){location.reload()})()" style="background:none; border:1px solid var(--cyan); color:var(--cyan); padding:.45rem 1rem; border-radius: var(--r-md); font-weight:700; cursor:pointer; font-family:inherit; margin-right:.35rem;">↻ Retry sign-in</button>
-              <button onclick="location.reload()" style="background:none; border:1px solid var(--border); color:var(--muted); padding:.45rem 1rem; border-radius: var(--r-md); font-weight:700; cursor:pointer; font-family:inherit;">Reload page</button>
-            </div>
+            <p id="googleSignInLoading" style="font-size: .82rem; color: var(--muted); margin: 0;">Loading sign-in… (Google may take a few seconds)</p>
           </div>
+
+          <!-- Brand-ID fallback — always visible so users can sign in even
+               when Google's GSI script is blocked (ad-blocker, slow network,
+               or any earlier JS error on the page). -->
+          <div id="brandIdFallback" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed var(--border); text-align: left;">
+            <p style="font-size:.78rem; color:var(--muted); margin: 0 0 .6rem; text-align:center;">Google sign-in not loading?</p>
+            <div style="display:flex; gap:.4rem; flex-wrap:wrap;">
+              <input type="text" id="manualBrandId" placeholder="Paste your Brand ID (UUID)" style="flex:1; min-width:200px; padding:.55rem .7rem; border:1px solid var(--border); border-radius:var(--r-md); font-size:16px; font-family:inherit;">
+              <button onclick="signInWithBrandId()" style="background: var(--cyan); border:none; color:#fff; padding:.55rem 1rem; border-radius:var(--r-md); font-weight:700; cursor:pointer; font-family:inherit;">Sign In</button>
+            </div>
+            <p style="font-size:.7rem; color:var(--muted); margin: .5rem 0 0;">Find your Brand ID in your welcome email or Supabase. <button type="button" onclick="location.reload()" style="background:none; border:none; color:var(--cyan); font-weight:700; cursor:pointer; font-family:inherit; text-decoration:underline; padding:0;">Reload page</button> to retry Google sign-in.</p>
+          </div>
+
           <script>
-            // Reveal the static fallback after 6s no matter what — even if
-            // a JS error earlier on the page kept initGoogleSignIn() from
-            // running, the user still sees a recovery button.
-            setTimeout(function () {
-              var btn = document.getElementById('googleSignInBtn');
-              var fb  = document.getElementById('staticSignInFallback');
-              if (btn && fb && !btn.querySelector('div')) {
-                fb.style.display = 'block';
+            // Manual brand-ID sign-in: routes through the existing autoload
+            // path. Hides Google block on success.
+            function signInWithBrandId() {
+              var v = (document.getElementById('manualBrandId').value || '').trim();
+              if (!v) { alert('Paste your Brand ID first.'); return; }
+              if (!/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(v)) {
+                alert('That doesn\'t look like a valid Brand ID. Expected format: 8-4-4-4-12 hex (e.g. 12345678-1234-1234-1234-123456789abc).');
+                return;
               }
-            }, 6000);
+              // Use the existing URL-param autoload path that already works.
+              var u = new URL(window.location.href);
+              u.searchParams.set('id', v);
+              window.location.href = u.toString();
+            }
           </script>
 
           <!-- Hidden fallback inputs (used by autoload-from-URL flow only) -->
