@@ -2145,71 +2145,36 @@
 
   // ── Google Sign-In setup (only auth method) ──
   let googleClientId = null;
-  // Resilience: hard timeout + retry button so the user never sits on a
-  // stuck "Loading sign-in…" if Google's GSI script is slow or blocked.
-  let gisRendered = false;
-  function showSignInTimeout(loadingEl) {
-    if (gisRendered) return;
-    if (!loadingEl) return;
-    loadingEl.innerHTML = `
-      Sign-in is taking longer than usual.
-      <br><button id="retrySignInBtn" style="margin-top:.5rem; background:none; border:1px solid var(--cyan); color:var(--cyan); padding:.45rem 1rem; border-radius: var(--r-md); font-weight:700; cursor:pointer; font-family:inherit;">↻ Retry</button>
-      <br><span style="font-size:.78rem; color:var(--muted); margin-top:.4rem; display:inline-block;">If your network is slow or an ad-blocker is blocking Google, switch network and tap Retry.</span>
-    `;
-    const btn = document.getElementById('retrySignInBtn');
-    if (btn) btn.onclick = () => {
-      loadingEl.textContent = 'Loading sign-in…';
-      initGoogleSignIn();
-    };
-  }
-
   async function initGoogleSignIn() {
     const loadingEl = document.getElementById('googleSignInLoading');
-    gisRendered = false;
-    // Hard 12s ceiling — beyond that we show a retry instead of a spinner.
-    const timeoutHandle = setTimeout(() => showSignInTimeout(loadingEl), 12000);
     try {
       const res = await fetch(`${API}/api/auth/config`);
       const cfg = await res.json();
       if (!cfg.google_enabled || !cfg.google_client_id) {
-        clearTimeout(timeoutHandle);
         if (loadingEl) loadingEl.innerHTML = '⚠ Google sign-in is not configured.<br><a href="/contact-us" style="color: var(--cyan); font-weight: 700;">Contact us for access</a>.';
         return;
       }
       googleClientId = cfg.google_client_id;
 
-      // Cap polling for the GSI global at 50 × 200ms = 10s, then fall back.
-      let attempts = 0;
       const tryInit = () => {
         if (typeof google === 'undefined' || !google.accounts) {
-          if (++attempts > 50) { clearTimeout(timeoutHandle); showSignInTimeout(loadingEl); return; }
           setTimeout(tryInit, 200);
           return;
         }
-        try {
-          google.accounts.id.initialize({
-            client_id: googleClientId,
-            callback: handleGoogleSignIn,
-            auto_select: false,
-          });
-          google.accounts.id.renderButton(
-            document.getElementById('googleSignInBtn'),
-            { theme: 'outline', size: 'large', text: 'signin_with', shape: 'rectangular', width: 320 }
-          );
-          gisRendered = true;
-          clearTimeout(timeoutHandle);
-          if (loadingEl) loadingEl.style.display = 'none';
-        } catch (e) {
-          console.error('[signin] GIS render failed:', e);
-          clearTimeout(timeoutHandle);
-          showSignInTimeout(loadingEl);
-        }
+        google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleGoogleSignIn,
+          auto_select: false,
+        });
+        google.accounts.id.renderButton(
+          document.getElementById('googleSignInBtn'),
+          { theme: 'outline', size: 'large', text: 'signin_with', shape: 'rectangular', width: 320 }
+        );
+        if (loadingEl) loadingEl.style.display = 'none';
       };
       tryInit();
     } catch (e) {
-      clearTimeout(timeoutHandle);
-      console.error('[signin] auth/config fetch failed:', e);
-      if (loadingEl) loadingEl.innerHTML = '⚠ Sign-in temporarily unavailable. <a href="/contact-us" style="color: var(--cyan);">Contact support</a> · <button onclick="initGoogleSignIn()" style="background:none; border:none; color:var(--cyan); font-weight:700; cursor:pointer; font-family:inherit; text-decoration:underline;">retry</button>.';
+      if (loadingEl) loadingEl.innerHTML = '⚠ Sign-in temporarily unavailable. <a href="/contact-us" style="color: var(--cyan);">Contact support</a>.';
     }
   }
 
