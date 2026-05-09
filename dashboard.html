@@ -321,6 +321,12 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
+    @keyframes livePulse {
+      0%   { box-shadow: 0 0 0 0 rgba(16,185,129,.55); }
+      70%  { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+      100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+    }
+
     /* ── Mobile bottom tab bar ── */
     .mobile-tab-bar { display: none; }
     @media (max-width: 720px) {
@@ -1174,6 +1180,10 @@
             <div id="dashProfileGrid" style="display:none; margin-top: .75rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .35rem .9rem; font-size: .82rem; color: var(--muted);"></div>
           </div>
           <div style="display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; flex-shrink: 0;">
+            <span id="liveIndicator" title="Auto-refreshes every 30 seconds while this tab is visible." style="display:none; font-size:.72rem; color: var(--muted); font-weight:600; align-self:center;">
+              <span style="display:inline-block; width:.45rem; height:.45rem; border-radius:50%; background:#10b981; margin-right:.3rem; vertical-align:.05rem; box-shadow: 0 0 0 0 rgba(16,185,129,.5); animation: livePulse 2s infinite;"></span>
+              <span id="liveLabel">Live</span>
+            </span>
             <button class="refresh-btn" onclick="refreshDashboard()">↻ Refresh</button>
             <div style="position: relative;">
               <button class="refresh-btn" id="notifBtn" onclick="toggleNotifications(event)" style="position: relative;">
@@ -2041,6 +2051,7 @@
     // distinct error so we don't blame the network for a frontend bug.
     try {
       renderDashboard(data);
+      startLivePolling();
     } catch (err) {
       show('loginView');
       hide('loadingView');
@@ -2317,8 +2328,72 @@
     if (activeBrandId) await fetchAndRender(activeBrandId);
   }
 
+  // ── Live (auto) refresh ──
+  // Polls /overview every 30s while the dashboard tab is visible. Quietly
+  // re-renders without flashing the loading view. Also reloads whichever
+  // tab is currently open so passcodes / products / QR usage update too.
+  let livePollInterval = null;
+  let lastLiveRefreshAt = 0;
+  const LIVE_REFRESH_MS = 30000;
+
+  async function refreshDashboardLive() {
+    if (!activeBrandId || document.hidden) return;
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/overview`);
+      if (!res.ok) return;
+      const data = await res.json();
+      renderDashboard(data);
+      // Refresh whichever tab the user is on so per-tab data stays live too.
+      const activeTab = document.querySelector('.tab-content.active')?.id;
+      if (activeTab === 'tab-products') {
+        loadProducts();
+        loadQrCodes();
+      } else if (activeTab === 'tab-code') {
+        loadBrandPasscodes();
+      }
+      lastLiveRefreshAt = Date.now();
+      const lbl = document.getElementById('liveLabel');
+      if (lbl) lbl.textContent = 'Live';
+    } catch (err) {
+      // Background refresh — never surface errors to the UI; the manual
+      // Refresh button still works if the user wants to retry.
+      console.warn('[dashboard] live refresh failed:', err);
+    }
+  }
+
+  function startLivePolling() {
+    if (livePollInterval) return;
+    const ind = document.getElementById('liveIndicator');
+    if (ind) ind.style.display = 'inline-flex';
+    livePollInterval = setInterval(refreshDashboardLive, LIVE_REFRESH_MS);
+  }
+
+  function stopLivePolling() {
+    if (livePollInterval) {
+      clearInterval(livePollInterval);
+      livePollInterval = null;
+    }
+    const ind = document.getElementById('liveIndicator');
+    if (ind) ind.style.display = 'none';
+  }
+
+  // Pause when the user switches away from the tab; resume + immediate
+  // refresh when they come back.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      // Don't tear down the interval — just skip the refresh check inside.
+      // Browser already throttles setInterval in hidden tabs to ≥1 min.
+    } else if (activeBrandId) {
+      // Coming back: refresh now if it's been a while.
+      if (Date.now() - lastLiveRefreshAt > LIVE_REFRESH_MS) {
+        refreshDashboardLive();
+      }
+    }
+  });
+
   function logout() {
     activeBrandId = null;
+    stopLivePolling();
     localStorage.removeItem('tif_brand_id');
     localStorage.removeItem('tif_brand_email');
     hide('dashView');
