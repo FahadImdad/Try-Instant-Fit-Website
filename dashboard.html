@@ -1740,7 +1740,7 @@
           <input type="text" id="qrSuccessUrl" readonly style="font-family: monospace; font-size: .85rem;">
         </div>
         <div style="display: flex; gap: .5rem;">
-          <a id="qrSuccessDownload" download="" class="btn btn-primary" style="flex:1;">⬇ Download PNG</a>
+          <button id="qrSuccessDownload" class="btn btn-primary" style="flex:1;">⬇ Download PNG</button>
           <button class="btn btn-secondary" style="flex:1;" onclick="copyText('qrSuccessUrl')">📋 Copy URL</button>
         </div>
       </div>
@@ -2705,6 +2705,8 @@
             </div>
             <div class="unified-tile-actions">
               <button class="btn btn-primary" onclick="viewQrImage(${JSON.stringify(qr.scan_url).replace(/"/g, '&quot;')}, ${JSON.stringify(p.name).replace(/"/g, '&quot;')})">📱 View QR</button>
+              <button class="btn btn-secondary" onclick="copyScanUrl(${JSON.stringify(qr.scan_url).replace(/"/g, '&quot;')}, this)">🔗 Copy URL</button>
+              <button class="btn btn-secondary" onclick="downloadQr(${JSON.stringify(qr.scan_url).replace(/"/g, '&quot;')}, ${JSON.stringify(p.name).replace(/"/g, '&quot;')}, this)">⬇ Download QR</button>
               ${(p.image_url || p.isolated_garment_url)
                 ? `<button class="btn btn-secondary" onclick="viewProductImages(${JSON.stringify(p.name).replace(/"/g, '&quot;')}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')})">View Processed</button>`
                 : '<span></span>'}
@@ -3010,6 +3012,60 @@
     return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=10&data=${encodeURIComponent(scanUrl)}`;
   }
 
+  // Build a safe filename for a QR download from the product name.
+  function qrFilename(productName) {
+    const slug = (productName || '').toString().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return `${slug || 'product'}-QR.png`;
+  }
+
+  // Copy a scan URL to clipboard with brief button feedback.
+  async function copyScanUrl(scanUrl, btn) {
+    try {
+      await navigator.clipboard.writeText(scanUrl);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = scanUrl;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch {}
+      document.body.removeChild(ta);
+    }
+    if (btn) {
+      const original = btn.textContent;
+      btn.textContent = '✓ Copied';
+      btn.disabled = true;
+      setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
+    }
+  }
+
+  // Download the QR for a scan URL as a high-res PNG named <product>-QR.png.
+  // Fetches as a blob so iOS Safari saves it directly instead of opening
+  // qrserver.com in a new tab.
+  async function downloadQr(scanUrl, productName, btn) {
+    const url = qrImageUrl(scanUrl, 800);
+    const original = btn ? btn.textContent : null;
+    if (btn) { btn.disabled = true; btn.textContent = '⬇ …'; }
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('QR fetch failed');
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = qrFilename(productName);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+    } catch (err) {
+      window.location.href = url;
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = original; }
+    }
+  }
+
   async function loadQrCodes() {
     if (!activeBrandId) return;
     try {
@@ -3195,8 +3251,7 @@
     img.src = imgUrl;
     document.getElementById('qrSuccessUrl').value = scanUrl;
     const dl = document.getElementById('qrSuccessDownload');
-    dl.href = imgUrl;
-    dl.download = `qr-${productName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.png`;
+    dl.onclick = () => downloadQr(scanUrl, productName, dl);
 
     // Status banner about garment processing. The backend now refuses
     // to issue the QR until isolation succeeds, so the only state that
