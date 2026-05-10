@@ -533,7 +533,7 @@
           qr_expired: 'This QR has expired.',
           qr_limit_reached: 'This QR has run out of tries.',
           qr_not_found: "This QR isn't active. Please ask the store for a fresh one.",
-          service_unavailable: "This store has run out of try-on credits for the moment. Please try again later.",
+          service_unavailable: "This store has run out of try-on credits. Please ask the staff to top up — your try-on will be ready as soon as they do.",
           server_error: 'Something went wrong on our end. Please try again in a moment.',
         };
         errEl.textContent = reasons[data.reason] || `Could not validate passcode${data.reason ? ' (' + data.reason + ')' : ''}.`;
