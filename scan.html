@@ -378,11 +378,11 @@
       <button type="button" id="reportToggleBtn" onclick="toggleReport()" style="background:none; border:none; color:var(--muted); font-size:.82rem; cursor:pointer; font-family:inherit; padding:.4rem .6rem;">🚩 Something wrong with this result?</button>
       <div id="reportForm" style="display:none; margin-top:.75rem; text-align:left;">
         <label style="display:block; font-size:.8rem; font-weight:600; color:var(--text); margin-bottom:.35rem;">What went wrong?</label>
-        <select id="reportReason" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:1rem; font-family: inherit; background: white; margin-bottom:.6rem;">
+        <select id="reportReason" style="width:100%; max-width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:1rem; font-family: inherit; background: white; margin-bottom:.6rem; text-overflow: ellipsis;">
           <option value="">— Pick a reason —</option>
-          <option value="garment_distorted">Garment looks distorted / weird shape</option>
-          <option value="wrong_garment">Different outfit than what I picked</option>
-          <option value="image_quality">Image quality is bad / blurry</option>
+          <option value="garment_distorted">Distorted / weird shape</option>
+          <option value="wrong_garment">Wrong outfit shown</option>
+          <option value="image_quality">Blurry or bad quality</option>
           <option value="not_me">Doesn't look like me</option>
           <option value="other">Something else</option>
         </select>
