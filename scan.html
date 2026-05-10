@@ -847,13 +847,25 @@
     if (blob && navigator.canShare) {
       const file = new File([blob], buildResultFilename(), { type: 'image/png' });
       if (navigator.canShare({ files: [file] })) {
+        // WhatsApp Android intentionally ignores the share API's `text` field
+        // as a caption — it always posts the text as a separate message from
+        // the image. Two-step workaround: copy the branded caption to the
+        // clipboard first, share ONLY the image, and instruct the user to
+        // paste the message as the follow-up. Result on the recipient side:
+        // image arrives first, branded text arrives right after.
+        let copied = false;
         try {
-          // IMPORTANT: when sharing a file, omit the `url` field — WhatsApp
-          // (and some other Android targets) post text/url as a separate
-          // message from the image, producing two bubbles instead of one.
-          // The CTA URL is already embedded inside `text`, so dropping the
-          // standalone `url` keeps everything in one captioned image post.
-          await navigator.share({ title: shareTitle, text: shareText, files: [file] });
+          await navigator.clipboard.writeText(shareText);
+          copied = true;
+        } catch { /* clipboard blocked — share image anyway, user can re-share text */ }
+
+        const hint = copied
+          ? '✓ Caption copied!\n\nAfter sending the image, paste it as the next message so your friend gets the brand mention too.'
+          : 'Sending image now. Tip: copy the message below and paste it in the same chat after the image:\n\n' + shareText;
+        alert(hint);
+
+        try {
+          await navigator.share({ title: shareTitle, files: [file] });
           return;
         } catch (err) { /* user cancelled or share failed */ }
       }
