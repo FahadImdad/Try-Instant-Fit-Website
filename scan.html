@@ -371,12 +371,15 @@
       <button class="btn btn-secondary" onclick="shareResult()">↗ Share</button>
     </div>
     <button class="btn-block primary" onclick="retryFlow()">Try Another Photo</button>
-    <p style="color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: .65rem .85rem; border-radius: 8px; font-size: .78rem; margin: 1rem 0 0; line-height: 1.5; text-align: center; font-weight: 600;">🔒 <strong>Privacy:</strong> This try-on isn't saved anywhere. It's gone once you close this page — download now if you want to keep it.</p>
+    <p style="color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: .65rem .85rem; border-radius: 8px; font-size: .78rem; margin: 1rem 0 0; line-height: 1.5; text-align: center; font-weight: 600;">🔒 <strong>Privacy:</strong> This try-on isn't saved anywhere — it's gone once you close this page (download to keep it). The only exception: if you submit a report below, we save your photo with that report so we can review what went wrong.</p>
 
     <!-- Report a bad result -->
     <div id="reportBlock" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,.12); text-align: center;">
       <button type="button" id="reportToggleBtn" onclick="toggleReport()" style="background:none; border:none; color:var(--muted); font-size:.82rem; cursor:pointer; font-family:inherit; padding:.4rem .6rem;">🚩 Something wrong with this result?</button>
       <div id="reportForm" style="display:none; margin-top:.75rem; text-align:left;">
+        <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius: var(--r-md); padding:.65rem .8rem; margin-bottom:.75rem; font-size:.78rem; color:#075985; line-height:1.45;">
+          🔎 <strong>How we use this:</strong> when you submit, we save your photo with this report so we can compare it against the AI result and find exactly what the model got wrong. We use it only to improve the AI — not for anything else. (If you don't report, your photo stays unsaved as promised.)
+        </div>
         <label style="display:block; font-size:.8rem; font-weight:600; color:var(--text); margin-bottom:.35rem;">What went wrong?</label>
         <select id="reportReason" style="width:100%; max-width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:1rem; font-family: inherit; background: white; margin-bottom:.6rem; text-overflow: ellipsis;">
           <option value="">— Pick a reason —</option>
@@ -715,23 +718,24 @@
     btn.disabled = true;
     btn.textContent = 'Submitting…';
     try {
-      const res = await fetch(`${API}/api/reports`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'tryon_bad',
-          source: 'customer',
-          reason: reason || null,
-          message: message || null,
-          result_url: resultUrl || null,
-          brand_id: qrInfo?.brand?.id || qrInfo?.brand_id || null,
-          product_id: qrInfo?.product_id || null,
-          qr_id: qrInfo?.qr_id || null,
-        }),
-      });
+      // Multipart so we can attach the customer's input photo (kept in
+      // memory from the try-on step). Backend uploads it and stores
+      // user_photo_url alongside the report so admin can review before/after.
+      const fd = new FormData();
+      fd.append('type', 'tryon_bad');
+      fd.append('source', 'customer');
+      if (reason)  fd.append('reason', reason);
+      if (message) fd.append('message', message);
+      if (resultUrl) fd.append('result_url', resultUrl);
+      const brandId = qrInfo?.brand?.id || qrInfo?.brand_id || '';
+      if (brandId) fd.append('brand_id', brandId);
+      if (qrInfo?.product_id) fd.append('product_id', qrInfo.product_id);
+      if (qrInfo?.qr_id)      fd.append('qr_id', qrInfo.qr_id);
+      if (userPhoto) fd.append('user_photo', userPhoto);
+      const res = await fetch(`${API}/api/reports`, { method: 'POST', body: fd });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Submit failed');
-      okEl.textContent = 'Thanks — we\'ll review this and get back to the brand within 24 hours.';
+      okEl.textContent = 'Thanks — we\'ll review your photo + the result to find what went wrong, and get back to the brand within 24 hours.';
       okEl.style.display = 'block';
       document.getElementById('reportReason').value = '';
       document.getElementById('reportNote').value = '';

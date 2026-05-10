@@ -726,10 +726,17 @@ function renderReports() {
           ${r.qr_id       ? `<span>QR <code>${escapeHtml(r.qr_id.slice(0,8))}</code></span>` : ''}
           ${r.tryon_id    ? `<span>Try-on <code>${escapeHtml(r.tryon_id.slice(0,8))}</code></span>` : ''}
         </div>` : ''}
-        ${(r.result_url || r.screenshot_url) ? `<div style="display:flex; gap:.85rem; flex-wrap:wrap; font-size:.82rem; margin-bottom:.5rem;">
-          ${r.result_url     ? `<a href="${escapeHtml(r.result_url)}" onclick="openLightbox('${escapeHtml(r.result_url)}'); return false;" style="color: var(--cyan); cursor: zoom-in;">↗ Try-on image</a>` : ''}
-          ${r.screenshot_url ? `<a href="${escapeHtml(r.screenshot_url)}" onclick="openLightbox('${escapeHtml(r.screenshot_url)}'); return false;" style="color: var(--cyan); cursor: zoom-in;">↗ User screenshot</a>` : ''}
+        ${(r.user_photo_url || r.result_url) ? `<div style="display:flex; gap:.5rem; margin-bottom:.5rem;">
+          ${r.user_photo_url ? `<div style="flex:1; min-width:0;">
+            <div style="font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:.2rem;">Customer photo (before)</div>
+            <img src="${escapeHtml(r.user_photo_url)}" onclick="openLightbox('${escapeHtml(r.user_photo_url)}')" style="width:100%; aspect-ratio: 3/4; object-fit:cover; border-radius:8px; cursor:zoom-in; border:1px solid var(--border);" loading="lazy">
+          </div>` : ''}
+          ${r.result_url ? `<div style="flex:1; min-width:0;">
+            <div style="font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:.2rem;">AI try-on (after)</div>
+            <img src="${escapeHtml(r.result_url)}" onclick="openLightbox('${escapeHtml(r.result_url)}')" style="width:100%; aspect-ratio: 3/4; object-fit:cover; border-radius:8px; cursor:zoom-in; border:1px solid var(--border);" loading="lazy">
+          </div>` : ''}
         </div>` : ''}
+        ${r.screenshot_url ? `<div style="margin-bottom:.5rem; font-size:.82rem;"><a href="${escapeHtml(r.screenshot_url)}" onclick="openLightbox('${escapeHtml(r.screenshot_url)}'); return false;" style="color: var(--cyan); cursor: zoom-in;">↗ User-uploaded screenshot</a></div>` : ''}
         ${r.resolution_note ? `<div style="font-size:.78rem; color:var(--muted); padding:.5rem .65rem; background:var(--surface); border-radius: var(--r-sm); margin-bottom:.5rem;"><strong>Resolution:</strong> ${escapeHtml(r.resolution_note)}${r.resolved_by ? ` · ${escapeHtml(r.resolved_by)}` : ''}</div>` : ''}
         ${isPending ? `
           <div class="report-actions" style="display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.25rem;">
