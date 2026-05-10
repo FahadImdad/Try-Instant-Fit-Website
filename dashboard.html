@@ -25,7 +25,7 @@
     .login-wrap { max-width: 480px; margin: 0 auto; }
 
     /* ── Dashboard layout ── */
-    .dash-wrap { max-width: 1080px; margin: 0 auto; }
+    .dash-wrap { max-width: 1400px; margin: 0 auto; }
 
     .dash-header {
       display: flex;
@@ -2643,6 +2643,7 @@
   }
 
   async function refreshDashboard() {
+    closeAccountMenu();
     if (activeBrandId) await fetchAndRender(activeBrandId);
   }
 
@@ -2821,6 +2822,7 @@
 
   // ── Tab switching ──
   function switchTab(tabName) {
+    closeAccountMenu();
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabName));
     if (!activeBrandId) return;
@@ -4247,6 +4249,9 @@
   });
 
   // ── Account dropdown ──
+  // Stays open until an explicit action (refresh, tab switch, menu item
+  // click, sign out, etc). Outside-click no longer auto-closes it — too
+  // easy to dismiss accidentally on touch devices.
   function toggleAccountMenu(e) {
     if (e) e.stopPropagation();
     const panel = document.getElementById('accountMenuPanel');
@@ -4256,14 +4261,6 @@
     const panel = document.getElementById('accountMenuPanel');
     if (panel) panel.style.display = 'none';
   }
-  document.addEventListener('click', (e) => {
-    const panel = document.getElementById('accountMenuPanel');
-    const btn   = document.getElementById('accountMenuBtn');
-    if (!panel || !btn) return;
-    if (panel.style.display === 'block' && !panel.contains(e.target) && !btn.contains(e.target)) {
-      panel.style.display = 'none';
-    }
-  });
 
   // ── Profile details collapse/expand ──
   function toggleProfileDetails() {
