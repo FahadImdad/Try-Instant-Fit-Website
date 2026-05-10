@@ -810,30 +810,44 @@
     }
   }
 
-  // Share = native OS share sheet. Mobile gets the watermarked image FILE
-  // directly; desktop gets the same OS popup with a URL (link to the
-  // watermarked image — chat apps preview it inline). Always opens the
-  // system share sheet — no custom popup, no clipboard alert.
+  // Share = native OS share sheet. We call navigator.share AS SOON as
+  // possible after the click — without awaiting the watermark blob first —
+  // because some Chrome desktop configurations drop the user-gesture token
+  // across awaits and refuse to open the share UI.
+  //
+  //   • Mobile (canShare with files supported) → file share with the
+  //     watermarked image. We await the blob, then share.
+  //   • Desktop with navigator.share → URL share. Opens the OS popup
+  //     (Windows share sheet on Chrome/Edge) with a link to the watermarked
+  //     result image; chat apps preview the image inline.
+  //   • No Web Share API at all → polite alert pointing to Download.
   async function shareResult() {
     if (!resultUrl) return;
 
-    const productName = qrInfo?.product_name || 'this outfit';
-    const shareTitle = `${productName} · Try Instant Fit`;
-
-    let blob;
-    try {
-      blob = await makeWatermarkedBlob();
-    } catch (err) {
-      console.error('[share]', err);
-      alert('Could not prepare the image. Please try again.');
+    if (!navigator.share) {
+      alert("Sharing isn't supported in this browser. Tap Download to save the image.");
       return;
     }
 
-    const file = new File([blob], buildResultFilename(), { type: 'image/png' });
+    const productName = qrInfo?.product_name || 'this outfit';
+    const shareTitle = 'My virtual try-on';
+    const shareText = `Check out how ${productName} looks on me — Try Instant Fit`;
 
-    // Mobile + Chrome/Edge desktop with file-share support → image FILE
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    // Synchronous feature-detect: can this browser share files at all?
+    // Uses a 1-byte placeholder so we don't have to await the real blob first.
+    let supportsFiles = false;
+    if (navigator.canShare) {
       try {
+        const probe = new File([new Uint8Array(1)], 'p.png', { type: 'image/png' });
+        supportsFiles = navigator.canShare({ files: [probe] });
+      } catch { supportsFiles = false; }
+    }
+
+    if (supportsFiles) {
+      // Mobile path — share the watermarked file
+      try {
+        const blob = await makeWatermarkedBlob();
+        const file = new File([blob], buildResultFilename(), { type: 'image/png' });
         await navigator.share({ files: [file], title: shareTitle });
         return;
       } catch (err) {
@@ -842,20 +856,14 @@
       }
     }
 
-    // Desktop browsers that have navigator.share but refuse files → URL share
-    // opens the same OS popup, just with a link to the result image.
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: shareTitle, url: resultUrl });
-        return;
-      } catch (err) {
-        if (err && err.name === 'AbortError') return;
-        console.warn('[share] URL share failed', err);
-      }
+    // Desktop path — URL share, called close to the click event
+    try {
+      await navigator.share({ title: shareTitle, text: shareText, url: resultUrl });
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+      console.error('[share] URL share failed', err);
+      alert("Couldn't open the share dialog. Tap Download to save the image.");
     }
-
-    // Truly no Web Share API → tell user to use Download
-    alert("Sharing isn't supported in this browser. Tap Download to save the image, then attach it where you'd like.");
   }
 
   // ── Custom report-reason dropdown ────────────────────────────────────
