@@ -629,7 +629,7 @@ let reportFilter = '';
 
 async function loadReports() {
   try {
-    const res = await adminFetch(`${API}/api/admin/reports`);
+    const res = await fetchAdmin(`/api/admin/reports`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to load reports');
     allReports = data.reports || [];
@@ -734,7 +734,7 @@ async function resolveReport(reportId, action) {
     if (!confirm('Approve this report and refund 1 credit ($0.125) to the brand?')) return;
   }
   try {
-    const res = await adminFetch(`${API}/api/admin/reports/${reportId}`, {
+    const res = await fetchAdmin(`/api/admin/reports/${reportId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, resolution_note: note || null, resolved_by: getAdminEmail() || 'admin' }),
