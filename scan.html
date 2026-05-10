@@ -843,33 +843,34 @@
     if (blob && navigator.canShare) {
       const file = new File([blob], buildResultFilename(), { type: 'image/png' });
       if (navigator.canShare({ files: [file] })) {
+        // Two-step: copy the branded caption to clipboard first so the user
+        // can paste it as the follow-up message after the image lands. We
+        // pass ONLY files to navigator.share — passing text/url here makes
+        // WhatsApp split the message in inconsistent ways across versions.
+        let copied = false;
         try {
-          // Pass `text` (the branded caption) but NOT `url` — modern
-          // WhatsApp Android pre-fills the image's caption box from
-          // share intent's EXTRA_TEXT. Adding `url` causes WhatsApp to
-          // post it as a second message, which is what previously
-          // produced two bubbles. Title is omitted too — only some
-          // share targets use it and it can confuse caption mapping.
-          await navigator.share({ text: shareText, files: [file] });
+          await navigator.clipboard.writeText(shareText);
+          copied = true;
+        } catch { /* clipboard blocked */ }
+
+        alert(copied
+          ? '✓ Caption copied!\n\nAfter sending the image, paste it as the next message so the brand details go too.'
+          : 'Sending image. Copy this and paste it as the next message:\n\n' + shareText);
+
+        try {
+          await navigator.share({ files: [file] });
           return;
-        } catch (err) { /* user cancelled or share failed */ }
+        } catch (err) { /* user cancelled */ }
       }
     }
 
-    // No file-share support → URL/text share so the brand line still lands.
-    // Here `url` is fine because there's no file to caption.
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: shareTitle, text: shareText, url: shareUrl });
-        return;
-      } catch (err) { /* user cancelled */ }
-    }
-    try {
-      await navigator.clipboard.writeText(shareText);
-      alert('Message copied! Paste it anywhere to share.');
-    } catch {
-      alert(shareText);
-    }
+    // Desktop / older browsers: Web Share API for files isn't supported.
+    // Copy the caption + open WhatsApp Web/app with the message pre-filled.
+    // The user attaches the image manually on this path (no API to send a
+    // file via wa.me deep link).
+    try { await navigator.clipboard.writeText(shareText); } catch {}
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+    window.open(waUrl, '_blank', 'noopener');
   }
 
   // ── Custom report-reason dropdown ────────────────────────────────────
