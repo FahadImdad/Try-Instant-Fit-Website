@@ -654,33 +654,17 @@
     return `${base}.png`;
   }
 
-  // Cached promise so the logo only loads once per page session.
-  let _logoPromise = null;
-  function loadBrandLogo() {
-    if (_logoPromise) return _logoPromise;
-    _logoPromise = new Promise((resolve) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';   // same-origin, but harmless
-      img.onload = () => resolve(img);
-      img.onerror = () => resolve(null); // fall back to text-only watermark
-      img.src = '/assets/website-icon.png';
-    });
-    return _logoPromise;
-  }
-
   // Render the AI result onto a canvas with a "Try Instant Fit" watermark
-  // (logo + brand text) baked into the pixels (bottom-right pill). Used for
-  // both Download and Share so the brand mark travels with the image
-  // anywhere the customer posts it. Returns a PNG Blob.
+  // baked into the pixels (bottom-right pill). Used for both Download and
+  // Share so the brand mark travels with the image anywhere the customer
+  // posts it. Returns a PNG Blob.
   //
-  // The result image lives on storage.googleapis.com which doesn't expose
-  // CORS headers for our website origin — fetching it directly would fail
-  // and tainted-canvas would block toBlob(). We route through the
-  // same-origin /api/proxy-image endpoint instead so the browser sees a
-  // same-origin response and the canvas stays clean.
+  // Routed through /api/proxy-image because storage.googleapis.com doesn't
+  // return CORS headers for our origin — direct fetch would taint the
+  // canvas and toBlob() would throw.
   async function makeWatermarkedBlob() {
     const proxied = `${API}/api/proxy-image?url=${encodeURIComponent(resultUrl)}`;
-    const [res, logo] = await Promise.all([fetch(proxied), loadBrandLogo()]);
+    const res = await fetch(proxied);
     if (!res.ok) throw new Error('Could not fetch result image');
     const sourceBlob = await res.blob();
 
@@ -693,93 +677,44 @@
         img.src = objUrl;
       });
 
-      const photoW = img.naturalWidth || img.width;
-      const photoH = img.naturalHeight || img.height;
-
-      // Image stays the same dimensions as the source photo. WhatsApp
-      // (and most modern share targets) DO accept navigator.share's
-      // `text` field as the image caption — proven by user's own
-      // working screenshot. We pass that text in shareResult below.
       const canvas = document.createElement('canvas');
-      canvas.width = photoW;
-      canvas.height = photoH;
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
 
+      // Watermark — pill in bottom-right, sized proportional to image width
       const text = 'Try Instant Fit';
-      const fontSize = Math.max(22, Math.round(photoW / 28));
+      const fontSize = Math.max(22, Math.round(canvas.width / 28));
       ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
       const textWidth = ctx.measureText(text).width;
-
-      // ── Tiled diagonal watermark across the full photo ─────────────────
-      // Anti-theft pattern at low opacity — covers the whole image so the
-      // brand mark can't be cropped out even if the corner pill is cut.
-      ctx.save();
-      ctx.translate(photoW / 2, photoH / 2);
-      ctx.rotate(-28 * Math.PI / 180);
-      ctx.textBaseline = 'middle';
-      ctx.textAlign = 'center';
-      const tileGapX = textWidth + Math.round(fontSize * 5);
-      const tileGapY = Math.round(fontSize * 4.5);
-      const diag = Math.ceil(Math.sqrt(photoW * photoW + photoH * photoH));
-      const cols = Math.ceil(diag / tileGapX) + 1;
-      const rows = Math.ceil(diag / tileGapY) + 1;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.10)';
-      ctx.lineWidth = Math.max(1, Math.round(fontSize / 24));
-      for (let row = -rows; row <= rows; row++) {
-        const offsetX = (row % 2 === 0) ? 0 : tileGapX / 2;
-        for (let col = -cols; col <= cols; col++) {
-          const x = col * tileGapX + offsetX;
-          const y = row * tileGapY;
-          ctx.strokeText(text, x, y);
-          ctx.fillText(text, x, y);
-        }
-      }
-      ctx.restore();
-
-      // ── Bottom-right brand pill (logo + text) ──────────────────────────
-      // Subtle brand mark anchored to the photo's bottom-right.
-      const logoSize = logo ? Math.round(fontSize * 1.55) : 0;
-      const logoGap  = logo ? Math.round(fontSize * 0.38) : 0;
-      const padX = Math.round(fontSize * 0.55);
+      const padX = Math.round(fontSize * 0.6);
       const padY = Math.round(fontSize * 0.32);
       const margin = Math.round(fontSize * 0.7);
-      const innerW = logoSize + logoGap + textWidth;
-      const pillW = innerW + padX * 2;
-      const pillH = Math.max(logoSize, fontSize) + padY * 2;
-      const pillX = photoW - pillW - margin;
-      const pillY = photoH - pillH - margin;
-      const radius = Math.round(pillH * 0.32);
+      const pillW = textWidth + padX * 2;
+      const pillH = fontSize + padY * 2;
+      const pillX = canvas.width - pillW - margin;
+      const pillY = canvas.height - pillH - margin;
 
-      ctx.shadowColor = 'rgba(0,0,0,.32)';
+      // Subtle drop shadow
+      ctx.shadowColor = 'rgba(0,0,0,.35)';
       ctx.shadowBlur = Math.max(6, Math.round(fontSize * 0.4));
       ctx.shadowOffsetY = 2;
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(pillX, pillY, pillW, pillH, radius);
-      } else {
-        ctx.rect(pillX, pillY, pillW, pillH);
-      }
-      ctx.fill();
+
+      // Pill background
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.72)'; // brand-dark / slate
+      ctx.fillRect(pillX, pillY, pillW, pillH);
+
+      // Reset shadow before text so the text isn't smeared
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
       ctx.shadowOffsetY = 0;
 
-      let cursorX = pillX + padX;
-      if (logo) {
-        ctx.save();
-        ctx.globalAlpha = 0.85;
-        const pLogoY = pillY + (pillH - logoSize) / 2;
-        ctx.drawImage(logo, cursorX, pLogoY, logoSize, logoSize);
-        ctx.restore();
-        cursorX += logoSize + logoGap;
-      }
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      // Text
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'left';
-      ctx.fillText(text, cursorX, pillY + pillH / 2 + 1);
+      ctx.fillText(text, pillX + padX, pillY + pillH / 2 + 1);
 
       return await new Promise((resolve, reject) => {
         canvas.toBlob(b => b ? resolve(b) : reject(new Error('Canvas export failed')), 'image/png', 0.95);
@@ -818,56 +753,40 @@
     }
   }
 
-  // Share = watermarked image FILE + branded message so the brand mark
-  // lands in WhatsApp / Instagram / etc with the photo AND the message.
-  // Falls back to URL share + clipboard if file-share isn't supported.
+  // Share = watermarked image FILE (not just a URL) so the brand mark lands
+  // in WhatsApp / Instagram / etc with the photo. Falls back to URL share +
+  // clipboard if the platform doesn't support file sharing.
   async function shareResult() {
     if (!resultUrl) return;
     let blob = null;
     try { blob = await makeWatermarkedBlob(); } catch (e) { console.error('[share]', e); }
 
     const productName = qrInfo?.product_name || 'this outfit';
-    const brandName = qrInfo?.brand?.name || qrInfo?.brand_name || '';
-    // CTA reality check: viewers of this share (friends on WhatsApp/IG) can't
-    // try-on themselves — they don't have a QR to scan. The action they CAN
-    // take is recommend Try Instant Fit to other fashion brands they shop
-    // with. So the share message points THEM at telling their favourite
-    // brands to sign up, not at a try-on URL that won't work for them.
-    const shareTitle = 'My virtual try-on · Try Instant Fit';
-    const shareText = `Tried on ${productName}${brandName ? ' from ' + brandName : ''} virtually — looks 🔥\n\n` +
-      `✨ AI try-on by Try Instant Fit\n` +
-      `Want this for the brands you shop with? Tell them to sign up:\n` +
-      `https://www.tryinstantfit.com`;
-    const shareUrl  = 'https://www.tryinstantfit.com';
+    const shareText = `Check out how ${productName} looks on me — Try Instant Fit`;
 
     if (blob && navigator.canShare) {
       const file = new File([blob], buildResultFilename(), { type: 'image/png' });
       if (navigator.canShare({ files: [file] })) {
         try {
-          // Hand the image + text straight to the OS share sheet. The user
-          // picks the destination (WhatsApp / IG / Messages / Email / etc)
-          // and that app handles caption-vs-separate-message however it
-          // does. No clipboard copy, no alert — just one tap to share.
-          await navigator.share({ text: shareText, files: [file] });
+          await navigator.share({ title: 'My virtual try-on', text: shareText, files: [file] });
           return;
-        } catch (err) { /* user cancelled */ }
+        } catch (err) { /* user cancelled or share failed */ }
       }
     }
 
-    // Desktop / browsers without Web Share API for files: open the OS
-    // share sheet for text+url instead so the user still sees a picker
-    // and can choose where to share. They'd attach the image themselves.
+    // No file-share support → URL share
     if (navigator.share) {
       try {
-        await navigator.share({ text: shareText, url: shareUrl });
+        await navigator.share({ title: 'My virtual try-on', text: shareText, url: resultUrl });
         return;
       } catch (err) { /* user cancelled */ }
     }
-
-    // Last fallback (very old browsers): open WhatsApp Web with the
-    // message pre-filled.
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-    window.open(waUrl, '_blank', 'noopener');
+    try {
+      await navigator.clipboard.writeText(resultUrl);
+      alert('Link copied! Paste it anywhere to share.');
+    } catch {
+      alert('Copy this link: ' + resultUrl);
+    }
   }
 
   // ── Custom report-reason dropdown ────────────────────────────────────
