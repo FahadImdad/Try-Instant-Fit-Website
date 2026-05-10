@@ -641,52 +641,138 @@
   function buildResultFilename() {
     const raw = (qrInfo?.product_name || '').toString();
     const slug = raw.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    const base = slug ? `tryinstantfit-${slug}` : 'tryinstantfit-tryon';
+    const base = slug ? `${slug}-tryinstantfit` : 'tryinstantfit-tryon';
     return `${base}.png`;
   }
 
-  // Download the result image directly (not in a new tab), at the original
-  // quality returned by the API. Fetching as a blob lets us bypass iOS
-  // Safari's behaviour of ignoring the `download` attribute on cross-origin
-  // links — same-origin via Vercel rewrite anyway, but blob is robust.
+  // Render the AI result onto a canvas with a "Try Instant Fit" watermark
+  // baked into the pixels (bottom-right pill). Used for both Download and
+  // Share so the brand mark travels with the image anywhere the customer
+  // posts it. Returns a PNG Blob.
+  async function makeWatermarkedBlob() {
+    const res = await fetch(resultUrl);
+    if (!res.ok) throw new Error('Could not fetch result image');
+    const sourceBlob = await res.blob();
+
+    const img = new Image();
+    const objUrl = URL.createObjectURL(sourceBlob);
+    try {
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(new Error('Image decode failed'));
+        img.src = objUrl;
+      });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+
+      // Watermark — pill in bottom-right, sized proportional to image width
+      const text = 'Try Instant Fit';
+      const fontSize = Math.max(22, Math.round(canvas.width / 28));
+      ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
+      const textWidth = ctx.measureText(text).width;
+      const padX = Math.round(fontSize * 0.6);
+      const padY = Math.round(fontSize * 0.32);
+      const margin = Math.round(fontSize * 0.7);
+      const pillW = textWidth + padX * 2;
+      const pillH = fontSize + padY * 2;
+      const pillX = canvas.width - pillW - margin;
+      const pillY = canvas.height - pillH - margin;
+
+      // Subtle drop shadow
+      ctx.shadowColor = 'rgba(0,0,0,.35)';
+      ctx.shadowBlur = Math.max(6, Math.round(fontSize * 0.4));
+      ctx.shadowOffsetY = 2;
+
+      // Pill background
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.72)'; // brand-dark / slate
+      ctx.fillRect(pillX, pillY, pillW, pillH);
+
+      // Reset shadow before text so the text isn't smeared
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // Text
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left';
+      ctx.fillText(text, pillX + padX, pillY + pillH / 2 + 1);
+
+      return await new Promise((resolve, reject) => {
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('Canvas export failed')), 'image/png', 0.95);
+      });
+    } finally {
+      URL.revokeObjectURL(objUrl);
+    }
+  }
+
+  // Download = watermarked PNG, named after the product. Uses an anchor with
+  // the `download` attribute on a same-origin blob URL so iOS Safari + every
+  // other browser actually saves the file instead of opening it as a new page.
   async function downloadResult() {
     if (!resultUrl) return;
     const btn = document.getElementById('downloadBtn');
     const original = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Downloading…';
+    btn.textContent = 'Preparing…';
     try {
-      const res = await fetch(resultUrl);
-      if (!res.ok) throw new Error('Download failed');
-      const blob = await res.blob();
+      const blob = await makeWatermarkedBlob();
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = objectUrl;
       a.download = buildResultFilename();
+      a.rel = 'noopener';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      // Release the blob URL after the browser has had a chance to start the save.
       setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
     } catch (err) {
-      // Fall back to opening the original URL if blob fetch fails.
-      window.location.href = resultUrl;
+      console.error('[download]', err);
+      alert('Could not prepare the download. Please try again.');
     } finally {
       btn.disabled = false;
       btn.textContent = original;
     }
   }
 
+  // Share = watermarked image FILE (not just a URL) so the brand mark lands
+  // in WhatsApp / Instagram / etc with the photo. Falls back to URL share +
+  // clipboard if the platform doesn't support file sharing.
   async function shareResult() {
     if (!resultUrl) return;
+    let blob = null;
+    try { blob = await makeWatermarkedBlob(); } catch (e) { console.error('[share]', e); }
+
+    const productName = qrInfo?.product_name || 'this outfit';
+    const shareText = `Check out how ${productName} looks on me — Try Instant Fit`;
+
+    if (blob && navigator.canShare) {
+      const file = new File([blob], buildResultFilename(), { type: 'image/png' });
+      if (navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ title: 'My virtual try-on', text: shareText, files: [file] });
+          return;
+        } catch (err) { /* user cancelled or share failed */ }
+      }
+    }
+
+    // No file-share support → URL share
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'My virtual try-on', text: `Check out how ${qrInfo.product_name} looks on me!`, url: resultUrl });
+        await navigator.share({ title: 'My virtual try-on', text: shareText, url: resultUrl });
         return;
       } catch (err) { /* user cancelled */ }
     }
-    navigator.clipboard.writeText(resultUrl);
-    alert('Link copied! Paste it anywhere to share.');
+    try {
+      await navigator.clipboard.writeText(resultUrl);
+      alert('Link copied! Paste it anywhere to share.');
+    } catch {
+      alert('Copy this link: ' + resultUrl);
+    }
   }
 
   // ── Report a bad result ──
