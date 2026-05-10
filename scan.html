@@ -632,17 +632,6 @@
       resultUrl = data.result_url;
       document.getElementById('resultImage').src = data.result_url;
       show('resultView');
-
-      // Render the watermarked version in the background and swap it into
-      // the preview when ready, so the user sees the same image they'll
-      // share/download (and the cached blob makes those buttons instant).
-      _watermarkedBlobPromise = null;
-      getWatermarkedBlob().then(blob => {
-        const objUrl = URL.createObjectURL(blob);
-        document.getElementById('resultImage').src = objUrl;
-      }).catch(err => {
-        console.warn('[watermark-preview]', err);
-      });
     } catch (err) {
       hide('processingView');
       show('uploadView');
@@ -652,22 +641,8 @@
 
   function retryFlow() {
     resetPhoto();
-    _watermarkedBlobPromise = null;
     hide('resultView');
     show('uploadView');
-  }
-
-  // Cache the watermarked blob so the preview, Download, and Share all
-  // share one render. Reset when the user retries with a new photo.
-  let _watermarkedBlobPromise = null;
-  function getWatermarkedBlob() {
-    if (!_watermarkedBlobPromise) {
-      _watermarkedBlobPromise = makeWatermarkedBlob().catch(err => {
-        _watermarkedBlobPromise = null; // allow retry on next click
-        throw err;
-      });
-    }
-    return _watermarkedBlobPromise;
   }
 
   // Build a safe filename from the product name. Falls back to a generic name
@@ -816,7 +791,7 @@
     btn.disabled = true;
     btn.textContent = 'Preparing…';
     try {
-      const blob = await getWatermarkedBlob();
+      const blob = await makeWatermarkedBlob();
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = objectUrl;
@@ -847,7 +822,7 @@
 
     let blob;
     try {
-      blob = await getWatermarkedBlob();
+      blob = await makeWatermarkedBlob();
     } catch (err) {
       console.error('[share]', err);
       alert('Could not prepare the image. Please try again.');
