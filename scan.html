@@ -843,32 +843,29 @@
     if (blob && navigator.canShare) {
       const file = new File([blob], buildResultFilename(), { type: 'image/png' });
       if (navigator.canShare({ files: [file] })) {
-        // Two-step: copy the branded caption to clipboard first so the user
-        // can paste it as the follow-up message after the image lands. We
-        // pass ONLY files to navigator.share — passing text/url here makes
-        // WhatsApp split the message in inconsistent ways across versions.
-        let copied = false;
         try {
-          await navigator.clipboard.writeText(shareText);
-          copied = true;
-        } catch { /* clipboard blocked */ }
-
-        alert(copied
-          ? '✓ Caption copied!\n\nAfter sending the image, paste it as the next message so the brand details go too.'
-          : 'Sending image. Copy this and paste it as the next message:\n\n' + shareText);
-
-        try {
-          await navigator.share({ files: [file] });
+          // Hand the image + text straight to the OS share sheet. The user
+          // picks the destination (WhatsApp / IG / Messages / Email / etc)
+          // and that app handles caption-vs-separate-message however it
+          // does. No clipboard copy, no alert — just one tap to share.
+          await navigator.share({ text: shareText, files: [file] });
           return;
         } catch (err) { /* user cancelled */ }
       }
     }
 
-    // Desktop / older browsers: Web Share API for files isn't supported.
-    // Copy the caption + open WhatsApp Web/app with the message pre-filled.
-    // The user attaches the image manually on this path (no API to send a
-    // file via wa.me deep link).
-    try { await navigator.clipboard.writeText(shareText); } catch {}
+    // Desktop / browsers without Web Share API for files: open the OS
+    // share sheet for text+url instead so the user still sees a picker
+    // and can choose where to share. They'd attach the image themselves.
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: shareText, url: shareUrl });
+        return;
+      } catch (err) { /* user cancelled */ }
+    }
+
+    // Last fallback (very old browsers): open WhatsApp Web with the
+    // message pre-filled.
     const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
     window.open(waUrl, '_blank', 'noopener');
   }
