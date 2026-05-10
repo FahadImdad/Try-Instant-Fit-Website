@@ -461,7 +461,10 @@
 
 <!-- ── LIGHTBOX (image preview overlay — click X or background to dismiss) ── -->
 <div id="lightbox" onclick="if(event.target===this)closeLightbox()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:10000; align-items:center; justify-content:center; padding:1rem;">
-  <button onclick="closeLightbox()" aria-label="Close" style="position:absolute; top:1rem; right:1.25rem; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); color:white; width:38px; height:38px; border-radius:50%; font-size:1.4rem; line-height:1; cursor:pointer; font-family:inherit;">&times;</button>
+  <div style="position:absolute; top:1rem; right:1.25rem; display:flex; gap:.5rem;">
+    <button onclick="downloadFromLightbox()" aria-label="Download" title="Download" style="background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); color:white; height:38px; padding:0 .9rem; border-radius:19px; font-size:.85rem; font-weight:600; cursor:pointer; font-family:inherit;">↓ Download</button>
+    <button onclick="closeLightbox()" aria-label="Close" style="background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); color:white; width:38px; height:38px; border-radius:50%; font-size:1.4rem; line-height:1; cursor:pointer; font-family:inherit;">&times;</button>
+  </div>
   <img id="lightboxImg" src="" alt="" style="max-width:92vw; max-height:88vh; border-radius:8px; box-shadow: 0 10px 40px rgba(0,0,0,.5);">
 </div>
 
@@ -726,14 +729,16 @@ function renderReports() {
           ${r.qr_id       ? `<span>QR <code>${escapeHtml(r.qr_id.slice(0,8))}</code></span>` : ''}
           ${r.tryon_id    ? `<span>Try-on <code>${escapeHtml(r.tryon_id.slice(0,8))}</code></span>` : ''}
         </div>` : ''}
-        ${(r.user_photo_url || r.result_url) ? `<div style="display:flex; gap:.5rem; margin-bottom:.5rem;">
+        ${(r.user_photo_url || r.result_url) ? `<div style="display:flex; gap:.5rem; margin-bottom:.5rem; align-items:flex-start;">
           ${r.user_photo_url ? `<div style="flex:1; min-width:0;">
             <div style="font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:.2rem;">Customer photo (before)</div>
-            <img src="${escapeHtml(r.user_photo_url)}" onclick="openLightbox('${escapeHtml(r.user_photo_url)}')" style="width:100%; aspect-ratio: 3/4; object-fit:cover; border-radius:8px; cursor:zoom-in; border:1px solid var(--border);" loading="lazy">
+            <img src="${escapeHtml(r.user_photo_url)}" onclick="openLightbox('${escapeHtml(r.user_photo_url)}')" style="width:100%; max-height:420px; object-fit:contain; border-radius:8px; cursor:zoom-in; border:1px solid var(--border); background:#f9fafb; display:block;" loading="lazy">
+            <a href="${escapeHtml(r.user_photo_url)}" onclick="downloadReportImage(event, '${escapeHtml(r.user_photo_url)}', '${r.id}-before.jpg')" style="display:block; text-align:center; font-size:.75rem; color: var(--cyan); margin-top:.3rem; text-decoration:none; font-weight:600;">↓ Download original</a>
           </div>` : ''}
           ${r.result_url ? `<div style="flex:1; min-width:0;">
             <div style="font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:.2rem;">AI try-on (after)</div>
-            <img src="${escapeHtml(r.result_url)}" onclick="openLightbox('${escapeHtml(r.result_url)}')" style="width:100%; aspect-ratio: 3/4; object-fit:cover; border-radius:8px; cursor:zoom-in; border:1px solid var(--border);" loading="lazy">
+            <img src="${escapeHtml(r.result_url)}" onclick="openLightbox('${escapeHtml(r.result_url)}')" style="width:100%; max-height:420px; object-fit:contain; border-radius:8px; cursor:zoom-in; border:1px solid var(--border); background:#f9fafb; display:block;" loading="lazy">
+            <a href="${escapeHtml(r.result_url)}" onclick="downloadReportImage(event, '${escapeHtml(r.result_url)}', '${r.id}-after.jpg')" style="display:block; text-align:center; font-size:.75rem; color: var(--cyan); margin-top:.3rem; text-decoration:none; font-weight:600;">↓ Download AI result</a>
           </div>` : ''}
         </div>` : ''}
         ${r.screenshot_url ? `<div style="margin-bottom:.5rem; font-size:.82rem;"><a href="${escapeHtml(r.screenshot_url)}" onclick="openLightbox('${escapeHtml(r.screenshot_url)}'); return false;" style="color: var(--cyan); cursor: zoom-in;">↗ User-uploaded screenshot</a></div>` : ''}
@@ -1191,11 +1196,13 @@ async function submitRejectTopup(e) {
 }
 
 // ── Lightbox (click an image link/thumbnail → overlay on this page) ──
+let lightboxCurrentUrl = null;
 function openLightbox(url) {
   const lb = document.getElementById('lightbox');
   const img = document.getElementById('lightboxImg');
   if (!lb || !img) return;
   img.src = url;
+  lightboxCurrentUrl = url;
   lb.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
@@ -1205,11 +1212,40 @@ function closeLightbox() {
   lb.style.display = 'none';
   document.body.style.overflow = '';
   document.getElementById('lightboxImg').src = '';
+  lightboxCurrentUrl = null;
+}
+function downloadFromLightbox() {
+  if (!lightboxCurrentUrl) return;
+  const filename = lightboxCurrentUrl.split('/').pop()?.split('?')[0] || 'image.jpg';
+  downloadReportImage(null, lightboxCurrentUrl, filename);
 }
 // Esc closes the lightbox
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeLightbox();
 });
+
+// Cross-origin-safe image download. Anchor with `download` attribute alone
+// doesn't trigger a save for cross-origin images on most browsers — fetch
+// as a blob first, then synthesize the click on a same-origin blob URL.
+async function downloadReportImage(e, url, filename) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Fetch failed');
+    const blob = await res.blob();
+    const objUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objUrl;
+    a.download = filename || 'report-image.jpg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(objUrl), 5000);
+  } catch (err) {
+    // Final fallback: open in new tab so admin can long-press → save.
+    window.open(url, '_blank', 'noopener');
+  }
+}
 
 // ── Helpers ──
 function escapeHtml(s) {
