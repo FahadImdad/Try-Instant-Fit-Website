@@ -848,16 +848,19 @@
       const file = new File([blob], buildResultFilename(), { type: 'image/png' });
       if (navigator.canShare({ files: [file] })) {
         try {
-          // Some Android share targets dedupe text+url; passing both is fine
-          // (most pick whichever they prefer; WhatsApp shows the text and
-          // attaches the image; IG accepts the image and discards the rest).
-          await navigator.share({ title: shareTitle, text: shareText, url: shareUrl, files: [file] });
+          // IMPORTANT: when sharing a file, omit the `url` field — WhatsApp
+          // (and some other Android targets) post text/url as a separate
+          // message from the image, producing two bubbles instead of one.
+          // The CTA URL is already embedded inside `text`, so dropping the
+          // standalone `url` keeps everything in one captioned image post.
+          await navigator.share({ title: shareTitle, text: shareText, files: [file] });
           return;
         } catch (err) { /* user cancelled or share failed */ }
       }
     }
 
     // No file-share support → URL/text share so the brand line still lands.
+    // Here `url` is fine because there's no file to caption.
     if (navigator.share) {
       try {
         await navigator.share({ title: shareTitle, text: shareText, url: shareUrl });
