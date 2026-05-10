@@ -2663,9 +2663,14 @@
       if (!res.ok) return;
       const data = await res.json();
       renderDashboard(data);
-      // Refresh per-section data so passcodes/products/QR usage stay live
+      // Refresh per-section data so passcodes/products/QR usage stay live.
+      // Skip the products re-render while the user has any drawer expanded
+      // — even with state preservation, an innerHTML rebuild causes a brief
+      // visual flicker that feels like the drawer closed. Counts catch up
+      // on the next poll once the user closes the drawer, or instantly
+      // when they hit the Refresh button.
       if (typeof loadBrandPasscodes === 'function') loadBrandPasscodes();
-      if (typeof loadProducts === 'function')        loadProducts();
+      if (typeof loadProducts === 'function' && openProductIds.size === 0) loadProducts();
       if (typeof loadQrCodes === 'function')         loadQrCodes();
       lastLiveRefreshAt = Date.now();
     } catch (err) {
