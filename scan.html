@@ -810,60 +810,16 @@
     }
   }
 
-  // Share = native OS share sheet. We call navigator.share AS SOON as
-  // possible after the click — without awaiting the watermark blob first —
-  // because some Chrome desktop configurations drop the user-gesture token
-  // across awaits and refuse to open the share UI.
-  //
-  //   • Mobile (canShare with files supported) → file share with the
-  //     watermarked image. We await the blob, then share.
-  //   • Desktop with navigator.share → URL share. Opens the OS popup
-  //     (Windows share sheet on Chrome/Edge) with a link to the watermarked
-  //     result image; chat apps preview the image inline.
-  //   • No Web Share API at all → polite alert pointing to Download.
   async function shareResult() {
     if (!resultUrl) return;
-
-    if (!navigator.share) {
-      alert("Sharing isn't supported in this browser. Tap Download to save the image.");
-      return;
-    }
-
-    const productName = qrInfo?.product_name || 'this outfit';
-    const shareTitle = 'My virtual try-on';
-    const shareText = `Check out how ${productName} looks on me — Try Instant Fit`;
-
-    // Synchronous feature-detect: can this browser share files at all?
-    // Uses a 1-byte placeholder so we don't have to await the real blob first.
-    let supportsFiles = false;
-    if (navigator.canShare) {
+    if (navigator.share) {
       try {
-        const probe = new File([new Uint8Array(1)], 'p.png', { type: 'image/png' });
-        supportsFiles = navigator.canShare({ files: [probe] });
-      } catch { supportsFiles = false; }
-    }
-
-    if (supportsFiles) {
-      // Mobile path — share the watermarked file
-      try {
-        const blob = await makeWatermarkedBlob();
-        const file = new File([blob], buildResultFilename(), { type: 'image/png' });
-        await navigator.share({ files: [file], title: shareTitle });
+        await navigator.share({ title: 'My virtual try-on', text: `Check out how ${qrInfo.product_name} looks on me!`, url: resultUrl });
         return;
-      } catch (err) {
-        if (err && err.name === 'AbortError') return;
-        console.warn('[share] file share failed, falling back to URL', err);
-      }
+      } catch (err) { /* user cancelled */ }
     }
-
-    // Desktop path — URL share, called close to the click event
-    try {
-      await navigator.share({ title: shareTitle, text: shareText, url: resultUrl });
-    } catch (err) {
-      if (err && err.name === 'AbortError') return;
-      console.error('[share] URL share failed', err);
-      alert("Couldn't open the share dialog. Tap Download to save the image.");
-    }
+    navigator.clipboard.writeText(resultUrl);
+    alert('Link copied! Paste it anywhere to share.');
   }
 
   // ── Custom report-reason dropdown ────────────────────────────────────
