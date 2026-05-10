@@ -3129,6 +3129,9 @@
   let allProducts = [];
   let allQrs = [];
   let apImageFile = null;
+  // Tracks which product rows the user has expanded — preserved across the
+  // 30s background refresh so opened drawers don't auto-collapse.
+  const openProductIds = new Set();
 
   async function loadProducts() {
     if (!activeBrandId) return;
@@ -3198,8 +3201,9 @@
           : qr
             ? '<span class="pl-status pl-status-on">Active</span>'
             : '<span class="pl-status pl-status-warn">No QR</span>';
+      const isOpen = openProductIds.has(p.id);
       return `
-        <div class="product-list-row" id="plrow-${p.id}">
+        <div class="product-list-row${isOpen ? ' open' : ''}" id="plrow-${p.id}">
           <div class="product-list-summary" onclick="toggleProductRow('${p.id}', event)">
             ${p.image_url
               ? `<img class="pl-thumb" src="${escapeHtml(p.image_url)}" alt="" loading="lazy">`
@@ -3209,9 +3213,9 @@
               <div class="pl-meta">${escapeHtml(p.sku)} · ${escapeHtml(priceTxt)} · ${tryonsTxt} try-on${tryonsTxt === '1' ? '' : 's'}</div>
             </div>
             ${statusBadge}
-            <span class="pl-chevron">›</span>
+            <span class="pl-chevron">${isOpen ? '⌃' : '›'}</span>
           </div>
-          <div class="product-list-drawer" hidden>
+          <div class="product-list-drawer"${isOpen ? '' : ' hidden'}>
             ${qr ? `
               <div class="pl-drawer-grid">
                 <img class="pl-drawer-qr" src="${qrImageUrl(qr.scan_url, 220)}" alt="QR for ${escapeHtml(p.name)}">
@@ -3261,10 +3265,12 @@
       drawer.setAttribute('hidden', '');
       row.classList.remove('open');
       if (chevron) chevron.textContent = '›';
+      openProductIds.delete(productId);
     } else {
       drawer.removeAttribute('hidden');
       row.classList.add('open');
       if (chevron) chevron.textContent = '⌃';
+      openProductIds.add(productId);
     }
   }
 
