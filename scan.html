@@ -810,15 +810,19 @@
     }
   }
 
-  // Share = the same watermarked image the Download button produces, sent
-  // to wherever the user wants:
-  //   • Mobile / supported desktop → native OS share sheet (WhatsApp, IG,
-  //     Messages, etc.) via Web Share API with the image FILE.
-  //   • Desktop without file-share support → copy the IMAGE itself to the
-  //     clipboard so the user can paste it into WhatsApp Web / IG / Slack /
-  //     Discord / email — anywhere a chat box accepts an image.
-  //   • Last resort (very old browsers) → save the image so the user can
-  //     attach it manually.
+  // Share = open the OS share sheet so the user can pick a platform / contact
+  // and send. Tries hardest to send the IMAGE itself, then falls back through
+  // progressively less ideal options. The user always sees a popup or
+  // confirmation — never silent.
+  //
+  //   1. Native share WITH the image FILE — mobile + Chrome/Edge desktop
+  //      versions that support file share. Best UX: image lands in WhatsApp,
+  //      IG, Messages, etc. directly.
+  //   2. Native share with the result URL — most desktop browsers (Chrome,
+  //      Edge, Safari on macOS). Popup still opens with the platform picker;
+  //      the recipient gets a link that messaging apps preview inline.
+  //   3. Image-to-clipboard — for browsers without any Web Share API.
+  //   4. Download — last resort.
   async function shareResult() {
     if (!resultUrl) return;
     let blob;
@@ -831,21 +835,34 @@
     }
 
     const file = new File([blob], buildResultFilename(), { type: 'image/png' });
+    const productName = qrInfo?.product_name || 'this outfit';
+    const shareTitle = `${productName} · Try Instant Fit`;
 
-    // 1. Native share sheet (mobile + Chrome/Edge with file-share support)
+    // 1. Native share with the image file
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
-        await navigator.share({ files: [file] });
+        await navigator.share({ files: [file], title: shareTitle });
         return;
       } catch (err) {
         if (err && err.name === 'AbortError') return; // user cancelled
-        console.warn('[share] native share failed, falling through', err);
+        console.warn('[share] file share failed, falling through', err);
       }
     }
 
-    // 2. Desktop fallback — copy the IMAGE to clipboard so the user can
-    //    paste it into any messaging app. (This is the IMAGE itself, not
-    //    a URL — pasting drops the photo straight into the chat.)
+    // 2. Native share with the URL — same OS popup, just a link instead of
+    //    a file. The link points to the watermarked result image so chat
+    //    apps preview it inline.
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: shareTitle, url: resultUrl });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return; // user cancelled
+        console.warn('[share] URL share failed, falling through', err);
+      }
+    }
+
+    // 3. Image-to-clipboard (no Web Share API at all — Firefox desktop, etc.)
     if (navigator.clipboard && window.ClipboardItem) {
       try {
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
@@ -856,7 +873,7 @@
       }
     }
 
-    // 3. Last resort — download so the user can attach it manually
+    // 4. Last resort — download
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = objectUrl;
