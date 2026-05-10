@@ -832,13 +832,16 @@
 
     const productName = qrInfo?.product_name || 'this outfit';
     const brandName = qrInfo?.brand?.name || qrInfo?.brand_name || '';
-    // Branded share copy — casual + product mention + branding line + CTA URL
-    // on a separate line so messaging apps that auto-link URLs render it
-    // cleanly instead of jamming text + URL together.
+    // CTA reality check: viewers of this share (friends on WhatsApp/IG) can't
+    // try-on themselves — they don't have a QR to scan. The action they CAN
+    // take is recommend Try Instant Fit to other fashion brands they shop
+    // with. So the share message points THEM at telling their favourite
+    // brands to sign up, not at a try-on URL that won't work for them.
     const shareTitle = 'My virtual try-on · Try Instant Fit';
-    const shareText = `Tried on ${productName}${brandName ? ' from ' + brandName : ''} virtually — and it looks 🔥\n\n` +
+    const shareText = `Tried on ${productName}${brandName ? ' from ' + brandName : ''} virtually — looks 🔥\n\n` +
       `✨ AI try-on by Try Instant Fit\n` +
-      `Try yours: https://www.tryinstantfit.com`;
+      `Want this for the brands you shop with? Tell them to sign up:\n` +
+      `https://www.tryinstantfit.com`;
     const shareUrl  = 'https://www.tryinstantfit.com';
 
     if (blob && navigator.canShare) {
