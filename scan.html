@@ -377,18 +377,27 @@
     <div id="reportBlock" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,.12); text-align: center;">
       <button type="button" id="reportToggleBtn" onclick="toggleReport()" style="background:none; border:none; color:var(--muted); font-size:.82rem; cursor:pointer; font-family:inherit; padding:.4rem .6rem;">🚩 Something wrong with this result?</button>
       <div id="reportForm" style="display:none; margin-top:.75rem; text-align:left;">
-        <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius: var(--r-md); padding:.65rem .8rem; margin-bottom:.75rem; font-size:.78rem; color:#075985; line-height:1.45;">
-          🔎 <strong>How we use this:</strong> when you submit, we save your photo with this report so we can compare it against the AI result and find exactly what the model got wrong. We use it only to improve the AI — not for anything else. (If you don't report, your photo stays unsaved as promised.)
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius: var(--r-md); padding:.7rem .85rem; margin-bottom:.75rem; font-size:.8rem; color:#166534; line-height:1.5;">
+          💚 <strong>We'll fix this for you.</strong> Tell us what went wrong below — our AI team reviews every report within 24 hours and uses it to make your next try-on better. Takes 10 seconds.
         </div>
         <label style="display:block; font-size:.8rem; font-weight:600; color:var(--text); margin-bottom:.35rem;">What went wrong?</label>
-        <select id="reportReason" style="width:100%; max-width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:1rem; font-family: inherit; background: white; margin-bottom:.6rem; text-overflow: ellipsis;">
-          <option value="">— Pick a reason —</option>
-          <option value="garment_distorted">Distorted / weird shape</option>
-          <option value="wrong_garment">Wrong outfit shown</option>
-          <option value="image_quality">Blurry or bad quality</option>
-          <option value="not_me">Doesn't look like me</option>
-          <option value="other">Something else</option>
-        </select>
+        <!-- Custom dropdown — replaces native <select> because some Android
+             browsers render the native options popup wider than the viewport.
+             Hidden input keeps the value reachable from submitReport(). -->
+        <div class="custom-select" id="reportReasonSelect" style="position:relative; margin-bottom:.6rem;">
+          <button type="button" id="reportReasonTrigger" onclick="toggleReportReasonPanel(event)" aria-haspopup="listbox" aria-expanded="false" style="width:100%; text-align:left; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:1rem; font-family: inherit; background: white; color: var(--muted); cursor: pointer; display:flex; justify-content:space-between; align-items:center; gap:.5rem;">
+            <span id="reportReasonLabel">— Pick a reason —</span>
+            <span aria-hidden="true" style="color:var(--muted); flex-shrink:0;">▾</span>
+          </button>
+          <div id="reportReasonPanel" role="listbox" hidden style="position:absolute; left:0; right:0; top:calc(100% + 4px); background:white; border:1px solid var(--border); border-radius: var(--r-md); box-shadow: 0 6px 18px rgba(0,0,0,.12); z-index:50; overflow:hidden; max-height:60vh; overflow-y:auto;">
+            <div class="cs-option" data-value="garment_distorted" onclick="pickReportReason(this)" style="padding:.75rem .85rem; cursor:pointer; font-size:1rem; border-bottom:1px solid #f3f4f6;">Distorted / weird shape</div>
+            <div class="cs-option" data-value="wrong_garment"     onclick="pickReportReason(this)" style="padding:.75rem .85rem; cursor:pointer; font-size:1rem; border-bottom:1px solid #f3f4f6;">Wrong outfit shown</div>
+            <div class="cs-option" data-value="image_quality"     onclick="pickReportReason(this)" style="padding:.75rem .85rem; cursor:pointer; font-size:1rem; border-bottom:1px solid #f3f4f6;">Blurry or bad quality</div>
+            <div class="cs-option" data-value="not_me"            onclick="pickReportReason(this)" style="padding:.75rem .85rem; cursor:pointer; font-size:1rem; border-bottom:1px solid #f3f4f6;">Doesn't look like me</div>
+            <div class="cs-option" data-value="other"             onclick="pickReportReason(this)" style="padding:.75rem .85rem; cursor:pointer; font-size:1rem;">Something else</div>
+          </div>
+          <input type="hidden" id="reportReason" value="">
+        </div>
         <textarea id="reportNote" rows="2" placeholder="Optional: tell us more (so we can fix it)" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:1rem; font-family: inherit; resize: vertical; margin-bottom:.6rem;"></textarea>
         <div id="reportError" style="display:none; color:#dc2626; font-size:.82rem; margin-bottom:.5rem;"></div>
         <div id="reportSuccess" style="display:none; color:#065f46; background:#d1fae5; padding:.6rem .8rem; border-radius: var(--r-md); font-size:.85rem; margin-bottom:.5rem;"></div>
@@ -775,6 +784,43 @@
     }
   }
 
+  // ── Custom report-reason dropdown ────────────────────────────────────
+  // The native <select> popup overflowed the viewport on some Android
+  // browsers regardless of CSS. Custom panel is constrained to the trigger's
+  // own width via left:0/right:0 so it can never escape the page.
+  function toggleReportReasonPanel(e) {
+    if (e) e.stopPropagation();
+    const panel = document.getElementById('reportReasonPanel');
+    const trigger = document.getElementById('reportReasonTrigger');
+    const willOpen = panel.hasAttribute('hidden');
+    if (willOpen) {
+      panel.removeAttribute('hidden');
+      trigger.setAttribute('aria-expanded', 'true');
+    } else {
+      panel.setAttribute('hidden', '');
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+  }
+  function pickReportReason(opt) {
+    document.getElementById('reportReason').value = opt.dataset.value;
+    document.getElementById('reportReasonLabel').textContent = opt.textContent;
+    document.getElementById('reportReasonTrigger').style.color = 'var(--text)';
+    document.querySelectorAll('#reportReasonPanel .cs-option').forEach(o => o.style.background = '');
+    opt.style.background = '#dbeafe';
+    document.getElementById('reportReasonPanel').setAttribute('hidden', '');
+    document.getElementById('reportReasonTrigger').setAttribute('aria-expanded', 'false');
+  }
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#reportReasonSelect')) {
+      const panel = document.getElementById('reportReasonPanel');
+      const trigger = document.getElementById('reportReasonTrigger');
+      if (panel && !panel.hasAttribute('hidden')) {
+        panel.setAttribute('hidden', '');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+      }
+    }
+  });
+
   // ── Report a bad result ──
   function toggleReport() {
     const form = document.getElementById('reportForm');
@@ -823,8 +869,23 @@
       if (!res.ok) throw new Error(data.error || 'Submit failed');
       okEl.textContent = 'Thanks — we\'ll review your photo + the result to find what went wrong, and get back to the brand within 24 hours.';
       okEl.style.display = 'block';
+      // Reset the form fields so a re-open starts clean
       document.getElementById('reportReason').value = '';
+      document.getElementById('reportReasonLabel').textContent = '— Pick a reason —';
+      document.getElementById('reportReasonTrigger').style.color = 'var(--muted)';
+      document.querySelectorAll('#reportReasonPanel .cs-option').forEach(o => o.style.background = '');
       document.getElementById('reportNote').value = '';
+      // Auto-close the report form after a short pause so the user has time
+      // to read the success confirmation, then collapses out of the way.
+      setTimeout(() => {
+        const form = document.getElementById('reportForm');
+        const toggleBtn = document.getElementById('reportToggleBtn');
+        if (form && form.style.display === 'block') {
+          form.style.display = 'none';
+          if (toggleBtn) toggleBtn.textContent = '🚩 Something wrong with this result?';
+          okEl.style.display = 'none';
+        }
+      }, 2200);
     } catch (err) {
       errEl.textContent = 'Could not submit. Please try again or contact the store.';
       errEl.style.display = 'block';
