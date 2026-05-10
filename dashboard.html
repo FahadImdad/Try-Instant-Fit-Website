@@ -574,7 +574,9 @@
     }
 
     /* ── Compact product list (scales to 1000s of products) ── */
-    .product-list { display: flex; flex-direction: column; gap: .35rem; }
+    /* Spans full width when nested inside .unified-list (which is a grid) —
+       otherwise the list lands in a single 320px cell and looks cramped. */
+    .product-list { display: flex; flex-direction: column; gap: .35rem; grid-column: 1 / -1; }
     .product-list-row {
       background: white;
       border: 1px solid var(--border);
