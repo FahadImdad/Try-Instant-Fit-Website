@@ -810,40 +810,42 @@
     }
   }
 
-  // Share = watermarked image FILE (not just a URL) so the brand mark lands
-  // in WhatsApp / Instagram / etc with the photo. Falls back to URL share +
-  // clipboard if the platform doesn't support file sharing.
+  // Share = watermarked image FILE only (no text, no URL). The watermark is
+  // baked into the image, so the brand mark travels regardless of where it
+  // lands. If the device doesn't support file sharing, fall back to saving
+  // the image so the user can share it manually.
   async function shareResult() {
     if (!resultUrl) return;
-    let blob = null;
-    try { blob = await makeWatermarkedBlob(); } catch (e) { console.error('[share]', e); }
-
-    const productName = qrInfo?.product_name || 'this outfit';
-    const shareText = `Check out how ${productName} looks on me — Try Instant Fit`;
-
-    if (blob && navigator.canShare) {
-      const file = new File([blob], buildResultFilename(), { type: 'image/png' });
-      if (navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ title: 'My virtual try-on', text: shareText, files: [file] });
-          return;
-        } catch (err) { /* user cancelled or share failed */ }
-      }
-    }
-
-    // No file-share support → URL share
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: 'My virtual try-on', text: shareText, url: resultUrl });
-        return;
-      } catch (err) { /* user cancelled */ }
-    }
+    let blob;
     try {
-      await navigator.clipboard.writeText(resultUrl);
-      alert('Link copied! Paste it anywhere to share.');
-    } catch {
-      alert('Copy this link: ' + resultUrl);
+      blob = await makeWatermarkedBlob();
+    } catch (err) {
+      console.error('[share]', err);
+      alert('Could not prepare the image. Please try again.');
+      return;
     }
+
+    const file = new File([blob], buildResultFilename(), { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+      } catch (err) { /* user cancelled — silent */ }
+      return;
+    }
+
+    // No file-share support (most desktop browsers) → save the image instead
+    // so the user can attach it themselves. No "link copied" — that confused
+    // users into thinking the share had succeeded.
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = buildResultFilename();
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
   }
 
   // ── Custom report-reason dropdown ────────────────────────────────────
