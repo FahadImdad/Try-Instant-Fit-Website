@@ -243,11 +243,60 @@
     .modal-box input:focus, .modal-box select:focus { border-color: var(--indigo); outline: none; }
 
     @media (max-width: 600px) {
+      .admin-shell { padding: 1rem .75rem; }
+
+      /* ── Header: keep logo on one line, shrink buttons ── */
+      .admin-header { gap: .5rem; margin-bottom: 1rem; }
+      .admin-header h1 { font-size: 1.05rem; gap: .4rem; flex: 1 1 auto; min-width: 0; }
+      .admin-header h1 img { height: 28px !important; }
+      .admin-header h1 span { font-size: .95rem !important; }
+      .admin-header .badge-admin { padding: .15rem .45rem; font-size: .6rem; }
+
+      /* ── Tabs: scroll horizontally instead of wrapping ── */
+      .admin-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -.75rem 1rem;     /* bleed to edge so scroll area uses full width */
+        padding: 0 .75rem;
+        scrollbar-width: none;
+      }
+      .admin-tabs::-webkit-scrollbar { display: none; }
+      .admin-tab {
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding: .7rem .9rem;
+        font-size: .85rem;
+      }
+
+      /* ── Filter row: stack search below pills, no overflow ── */
+      .filter-row { gap: .4rem; }
+      .filter-row input[type="search"] {
+        min-width: 0 !important;
+        width: 100%;
+        margin-left: 0 !important;
+        flex: 1 1 100%;
+        order: -1;          /* search above pills, easier to reach */
+        margin-bottom: .25rem;
+      }
+      .filter-pill { font-size: .78rem; padding: .35rem .7rem; }
+
+      /* Brands pane has its own search outside .filter-row — same treatment */
+      #pane-brands input[type="search"] {
+        min-width: 0 !important;
+        width: 100%;
+      }
+      #pane-brands > div:first-child { flex-direction: column; align-items: stretch !important; }
+
+      /* ── Cards in place of tables ── */
       .data-table thead { display: none; }
-      .data-table tr { display: block; padding: .75rem; border-bottom: 1px solid var(--border); }
+      .data-table tr { display: block; padding: .85rem; border-bottom: 1px solid var(--border); }
       .data-table td { display: block; padding: .35rem 0; border: none; font-size: .85rem; }
       .data-table td:before { content: attr(data-label) ': '; font-weight: 700; color: var(--muted); }
       .data-table { border-radius: var(--r-md); }
+      .row-actions { margin-top: .5rem; }
+      .row-actions .btn { font-size: .8rem; padding: .45rem .75rem; }
     }
   </style>
 </head>
