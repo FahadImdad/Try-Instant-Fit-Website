@@ -10,31 +10,31 @@
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "/assets/website%20icon.png",
+      "src": "/assets/website-icon.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/assets/website%20icon.png",
+      "src": "/assets/website-icon.png",
       "sizes": "256x256",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/assets/website%20icon.png",
+      "src": "/assets/website-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/assets/website%20icon.png",
+      "src": "/assets/website-icon.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/website%20icon.png",
+      "src": "/assets/website-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
@@ -45,13 +45,13 @@
       "name": "Products",
       "short_name": "Products",
       "url": "/dashboard?tab=products",
-      "icons": [{ "src": "/assets/website%20icon.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/assets/website-icon.png", "sizes": "192x192" }]
     },
     {
       "name": "Codes",
       "short_name": "Codes",
       "url": "/dashboard?tab=code",
-      "icons": [{ "src": "/assets/website%20icon.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/assets/website-icon.png", "sizes": "192x192" }]
     }
   ]
 }
