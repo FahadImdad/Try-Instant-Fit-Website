@@ -797,7 +797,6 @@ function renderBrands() {
                 <div style="display:flex; flex-direction:column; gap:.15rem;">
                   <div><span style="font-weight:800; color:#5a67f2;">${b.tryon_count || 0}</span> <span style="font-size:.72rem; color:var(--muted);">try-ons</span></div>
                   <div><span style="font-weight:800; color:#ec4899;">${b.process_count || 0}</span> <span style="font-size:.72rem; color:var(--muted);">uploads</span></div>
-                  ${b.refund_count ? `<div style="font-size:.7rem; color:#059669;">+${b.refund_count} refunded</div>` : ''}
                 </div>
               </td>
               <td data-label="Rate">$${Number(b.price_per_tryon_usd).toFixed(3)}</td>

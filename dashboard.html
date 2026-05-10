@@ -1535,7 +1535,8 @@
 
           <!-- Stat cards -->
           <div class="stat-grid">
-            <div class="stat-card"><div class="stat-label">Total Try-Ons</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">All time</div></div>
+            <div class="stat-card"><div class="stat-label">Total Try-Ons</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">Customer scans · all time</div></div>
+            <div class="stat-card"><div class="stat-label">Product Uploads</div><div class="stat-value" id="statUploads">—</div><div class="stat-sub">Catalog images processed</div></div>
             <div class="stat-card"><div class="stat-label">Today</div><div class="stat-value" id="statToday">—</div><div class="stat-sub">Try-ons so far</div></div>
             <div class="stat-card"><div class="stat-label">This Week</div><div class="stat-value" id="statWeek">—</div><div class="stat-sub">Last 7 days</div></div>
             <div class="stat-card"><div class="stat-label">This Month</div><div class="stat-value" id="statMonth">—</div><div class="stat-sub">Current month</div></div>
@@ -2424,7 +2425,8 @@
 
     // Top overall stats (across all sources)
     document.getElementById('statTotal').textContent = fmt(stats.total_tryons);
-    // Button Clicks removed from overall stats per product decision
+    // setup_credits_used = product image uploads processed (separate from try-ons)
+    document.getElementById('statUploads').textContent = fmt(stats.setup_credits_used || 0);
     document.getElementById('statToday').textContent = fmt(stats.today);
     document.getElementById('statWeek').textContent = fmt(stats.this_week);
     document.getElementById('statMonth').textContent = fmt(stats.this_month);
