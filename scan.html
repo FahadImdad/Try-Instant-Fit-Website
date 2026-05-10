@@ -699,13 +699,47 @@
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
 
-      // Watermark layout — pill in bottom-right with logo + text, sized
-      // proportional to image width so it reads on any photo.
       const text = 'Try Instant Fit';
       const fontSize = Math.max(22, Math.round(canvas.width / 28));
       ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
       const textWidth = ctx.measureText(text).width;
 
+      // ── Tiled diagonal watermark across the full image ─────────────────
+      // Anti-theft style: a faint repeating "Try Instant Fit" pattern at
+      // -28° covers every region of the photo so the brand mark can't be
+      // cropped out. Very low opacity so it doesn't compete with the
+      // try-on subject.
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(-28 * Math.PI / 180);
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      const tileGapX = textWidth + Math.round(fontSize * 5);
+      const tileGapY = Math.round(fontSize * 4.5);
+      // Cover diagonally — use the canvas diagonal so rotation never leaves gaps
+      const diag = Math.ceil(Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height));
+      const cols = Math.ceil(diag / tileGapX) + 1;
+      const rows = Math.ceil(diag / tileGapY) + 1;
+      // Soft white text with a subtle dark stroke so it reads on light AND
+      // dark backgrounds without overpowering either.
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.10)';
+      ctx.lineWidth = Math.max(1, Math.round(fontSize / 24));
+      for (let row = -rows; row <= rows; row++) {
+        // Stagger every other row by half a tile width — looks more natural
+        const offsetX = (row % 2 === 0) ? 0 : tileGapX / 2;
+        for (let col = -cols; col <= cols; col++) {
+          const x = col * tileGapX + offsetX;
+          const y = row * tileGapY;
+          ctx.strokeText(text, x, y);
+          ctx.fillText(text, x, y);
+        }
+      }
+      ctx.restore();
+
+      // ── Bottom-right brand pill (logo + text) ──────────────────────────
+      // The strong brand mark — kept but at lower opacity than before so it
+      // sits more subtly over the photo.
       const logoSize = logo ? Math.round(fontSize * 1.55) : 0;
       const logoGap  = logo ? Math.round(fontSize * 0.38) : 0;
       const padX = Math.round(fontSize * 0.55);
@@ -718,16 +752,12 @@
       const pillY = canvas.height - pillH - margin;
       const radius = Math.round(pillH * 0.32);
 
-      // Drop shadow under the pill so the watermark stays readable on any
-      // background — light or dark.
-      ctx.shadowColor = 'rgba(0,0,0,.4)';
-      ctx.shadowBlur = Math.max(8, Math.round(fontSize * 0.5));
+      // Soft drop shadow so the pill stays readable on busy backgrounds.
+      ctx.shadowColor = 'rgba(0,0,0,.32)';
+      ctx.shadowBlur = Math.max(6, Math.round(fontSize * 0.4));
       ctx.shadowOffsetY = 2;
 
-      // Rounded pill background. roundRect is available in all current
-      // browsers; fall back to a plain rect if a customer is on something
-      // older.
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';   // was 0.78 — softer
       ctx.beginPath();
       if (typeof ctx.roundRect === 'function') {
         ctx.roundRect(pillX, pillY, pillW, pillH, radius);
@@ -736,21 +766,21 @@
       }
       ctx.fill();
 
-      // Clear shadow before drawing logo + text so they're crisp.
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
       ctx.shadowOffsetY = 0;
 
-      // Logo (left side of pill)
       let cursorX = pillX + padX;
       if (logo) {
+        ctx.save();
+        ctx.globalAlpha = 0.85;
         const logoY = pillY + (pillH - logoSize) / 2;
         ctx.drawImage(logo, cursorX, logoY, logoSize, logoSize);
+        ctx.restore();
         cursorX += logoSize + logoGap;
       }
 
-      // Brand text (right of logo)
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.97)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)'; // was 0.97 — softer
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'left';
       ctx.fillText(text, cursorX, pillY + pillH / 2 + 1);
@@ -792,39 +822,50 @@
     }
   }
 
-  // Share = watermarked image FILE (not just a URL) so the brand mark lands
-  // in WhatsApp / Instagram / etc with the photo. Falls back to URL share +
-  // clipboard if the platform doesn't support file sharing.
+  // Share = watermarked image FILE + branded message so the brand mark
+  // lands in WhatsApp / Instagram / etc with the photo AND the message.
+  // Falls back to URL share + clipboard if file-share isn't supported.
   async function shareResult() {
     if (!resultUrl) return;
     let blob = null;
     try { blob = await makeWatermarkedBlob(); } catch (e) { console.error('[share]', e); }
 
     const productName = qrInfo?.product_name || 'this outfit';
-    const shareText = `Check out how ${productName} looks on me — Try Instant Fit`;
+    const brandName = qrInfo?.brand?.name || qrInfo?.brand_name || '';
+    // Branded share copy — casual + product mention + branding line + CTA URL
+    // on a separate line so messaging apps that auto-link URLs render it
+    // cleanly instead of jamming text + URL together.
+    const shareTitle = 'My virtual try-on · Try Instant Fit';
+    const shareText = `Tried on ${productName}${brandName ? ' from ' + brandName : ''} virtually — and it looks 🔥\n\n` +
+      `✨ AI try-on by Try Instant Fit\n` +
+      `Try yours: https://www.tryinstantfit.com`;
+    const shareUrl  = 'https://www.tryinstantfit.com';
 
     if (blob && navigator.canShare) {
       const file = new File([blob], buildResultFilename(), { type: 'image/png' });
       if (navigator.canShare({ files: [file] })) {
         try {
-          await navigator.share({ title: 'My virtual try-on', text: shareText, files: [file] });
+          // Some Android share targets dedupe text+url; passing both is fine
+          // (most pick whichever they prefer; WhatsApp shows the text and
+          // attaches the image; IG accepts the image and discards the rest).
+          await navigator.share({ title: shareTitle, text: shareText, url: shareUrl, files: [file] });
           return;
         } catch (err) { /* user cancelled or share failed */ }
       }
     }
 
-    // No file-share support → URL share
+    // No file-share support → URL/text share so the brand line still lands.
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'My virtual try-on', text: shareText, url: resultUrl });
+        await navigator.share({ title: shareTitle, text: shareText, url: shareUrl });
         return;
       } catch (err) { /* user cancelled */ }
     }
     try {
-      await navigator.clipboard.writeText(resultUrl);
-      alert('Link copied! Paste it anywhere to share.');
+      await navigator.clipboard.writeText(shareText);
+      alert('Message copied! Paste it anywhere to share.');
     } catch {
-      alert('Copy this link: ' + resultUrl);
+      alert(shareText);
     }
   }
 
