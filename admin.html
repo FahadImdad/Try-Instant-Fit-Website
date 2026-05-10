@@ -1224,13 +1224,15 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeLightbox();
 });
 
-// Cross-origin-safe image download. Anchor with `download` attribute alone
-// doesn't trigger a save for cross-origin images on most browsers — fetch
-// as a blob first, then synthesize the click on a same-origin blob URL.
+// Cross-origin-safe image download. The image lives on storage.googleapis.com
+// which doesn't return CORS headers for our origin, so a direct fetch fails.
+// Route through the same-origin /api/proxy-image endpoint and synthesize
+// the click on a blob URL.
 async function downloadReportImage(e, url, filename) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
   try {
-    const res = await fetch(url);
+    const proxied = `/api/proxy-image?url=${encodeURIComponent(url)}`;
+    const res = await fetch(proxied);
     if (!res.ok) throw new Error('Fetch failed');
     const blob = await res.blob();
     const objUrl = URL.createObjectURL(blob);

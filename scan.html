@@ -654,12 +654,33 @@
     return `${base}.png`;
   }
 
+  // Cached promise so the logo only loads once per page session.
+  let _logoPromise = null;
+  function loadBrandLogo() {
+    if (_logoPromise) return _logoPromise;
+    _logoPromise = new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';   // same-origin, but harmless
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null); // fall back to text-only watermark
+      img.src = '/assets/website-icon.png';
+    });
+    return _logoPromise;
+  }
+
   // Render the AI result onto a canvas with a "Try Instant Fit" watermark
-  // baked into the pixels (bottom-right pill). Used for both Download and
-  // Share so the brand mark travels with the image anywhere the customer
-  // posts it. Returns a PNG Blob.
+  // (logo + brand text) baked into the pixels (bottom-right pill). Used for
+  // both Download and Share so the brand mark travels with the image
+  // anywhere the customer posts it. Returns a PNG Blob.
+  //
+  // The result image lives on storage.googleapis.com which doesn't expose
+  // CORS headers for our website origin — fetching it directly would fail
+  // and tainted-canvas would block toBlob(). We route through the
+  // same-origin /api/proxy-image endpoint instead so the browser sees a
+  // same-origin response and the canvas stays clean.
   async function makeWatermarkedBlob() {
-    const res = await fetch(resultUrl);
+    const proxied = `${API}/api/proxy-image?url=${encodeURIComponent(resultUrl)}`;
+    const [res, logo] = await Promise.all([fetch(proxied), loadBrandLogo()]);
     if (!res.ok) throw new Error('Could not fetch result image');
     const sourceBlob = await res.blob();
 
@@ -678,38 +699,61 @@
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
 
-      // Watermark — pill in bottom-right, sized proportional to image width
+      // Watermark layout — pill in bottom-right with logo + text, sized
+      // proportional to image width so it reads on any photo.
       const text = 'Try Instant Fit';
       const fontSize = Math.max(22, Math.round(canvas.width / 28));
       ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
       const textWidth = ctx.measureText(text).width;
-      const padX = Math.round(fontSize * 0.6);
+
+      const logoSize = logo ? Math.round(fontSize * 1.55) : 0;
+      const logoGap  = logo ? Math.round(fontSize * 0.38) : 0;
+      const padX = Math.round(fontSize * 0.55);
       const padY = Math.round(fontSize * 0.32);
       const margin = Math.round(fontSize * 0.7);
-      const pillW = textWidth + padX * 2;
-      const pillH = fontSize + padY * 2;
+      const innerW = logoSize + logoGap + textWidth;
+      const pillW = innerW + padX * 2;
+      const pillH = Math.max(logoSize, fontSize) + padY * 2;
       const pillX = canvas.width - pillW - margin;
       const pillY = canvas.height - pillH - margin;
+      const radius = Math.round(pillH * 0.32);
 
-      // Subtle drop shadow
-      ctx.shadowColor = 'rgba(0,0,0,.35)';
-      ctx.shadowBlur = Math.max(6, Math.round(fontSize * 0.4));
+      // Drop shadow under the pill so the watermark stays readable on any
+      // background — light or dark.
+      ctx.shadowColor = 'rgba(0,0,0,.4)';
+      ctx.shadowBlur = Math.max(8, Math.round(fontSize * 0.5));
       ctx.shadowOffsetY = 2;
 
-      // Pill background
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.72)'; // brand-dark / slate
-      ctx.fillRect(pillX, pillY, pillW, pillH);
+      // Rounded pill background. roundRect is available in all current
+      // browsers; fall back to a plain rect if a customer is on something
+      // older.
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(pillX, pillY, pillW, pillH, radius);
+      } else {
+        ctx.rect(pillX, pillY, pillW, pillH);
+      }
+      ctx.fill();
 
-      // Reset shadow before text so the text isn't smeared
+      // Clear shadow before drawing logo + text so they're crisp.
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
       ctx.shadowOffsetY = 0;
 
-      // Text
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+      // Logo (left side of pill)
+      let cursorX = pillX + padX;
+      if (logo) {
+        const logoY = pillY + (pillH - logoSize) / 2;
+        ctx.drawImage(logo, cursorX, logoY, logoSize, logoSize);
+        cursorX += logoSize + logoGap;
+      }
+
+      // Brand text (right of logo)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.97)';
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'left';
-      ctx.fillText(text, pillX + padX, pillY + pillH / 2 + 1);
+      ctx.fillText(text, cursorX, pillY + pillH / 2 + 1);
 
       return await new Promise((resolve, reject) => {
         canvas.toBlob(b => b ? resolve(b) : reject(new Error('Canvas export failed')), 'image/png', 0.95);
