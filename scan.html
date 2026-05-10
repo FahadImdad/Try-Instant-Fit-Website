@@ -810,10 +810,15 @@
     }
   }
 
-  // Share = watermarked image FILE only (no text, no URL). The watermark is
-  // baked into the image, so the brand mark travels regardless of where it
-  // lands. If the device doesn't support file sharing, fall back to saving
-  // the image so the user can share it manually.
+  // Share = the same watermarked image the Download button produces, sent
+  // to wherever the user wants:
+  //   • Mobile / supported desktop → native OS share sheet (WhatsApp, IG,
+  //     Messages, etc.) via Web Share API with the image FILE.
+  //   • Desktop without file-share support → copy the IMAGE itself to the
+  //     clipboard so the user can paste it into WhatsApp Web / IG / Slack /
+  //     Discord / email — anywhere a chat box accepts an image.
+  //   • Last resort (very old browsers) → save the image so the user can
+  //     attach it manually.
   async function shareResult() {
     if (!resultUrl) return;
     let blob;
@@ -827,16 +832,31 @@
 
     const file = new File([blob], buildResultFilename(), { type: 'image/png' });
 
+    // 1. Native share sheet (mobile + Chrome/Edge with file-share support)
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({ files: [file] });
-      } catch (err) { /* user cancelled — silent */ }
-      return;
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return; // user cancelled
+        console.warn('[share] native share failed, falling through', err);
+      }
     }
 
-    // No file-share support (most desktop browsers) → save the image instead
-    // so the user can attach it themselves. No "link copied" — that confused
-    // users into thinking the share had succeeded.
+    // 2. Desktop fallback — copy the IMAGE to clipboard so the user can
+    //    paste it into any messaging app. (This is the IMAGE itself, not
+    //    a URL — pasting drops the photo straight into the chat.)
+    if (navigator.clipboard && window.ClipboardItem) {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        alert('Image copied! Paste it into WhatsApp, Instagram, or any chat app.');
+        return;
+      } catch (err) {
+        console.warn('[share] clipboard image write failed, falling through', err);
+      }
+    }
+
+    // 3. Last resort — download so the user can attach it manually
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = objectUrl;
@@ -846,6 +866,7 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+    alert('Image saved! Attach it to share.');
   }
 
   // ── Custom report-reason dropdown ────────────────────────────────────
