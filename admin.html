@@ -645,8 +645,11 @@ function renderAnalytics() {
     return acc;
   }, {});
 
-  // Try-on totals (sum of credits used across brands)
-  const totalTryons = brands.reduce((sum, b) => sum + (b.tryon_credits_used || 0), 0);
+  // Try-on totals split: customer try-ons vs product-upload processing.
+  // (Both consume credits at the same rate; we track them separately so admin
+  //  can see exactly how much spend goes to scans vs catalog ingestion.)
+  const totalTryons = brands.reduce((sum, b) => sum + (b.tryon_count || 0), 0);
+  const totalUploads = brands.reduce((sum, b) => sum + (b.process_count || 0), 0);
   const totalCreditsRemaining = brands.reduce((sum, b) => {
     if (b.unlimited) return sum;
     return sum + Math.max(0, (b.tryon_credits || 0) - (b.tryon_credits_used || 0));
@@ -660,10 +663,10 @@ function renderAnalytics() {
   const pendingUsd = pendingTopups.reduce((s, t) => s + Number(t.amount_usd || 0), 0);
   const creditsSold = approvedTopups.reduce((s, t) => s + Number(t.credits_requested || 0), 0);
 
-  // Top brands by usage
+  // Top brands by customer try-ons (the metric brands actually care about)
   const topBrands = [...brands]
-    .filter(b => (b.tryon_credits_used || 0) > 0)
-    .sort((a, b) => (b.tryon_credits_used || 0) - (a.tryon_credits_used || 0))
+    .filter(b => (b.tryon_count || 0) > 0)
+    .sort((a, b) => (b.tryon_count || 0) - (a.tryon_count || 0))
     .slice(0, 5);
 
   // Last 30 days — approvals + try-ons
@@ -680,7 +683,8 @@ function renderAnalytics() {
     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
       ${kpi('💰 Revenue (approved)', fmtUsd(revenueUsd), `${approvedTopups.length} approved · ${fmtUsd(recentApprovedRevenue)} last 30d`)}
       ${kpi('⏳ Pending revenue',     fmtUsd(pendingUsd), `${pendingTopups.length} pending top-ups`)}
-      ${kpi('🧥 Try-ons run',         fmtN(totalTryons),  `across ${totalBrands} brand${totalBrands === 1 ? '' : 's'}`)}
+      ${kpi('🧥 Try-ons run',         fmtN(totalTryons),  `customer scans across ${totalBrands} brand${totalBrands === 1 ? '' : 's'}`)}
+      ${kpi('📦 Product uploads',     fmtN(totalUploads), 'image-processing credits used')}
       ${kpi('🎟️ Credits sold',        fmtN(creditsSold),  `~${fmtN(totalCreditsRemaining)} unused in wallets`)}
       ${kpi('🏢 Active brands',       String(byStatus.active || 0), `${byStatus.pending || 0} pending · ${byStatus.suspended || 0} suspended`)}
       ${kpi('❌ Rejected top-ups',    String(rejectedTopups.length), 'of all time')}
@@ -697,9 +701,10 @@ function renderAnalytics() {
         : `
         <div style="display:grid; gap:.5rem;">
           ${topBrands.map((b, i) => {
-            const used = b.tryon_credits_used || 0;
-            const max  = topBrands[0].tryon_credits_used || 1;
+            const used = b.tryon_count || 0;
+            const max  = topBrands[0].tryon_count || 1;
             const pct  = (used / max) * 100;
+            const uploads = b.process_count || 0;
             return `
               <div style="display:grid; grid-template-columns: 28px 1fr auto; gap:.75rem; align-items:center;">
                 <div style="font-weight:700; color:var(--muted); font-size:.85rem;">#${i + 1}</div>
@@ -708,6 +713,7 @@ function renderAnalytics() {
                   <div style="height:6px; background:var(--surface); border-radius:3px; margin-top:.35rem; overflow:hidden;">
                     <div style="height:100%; width:${pct}%; background: linear-gradient(90deg,#5a67f2,#00c8e8);"></div>
                   </div>
+                  <div style="font-size:.7rem; color:var(--muted); margin-top:.25rem;">${fmtN(uploads)} product upload${uploads === 1 ? '' : 's'}</div>
                 </div>
                 <div style="font-weight:800; font-size:.95rem; white-space:nowrap;">${fmtN(used)} <span style="font-size:.7rem; color:var(--muted); font-weight:500;">try-ons</span></div>
               </div>`;
@@ -788,8 +794,11 @@ function renderBrands() {
                 </div>
               </td>
               <td data-label="Used">
-                <div style="font-weight:700;">${b.tryon_credits_used || 0}</div>
-                <div style="font-size:.72rem; color:var(--muted);">try-ons run</div>
+                <div style="display:flex; flex-direction:column; gap:.15rem;">
+                  <div><span style="font-weight:800; color:#5a67f2;">${b.tryon_count || 0}</span> <span style="font-size:.72rem; color:var(--muted);">try-ons</span></div>
+                  <div><span style="font-weight:800; color:#ec4899;">${b.process_count || 0}</span> <span style="font-size:.72rem; color:var(--muted);">uploads</span></div>
+                  ${b.refund_count ? `<div style="font-size:.7rem; color:#059669;">+${b.refund_count} refunded</div>` : ''}
+                </div>
               </td>
               <td data-label="Rate">$${Number(b.price_per_tryon_usd).toFixed(3)}</td>
               <td data-label="Actions">
