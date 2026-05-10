@@ -262,58 +262,6 @@
 
     /* Make sure all images scale */
     img { max-width: 100%; }
-
-    /* Share modal — opens on desktop where the native share sheet can't
-       carry a file. Always-reliable popup with explicit platform buttons. */
-    .share-modal {
-      position: fixed; inset: 0;
-      background: rgba(15, 23, 42, 0.65);
-      z-index: 200;
-      display: flex; align-items: center; justify-content: center;
-      padding: 1rem;
-      animation: shareFadeIn .15s ease-out;
-    }
-    @keyframes shareFadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .share-modal-card {
-      background: white;
-      border-radius: 16px;
-      padding: 1.5rem 1.25rem 1.25rem;
-      max-width: 360px; width: 100%;
-      position: relative;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
-    }
-    .share-modal-close {
-      position: absolute; top: 8px; right: 12px;
-      background: none; border: none; font-size: 1.4rem;
-      cursor: pointer; color: #6b7280; line-height: 1;
-      padding: 4px 8px;
-    }
-    .share-modal-close:hover { color: #111827; }
-    .share-modal-title {
-      margin: 0 0 .25rem; font-size: 1.1rem; color: #111827;
-    }
-    .share-modal-sub {
-      margin: 0 0 1rem; color: #6b7280; font-size: .85rem;
-    }
-    .share-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: .55rem;
-    }
-    .share-option {
-      display: flex; flex-direction: column; align-items: center;
-      gap: .35rem;
-      padding: .9rem .5rem;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      cursor: pointer; font-family: inherit; font-size: .82rem;
-      color: #111827; font-weight: 600;
-      transition: background .15s, border-color .15s;
-    }
-    .share-option:hover { background: #f3f4f6; border-color: #d1d5db; }
-    .share-option:active { background: #e5e7eb; }
-    .share-option-icon { font-size: 1.6rem; line-height: 1; }
   </style>
 </head>
 <body>
@@ -862,91 +810,52 @@
     }
   }
 
-  // Share = best UX per device.
-  //   • Mobile (file-share supported) → native OS share sheet with the image
-  //     file. WhatsApp/IG/Messages get the image directly.
-  //   • Desktop (or any browser without file-share) → custom share modal
-  //     with explicit platform buttons (WhatsApp, Copy Image, Email,
-  //     Download). Always opens — no silent paths, no "Image copied"
-  //     alert appearing out of nowhere.
+  // Share = native OS share sheet. Mobile gets the watermarked image FILE
+  // directly; desktop gets the same OS popup with a URL (link to the
+  // watermarked image — chat apps preview it inline). Always opens the
+  // system share sheet — no custom popup, no clipboard alert.
   async function shareResult() {
     if (!resultUrl) return;
 
-    // Try native file share first. We need the blob to feature-detect
-    // properly (canShare with the actual file), but only build it if
-    // Web Share API exists at all.
-    if (navigator.canShare && navigator.share) {
-      let blob;
-      try {
-        blob = await makeWatermarkedBlob();
-      } catch (err) {
-        console.error('[share]', err);
-        alert('Could not prepare the image. Please try again.');
-        return;
-      }
-      const file = new File([blob], buildResultFilename(), { type: 'image/png' });
-      const productName = qrInfo?.product_name || 'this outfit';
-      const shareTitle = `${productName} · Try Instant Fit`;
-
-      if (navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: shareTitle });
-          return;
-        } catch (err) {
-          if (err && err.name === 'AbortError') return; // user cancelled
-          console.warn('[share] native file share failed, opening modal', err);
-        }
-      }
-    }
-
-    // Desktop / unsupported → open custom share modal
-    openShareModal();
-  }
-
-  // ── Share modal (desktop / non-file-share browsers) ──────────────────
-  function openShareModal()  { document.getElementById('shareModal').style.display = 'flex'; }
-  function closeShareModal() { document.getElementById('shareModal').style.display = 'none'; }
-
-  function shareToWhatsApp() {
     const productName = qrInfo?.product_name || 'this outfit';
-    const text = `Check out how ${productName} looks on me — Try Instant Fit\n${resultUrl}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
-    closeShareModal();
-  }
+    const shareTitle = `${productName} · Try Instant Fit`;
 
-  function shareToEmail() {
-    const productName = qrInfo?.product_name || 'this outfit';
-    const subject = `My virtual try-on — ${productName}`;
-    const body = `Check out how ${productName} looks on me!\n\n${resultUrl}\n\n— Try Instant Fit`;
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    closeShareModal();
-  }
-
-  async function shareCopyImageFromModal() {
     let blob;
     try {
       blob = await makeWatermarkedBlob();
     } catch (err) {
-      console.error('[share-copy]', err);
+      console.error('[share]', err);
       alert('Could not prepare the image. Please try again.');
       return;
     }
-    if (navigator.clipboard && window.ClipboardItem) {
+
+    const file = new File([blob], buildResultFilename(), { type: 'image/png' });
+
+    // Mobile + Chrome/Edge desktop with file-share support → image FILE
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-        closeShareModal();
-        alert('Image copied! Paste it into any chat app with Ctrl+V.');
+        await navigator.share({ files: [file], title: shareTitle });
         return;
       } catch (err) {
-        console.warn('[share-copy] clipboard write failed', err);
+        if (err && err.name === 'AbortError') return;
+        console.warn('[share] file share failed, falling back to URL', err);
       }
     }
-    alert("Couldn't copy on this browser. Try Download instead.");
-  }
 
-  async function shareDownloadFromModal() {
-    closeShareModal();
-    await downloadResult();
+    // Desktop browsers that have navigator.share but refuse files → URL share
+    // opens the same OS popup, just with a link to the result image.
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: shareTitle, url: resultUrl });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+        console.warn('[share] URL share failed', err);
+      }
+    }
+
+    // Truly no Web Share API → tell user to use Download
+    alert("Sharing isn't supported in this browser. Tap Download to save the image, then attach it where you'd like.");
   }
 
   // ── Custom report-reason dropdown ────────────────────────────────────
@@ -1071,33 +980,6 @@
     show('errorView');
   }
 </script>
-
-<!-- Share modal — desktop fallback when native file-share isn't available -->
-<div id="shareModal" class="share-modal" style="display:none;" onclick="if(event.target.id==='shareModal') closeShareModal()">
-  <div class="share-modal-card" role="dialog" aria-labelledby="shareModalTitle">
-    <button type="button" class="share-modal-close" onclick="closeShareModal()" aria-label="Close">×</button>
-    <h3 id="shareModalTitle" class="share-modal-title">Share your try-on</h3>
-    <p class="share-modal-sub">Pick where to send it</p>
-    <div class="share-grid">
-      <button type="button" class="share-option" onclick="shareToWhatsApp()">
-        <span class="share-option-icon">💬</span>
-        <span>WhatsApp</span>
-      </button>
-      <button type="button" class="share-option" onclick="shareCopyImageFromModal()">
-        <span class="share-option-icon">🖼️</span>
-        <span>Copy Image</span>
-      </button>
-      <button type="button" class="share-option" onclick="shareToEmail()">
-        <span class="share-option-icon">✉️</span>
-        <span>Email</span>
-      </button>
-      <button type="button" class="share-option" onclick="shareDownloadFromModal()">
-        <span class="share-option-icon">⬇️</span>
-        <span>Download</span>
-      </button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
