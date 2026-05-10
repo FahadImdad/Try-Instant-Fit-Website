@@ -459,6 +459,12 @@
   </div>
 </div>
 
+<!-- ── LIGHTBOX (image preview overlay — click X or background to dismiss) ── -->
+<div id="lightbox" onclick="if(event.target===this)closeLightbox()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:10000; align-items:center; justify-content:center; padding:1rem;">
+  <button onclick="closeLightbox()" aria-label="Close" style="position:absolute; top:1rem; right:1.25rem; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); color:white; width:38px; height:38px; border-radius:50%; font-size:1.4rem; line-height:1; cursor:pointer; font-family:inherit;">&times;</button>
+  <img id="lightboxImg" src="" alt="" style="max-width:92vw; max-height:88vh; border-radius:8px; box-shadow: 0 10px 40px rgba(0,0,0,.5);">
+</div>
+
 <!-- ── MODAL: Reject Top-Up ── -->
 <div class="modal-bg" id="rejectTopupModal" onclick="if(event.target===this)closeRejectTopupModal()">
   <div class="modal-box" style="max-width: 480px;">
@@ -688,37 +694,48 @@ function renderReports() {
       difficulty: '⚠️ Platform difficulty',
     })[r.type] || r.type;
 
+    // Human-friendly reason labels (mirror scan.html's trimmed dropdown options).
+    const reasonLabel = ({
+      garment_distorted: 'Distorted / weird shape',
+      wrong_garment:     'Wrong outfit shown',
+      image_quality:     'Blurry or bad quality',
+      not_me:            "Doesn't look like me",
+      other:             'Something else',
+    })[r.reason] || r.reason;
+
     const refundEligible = (r.type === 'tryon_bad' || r.type === 'image_bad');
     const isPending = r.status === 'pending';
+    const when = new Date(r.created_at).toLocaleString('en-PK', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
     return `
-      <div class="topup-card" style="border-left: 4px solid ${r.status === 'pending' ? '#f59e0b' : 'transparent'};">
-        <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:.5rem;">
-          <div>
+      <div class="report-card" style="border-left: 4px solid ${r.status === 'pending' ? '#f59e0b' : '#e5e7eb'}; background:#fff; border-radius: var(--r-md); padding: .85rem 1rem; margin-bottom: .65rem; box-shadow: 0 1px 2px rgba(0,0,0,.04);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; flex-wrap:wrap; margin-bottom:.4rem;">
+          <div style="display:flex; align-items:center; gap:.4rem; flex-wrap:wrap;">
             <strong style="font-size:.95rem;">${typeLabel}</strong>
             ${statusBadge}
-            <span style="font-size:.78rem; color:var(--muted); margin-left:.5rem;">${new Date(r.created_at).toLocaleString()}</span>
           </div>
-          <div style="font-size:.82rem; color:var(--muted);">
-            Brand: <strong style="color:var(--text);">${escapeHtml(r.brand?.name || r.brand_id || 'Unknown')}</strong>
-            ${r.brand?.email ? ` · ${escapeHtml(r.brand.email)}` : ''}
-          </div>
+          <span style="font-size:.72rem; color:var(--muted); white-space:nowrap;">${when}</span>
         </div>
-        ${r.reason  ? `<div style="font-size:.85rem; margin-bottom:.25rem;"><strong>Reason:</strong> ${escapeHtml(r.reason)}</div>` : ''}
-        ${r.message ? `<div style="font-size:.85rem; margin-bottom:.5rem; white-space:pre-wrap;"><strong>Note:</strong> ${escapeHtml(r.message)}</div>` : ''}
-        <div style="display:flex; gap:.5rem; flex-wrap:wrap; font-size:.78rem; color:var(--muted); margin-bottom:.5rem;">
-          ${r.product_id  ? `<span>Product: <code>${escapeHtml(r.product_id)}</code></span>` : ''}
-          ${r.qr_id       ? `<span>QR: <code>${escapeHtml(r.qr_id.slice(0,8))}…</code></span>` : ''}
-          ${r.tryon_id    ? `<span>Try-on: <code>${escapeHtml(r.tryon_id.slice(0,8))}…</code></span>` : ''}
+        <div style="font-size:.82rem; color:var(--muted); margin-bottom:.5rem;">
+          <strong style="color:var(--text); font-weight:700;">${escapeHtml(r.brand?.name || r.brand_id || 'Unknown')}</strong>${r.brand?.email ? ` · ${escapeHtml(r.brand.email)}` : ''}
         </div>
-        ${r.result_url ? `<div style="margin-bottom:.5rem;"><a href="${escapeHtml(r.result_url)}" target="_blank" rel="noopener" style="color: var(--cyan); font-size:.85rem;">↗ View try-on result image</a></div>` : ''}
-        ${r.screenshot_url ? `<div style="margin-bottom:.5rem;"><a href="${escapeHtml(r.screenshot_url)}" target="_blank" rel="noopener" style="color: var(--cyan); font-size:.85rem;">↗ View user screenshot</a></div>` : ''}
-        ${r.resolution_note ? `<div style="font-size:.82rem; color:var(--muted); padding:.5rem .75rem; background:var(--surface); border-radius: var(--r-md); margin-bottom:.5rem;"><strong>Resolution:</strong> ${escapeHtml(r.resolution_note)} ${r.resolved_by ? `· by ${escapeHtml(r.resolved_by)}` : ''}</div>` : ''}
+        ${r.reason  ? `<div style="font-size:.9rem; font-weight:600; margin-bottom:.2rem;">${escapeHtml(reasonLabel)}</div>` : ''}
+        ${r.message ? `<div style="font-size:.85rem; color:var(--text); margin-bottom:.5rem; white-space:pre-wrap; padding-left:.65rem; border-left: 2px solid var(--border);">${escapeHtml(r.message)}</div>` : ''}
+        ${(r.product_id || r.qr_id || r.tryon_id) ? `<div style="display:flex; gap:.65rem; flex-wrap:wrap; font-size:.72rem; color:var(--muted); margin-bottom:.5rem;">
+          ${r.product_id  ? `<span><code>${escapeHtml(r.product_id)}</code></span>` : ''}
+          ${r.qr_id       ? `<span>QR <code>${escapeHtml(r.qr_id.slice(0,8))}</code></span>` : ''}
+          ${r.tryon_id    ? `<span>Try-on <code>${escapeHtml(r.tryon_id.slice(0,8))}</code></span>` : ''}
+        </div>` : ''}
+        ${(r.result_url || r.screenshot_url) ? `<div style="display:flex; gap:.85rem; flex-wrap:wrap; font-size:.82rem; margin-bottom:.5rem;">
+          ${r.result_url     ? `<a href="${escapeHtml(r.result_url)}" onclick="openLightbox('${escapeHtml(r.result_url)}'); return false;" style="color: var(--cyan); cursor: zoom-in;">↗ Try-on image</a>` : ''}
+          ${r.screenshot_url ? `<a href="${escapeHtml(r.screenshot_url)}" onclick="openLightbox('${escapeHtml(r.screenshot_url)}'); return false;" style="color: var(--cyan); cursor: zoom-in;">↗ User screenshot</a>` : ''}
+        </div>` : ''}
+        ${r.resolution_note ? `<div style="font-size:.78rem; color:var(--muted); padding:.5rem .65rem; background:var(--surface); border-radius: var(--r-sm); margin-bottom:.5rem;"><strong>Resolution:</strong> ${escapeHtml(r.resolution_note)}${r.resolved_by ? ` · ${escapeHtml(r.resolved_by)}` : ''}</div>` : ''}
         ${isPending ? `
-          <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
-            ${refundEligible ? `<button class="btn btn-primary btn-sm" onclick="resolveReport('${r.id}', 'approve')" style="background:#10b981; border-color:transparent;">✓ Approve & Refund $0.125</button>` : ''}
-            <button class="btn btn-secondary btn-sm" onclick="resolveReport('${r.id}', 'deny')" style="color:#991b1b; border-color:#fca5a5;">✕ Deny</button>
-            <button class="btn btn-secondary btn-sm" onclick="resolveReport('${r.id}', 'close')">Close (no action)</button>
+          <div class="report-actions" style="display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.25rem;">
+            ${refundEligible ? `<button class="btn btn-primary btn-sm" onclick="resolveReport('${r.id}', 'approve')" style="background:#10b981; border-color:transparent; flex:1 1 auto; min-width:0;">✓ Refund $0.125</button>` : ''}
+            <button class="btn btn-secondary btn-sm" onclick="resolveReport('${r.id}', 'deny')" style="color:#991b1b; border-color:#fca5a5; flex:1 1 auto; min-width:0;">✕ Deny</button>
+            <button class="btn btn-secondary btn-sm" onclick="resolveReport('${r.id}', 'close')" style="flex:1 1 auto; min-width:0;">Close</button>
           </div>
         ` : ''}
       </div>`;
@@ -1087,7 +1104,7 @@ function renderTopups() {
               <td data-label="Amount"><strong>$${Number(t.amount_usd).toFixed(2)}</strong>${localStr ? `<div style="font-size:.75rem; color:var(--muted);">${escapeHtml(localStr)}</div>` : ''}</td>
               <td data-label="Credits"><strong>${t.credits_requested}</strong></td>
               <td data-label="Method">${escapeHtml(t.payment_method || '—')}${t.payment_ref ? `<div style="font-size:.7rem; color:var(--muted); font-family:monospace;">${escapeHtml(t.payment_ref)}</div>` : ''}</td>
-              <td data-label="Screenshot">${t.payment_screenshot_url ? `<a href="${escapeHtml(t.payment_screenshot_url)}" target="_blank"><img src="${escapeHtml(t.payment_screenshot_url)}" style="width:64px; height:64px; object-fit:cover; border-radius: var(--r-sm); cursor:zoom-in;" loading="lazy"></a>` : '—'}</td>
+              <td data-label="Screenshot">${t.payment_screenshot_url ? `<img src="${escapeHtml(t.payment_screenshot_url)}" onclick="openLightbox('${escapeHtml(t.payment_screenshot_url)}')" style="width:64px; height:64px; object-fit:cover; border-radius: var(--r-sm); cursor:zoom-in;" loading="lazy">` : '—'}</td>
               <td data-label="Status"><span class="status-pill ${pillClass}">${status}</span>${t.rejection_reason ? `<div style="font-size:.72rem; color:#991b1b; margin-top:.25rem;">${escapeHtml(t.rejection_reason)}</div>` : ''}</td>
               <td data-label="Date" style="color:var(--muted); font-size:.78rem;">${fmtDate(t.created_at)}</td>
               <td data-label="Actions">
@@ -1165,6 +1182,27 @@ async function submitRejectTopup(e) {
   }
   return false;
 }
+
+// ── Lightbox (click an image link/thumbnail → overlay on this page) ──
+function openLightbox(url) {
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lightboxImg');
+  if (!lb || !img) return;
+  img.src = url;
+  lb.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  const lb = document.getElementById('lightbox');
+  if (!lb) return;
+  lb.style.display = 'none';
+  document.body.style.overflow = '';
+  document.getElementById('lightboxImg').src = '';
+}
+// Esc closes the lightbox
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeLightbox();
+});
 
 // ── Helpers ──
 function escapeHtml(s) {
