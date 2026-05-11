@@ -815,11 +815,17 @@
 
   async function shareResult() {
     if (!resultUrl) return;
+    console.log('[share] navigator.share is:', typeof navigator.share, navigator.share);
     if (navigator.share) {
       try {
         await navigator.share({ title: 'My virtual try-on', text: `Check out how ${qrInfo.product_name} looks on me!`, url: resultUrl });
+        console.log('[share] share completed');
         return;
-      } catch (err) { /* user cancelled */ }
+      } catch (err) {
+        console.warn('[share] navigator.share threw:', err?.name, err?.message, err);
+      }
+    } else {
+      console.warn('[share] navigator.share is undefined — falling back to clipboard');
     }
     navigator.clipboard.writeText(resultUrl);
     alert('Link copied! Paste it anywhere to share.');
