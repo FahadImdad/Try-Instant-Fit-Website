@@ -813,20 +813,36 @@
     }
   }
 
+  // Guard against a Chrome-on-Windows quirk where the Web Share UI sometimes
+  // doesn't resolve cleanly (e.g. share dialog dismissed without picking a
+  // target), leaving navigator.share() in a permanent "in progress" state
+  // and every subsequent call throwing InvalidStateError until the user
+  // restarts Chrome. We track our own in-flight flag to drop rapid clicks
+  // and gracefully degrade to clipboard on any error other than user cancel.
+  let _sharePending = false;
   async function shareResult() {
     if (!resultUrl) return;
-    console.log('[share] navigator.share is:', typeof navigator.share, navigator.share);
+    if (_sharePending) return; // ignore double-clicks while a share is open
+
     if (navigator.share) {
+      _sharePending = true;
       try {
-        await navigator.share({ title: 'My virtual try-on', text: `Check out how ${qrInfo.product_name} looks on me!`, url: resultUrl });
-        console.log('[share] share completed');
+        await navigator.share({
+          title: 'My virtual try-on',
+          text: `Check out how ${qrInfo.product_name} looks on me!`,
+          url: resultUrl,
+        });
         return;
       } catch (err) {
-        console.warn('[share] navigator.share threw:', err?.name, err?.message, err);
+        // User cancelled the share UI — leave them be
+        if (err && err.name === 'AbortError') return;
+        // InvalidStateError or anything else — fall through to clipboard
+        console.warn('[share]', err && err.name, err && err.message);
+      } finally {
+        _sharePending = false;
       }
-    } else {
-      console.warn('[share] navigator.share is undefined — falling back to clipboard');
     }
+
     navigator.clipboard.writeText(resultUrl);
     alert('Link copied! Paste it anywhere to share.');
   }
