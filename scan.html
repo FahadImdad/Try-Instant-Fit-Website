@@ -631,9 +631,22 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Try-on failed');
 
-      hide('processingView');
+      // Preload + fully decode the result before swapping it into the DOM so it
+      // pops in as a single frame instead of painting top-to-bottom.
       resultUrl = data.result_url;
-      document.getElementById('resultImage').src = data.result_url;
+      const preload = new Image();
+      preload.decoding = 'async';
+      preload.src = resultUrl;
+      try {
+        if (preload.decode) await preload.decode();
+        else await new Promise((resolve, reject) => {
+          preload.onload = resolve;
+          preload.onerror = reject;
+        });
+      } catch { /* fall through — show whatever we have */ }
+
+      document.getElementById('resultImage').src = resultUrl;
+      hide('processingView');
       show('resultView');
     } catch (err) {
       hide('processingView');
