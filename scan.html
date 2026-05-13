@@ -831,18 +831,13 @@
       }
     }
 
-    // No file-share support → URL share
+    // No file-share support → URL share. No clipboard "Link copied!"
+    // fallback by design — the user wants share to open the OS popup or
+    // do nothing, never just copy a link.
     if (navigator.share) {
       try {
         await navigator.share({ title: 'My virtual try-on', text: shareText, url: resultUrl });
-        return;
-      } catch (err) { /* user cancelled */ }
-    }
-    try {
-      await navigator.clipboard.writeText(resultUrl);
-      alert('Link copied! Paste it anywhere to share.');
-    } catch {
-      alert('Copy this link: ' + resultUrl);
+      } catch (err) { /* user cancelled or share failed */ }
     }
   }
 
