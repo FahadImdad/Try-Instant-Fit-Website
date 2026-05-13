@@ -813,48 +813,37 @@
     }
   }
 
-  // Share = the SAME watermarked image the Download button saves, sent to
-  // the native OS share sheet. No text, no URL, no caption — just the
-  // image. The watermark is baked in so branding travels with the photo
-  // wherever the user posts it.
-  //
-  // _sharePending guards against a Chrome-on-Windows quirk where the Web
-  // Share UI sometimes doesn't resolve cleanly, leaving navigator.share()
-  // in a permanent "in progress" state. The flag drops rapid clicks; any
-  // failure (InvalidStateError, no file-share support, etc.) degrades to
-  // a clipboard URL fallback so the user always gets something.
-  let _sharePending = false;
   async function shareResult() {
     if (!resultUrl) return;
-    if (_sharePending) return;
+    let blob = null;
+    try { blob = await makeWatermarkedBlob(); } catch (e) { console.error('[share]', e); }
 
-    if (navigator.canShare) {
-      _sharePending = true;
-      try {
-        const blob = await makeWatermarkedBlob();
-        const file = new File([blob], buildResultFilename(), { type: 'image/png' });
+    const productName = qrInfo?.product_name || 'this outfit';
+    const shareText = `Check out how ${productName} looks on me — Try Instant Fit`;
 
-        if (navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({ files: [file] });
-            return;
-          } catch (err) {
-            if (err && err.name === 'AbortError') return; // user cancelled
-            console.warn('[share]', err && err.name, err && err.message);
-            // fall through to clipboard
-          }
-        }
-      } catch (err) {
-        console.warn('[share] could not prepare image:', err);
-        // fall through to clipboard
-      } finally {
-        _sharePending = false;
+    if (blob && navigator.canShare) {
+      const file = new File([blob], buildResultFilename(), { type: 'image/png' });
+      if (navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ title: 'My virtual try-on', text: shareText, files: [file] });
+          return;
+        } catch (err) { /* user cancelled or share failed */ }
       }
     }
 
-    // Fallback when file-share isn't available (most desktop browsers)
-    navigator.clipboard.writeText(resultUrl);
-    alert('Link copied! Paste it anywhere to share.');
+    // No file-share support → URL share
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'My virtual try-on', text: shareText, url: resultUrl });
+        return;
+      } catch (err) { /* user cancelled */ }
+    }
+    try {
+      await navigator.clipboard.writeText(resultUrl);
+      alert('Link copied! Paste it anywhere to share.');
+    } catch {
+      alert('Copy this link: ' + resultUrl);
+    }
   }
 
   // ── Custom report-reason dropdown ────────────────────────────────────
