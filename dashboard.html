@@ -1215,6 +1215,97 @@
       .credits-widget { grid-template-columns: 1fr; gap: 1rem; }
     }
 
+    /* Top-up history list — one row per recorded top-up, FIFO-allocated. */
+    .topup-history {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 1rem 1.1rem 1.1rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .topup-history-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: .75rem;
+      margin-bottom: .85rem;
+    }
+    .topup-history-head h3 {
+      margin: 0;
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .topup-history-sub {
+      font-size: .78rem;
+      color: var(--muted);
+    }
+    .topup-history-list {
+      display: grid;
+      gap: .65rem;
+    }
+    .topup-row {
+      padding: .7rem .8rem;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      background: #fafafa;
+    }
+    .topup-row.warn { border-color: #fbbf24; background: #fffbeb; }
+    .topup-row.drained { opacity: .65; }
+    .topup-row-head {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-size: .85rem;
+      margin-bottom: .45rem;
+      flex-wrap: wrap;
+    }
+    .topup-date { color: var(--muted); font-size: .78rem; }
+    .topup-credits {
+      font-weight: 700;
+      color: var(--text);
+      margin-left: auto;
+    }
+    .topup-status {
+      font-size: .72rem;
+      padding: .15rem .55rem;
+      border-radius: 999px;
+      background: rgba(0,0,0,.06);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .topup-row.warn .topup-status { background: #fde68a; color: #78350f; }
+    .topup-row.drained .topup-status { background: rgba(0,0,0,.08); }
+    .topup-bar {
+      height: 6px;
+      background: rgba(0,0,0,.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .topup-bar-fill {
+      height: 100%;
+      background: linear-gradient(135deg, #5a67f2, #00c8e8);
+      transition: width .4s;
+    }
+    .topup-row.warn .topup-bar-fill { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+    .topup-row.drained .topup-bar-fill { background: rgba(0,0,0,.3); }
+    .topup-row-meta {
+      display: flex;
+      gap: .6rem;
+      flex-wrap: wrap;
+      margin-top: .45rem;
+      font-size: .76rem;
+      color: var(--muted);
+    }
+    .topup-ref, .topup-note {
+      padding: .1rem .4rem;
+      background: rgba(0,0,0,.04);
+      border-radius: 4px;
+      font-family: ui-monospace, monospace;
+      font-size: .72rem;
+    }
+    .topup-note { font-family: inherit; font-style: italic; }
+
     /* Tab counts */
     .tab-count {
       display: inline-block;
@@ -1533,6 +1624,15 @@
             <div class="credits-actions">
               <button class="btn btn-primary btn-sm" onclick="openTopupModal()">💳 Top Up Credits</button>
             </div>
+          </div>
+
+          <!-- Top-up history (one bar per top-up, FIFO-allocated) -->
+          <div id="topupHistory" class="topup-history" style="display: none; margin-bottom: 1.25rem;">
+            <div class="topup-history-head">
+              <h3>Top-up history</h3>
+              <span class="topup-history-sub" id="topupHistorySub"></span>
+            </div>
+            <div id="topupHistoryList" class="topup-history-list"></div>
           </div>
 
           <!-- Stat cards -->
@@ -2441,8 +2541,12 @@
     const tcSw = document.getElementById('tabCountScanWear');
     if (tcSw) tcSw.textContent = fmt(sw.total || 0);
 
-    // Credits widget
+    // Credits widget — rolling bar (max = balance at last top-up). Falls back
+    // to total/used when no top-ups are recorded (legacy brands seeded with a
+    // manual SQL grant).
     const widget = document.getElementById('creditsWidget');
+    const creditsBlock = data.credits || {};
+    const rb = creditsBlock.rolling_bar; // null when there are no top-ups yet
     const credits = brand.tryon_credits || 0;
     const used = brand.tryon_credits_used || 0;
     const remaining = Math.max(0, credits - used);
@@ -2458,27 +2562,35 @@
       document.getElementById('creditsRateLbl').textContent = 'Partner / demo brand';
     } else {
       widget.style.display = 'grid';
-      const usagePct = credits > 0 ? Math.min(100, (used / credits) * 100) : 0;
-      const cls = remaining === 0 ? 'low' : usagePct >= 80 ? 'warn' : '';
+      // Rolling values: prefer the bar's max-since-last-topup if available so
+      // the widget reads like a fuel gauge that resets on each top-up.
+      const barCurrent = rb ? rb.current : remaining;
+      const barMax     = rb ? rb.max     : credits;
+      const usedInBar  = Math.max(0, barMax - barCurrent);
+      const usagePct = barMax > 0 ? Math.min(100, (usedInBar / barMax) * 100) : 0;
+      const cls = barCurrent === 0 ? 'low' : usagePct >= 80 ? 'warn' : '';
       widget.className = 'credits-widget' + (cls ? ' ' + cls : '');
-      document.getElementById('creditsRemaining').textContent = fmt(remaining);
-      document.getElementById('creditsOf').textContent = `of ${fmt(credits)}`;
+      document.getElementById('creditsRemaining').textContent = fmt(barCurrent);
+      document.getElementById('creditsOf').textContent = `of ${fmt(barMax)}${rb ? ' (current cycle)' : ''}`;
       // Forecast: based on this week's burn rate
       const dailyBurn = (gl.this_week + sw.this_week) / 7;
-      let metaTxt = remaining === 0
+      let metaTxt = barCurrent === 0
         ? '⚠ Out of credits — top up to keep customers trying on.'
         : usagePct >= 80
           ? `⚠ ${Math.round(100 - usagePct)}% remaining — consider topping up.`
-          : `${fmt(used)} credit${used !== 1 ? 's' : ''} used so far (1 per product processed + 1 per customer try-on).`;
-      if (dailyBurn > 0 && remaining > 0) {
-        const days = Math.floor(remaining / dailyBurn);
+          : `${fmt(usedInBar)} of this cycle used so far (1 per product processed + 1 per customer try-on).`;
+      if (dailyBurn > 0 && barCurrent > 0) {
+        const days = Math.floor(barCurrent / dailyBurn);
         if (days < 30) metaTxt += ` ~${days} day${days !== 1 ? 's' : ''} at current rate.`;
       }
       document.getElementById('creditsMeta').textContent = metaTxt;
       document.getElementById('creditsBarFill').style.width = `${usagePct}%`;
-      document.getElementById('creditsUsedLbl').textContent = `${fmt(used)} used (${Math.round(usagePct)}%)`;
+      document.getElementById('creditsUsedLbl').textContent = `${fmt(usedInBar)} used (${Math.round(usagePct)}%)`;
       document.getElementById('creditsRateLbl').textContent = `$${rate.toFixed(3)} / try-on`;
     }
+
+    // Top-up history — one bar per top-up, FIFO-allocated used/remaining.
+    renderTopupHistory(creditsBlock.topups || [], brand.unlimited);
 
 
     // ── Per-source stat strip (legacy hidden tab) ──
@@ -2801,6 +2913,56 @@
     const d = new Date(iso);
     return d.toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' })
       + ' · ' + d.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' });
+  }
+  function fmtShortDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  // Renders the per-top-up history list under the credits widget.
+  // `topups` is newest-first; each row has { credits_added, used, remaining,
+  // created_at, payment_ref, notes, amount_usd }.
+  function renderTopupHistory(topups, unlimited) {
+    const wrap = document.getElementById('topupHistory');
+    const list = document.getElementById('topupHistoryList');
+    const sub  = document.getElementById('topupHistorySub');
+    if (!wrap || !list) return;
+    if (unlimited || !topups || topups.length === 0) {
+      wrap.style.display = 'none';
+      return;
+    }
+    wrap.style.display = 'block';
+    sub.textContent = `${topups.length} top-up${topups.length === 1 ? '' : 's'}`;
+
+    list.innerHTML = topups.map(t => {
+      const total = Number(t.credits_added) || 0;
+      const used  = Number(t.used) || 0;
+      const left  = Number(t.remaining) || 0;
+      const pct   = total > 0 ? Math.min(100, (used / total) * 100) : 0;
+      const drained = total > 0 && left === 0;
+      const fresh   = total > 0 && used === 0;
+      const status  = drained ? 'used up' : fresh ? 'unused' : `${left} left`;
+      const cls = drained ? 'drained' : pct >= 80 ? 'warn' : '';
+      const refLine = t.payment_ref
+        ? `<span class="topup-ref">Payment: ${escapeHtml(t.payment_ref)}</span>` : '';
+      const noteLine = t.notes
+        ? `<span class="topup-note">${escapeHtml(t.notes)}</span>` : '';
+      return `
+        <div class="topup-row ${cls}">
+          <div class="topup-row-head">
+            <span class="topup-date">${fmtShortDate(t.created_at)}</span>
+            <span class="topup-credits">+${fmt(total)} credits</span>
+            <span class="topup-status">${status}</span>
+          </div>
+          <div class="topup-bar"><div class="topup-bar-fill" style="width:${pct}%;"></div></div>
+          <div class="topup-row-meta">
+            <span>${fmt(used)} used · ${fmt(left)} left</span>
+            ${refLine}${noteLine}
+          </div>
+        </div>
+      `;
+    }).join('');
   }
   function showLoginError(msg) {
     const el = document.getElementById('loginError');
