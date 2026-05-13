@@ -364,7 +364,22 @@
 
   <!-- Step 4: Result -->
   <div id="resultView" class="scan-card" style="display:none;">
-    <h3 class="step-title" style="margin-bottom: 1rem;">✨ Your Try-On</h3>
+    <!-- Same product card as the upload view so customer sees what they tried on,
+         price, and remaining tries on the result screen too. Mirrors #uploadView's
+         .product-head; populated by renderProductHeader(). -->
+    <div class="product-head">
+      <img id="productImageResult" class="product-image" src="" alt="" style="display:none;">
+      <div id="productImagePlaceholderResult" class="product-image-placeholder">👗</div>
+      <div class="product-info">
+        <h2 id="productNameResult">Product Name</h2>
+        <p id="brandNameResult">Brand Name</p>
+        <p id="productSkuResult" style="display:none; font-size:.78rem; color:var(--muted); margin: .1rem 0 0; font-family: ui-monospace, monospace;"></p>
+        <p id="productPriceResult" style="display:none; font-size:.95rem; font-weight:700; color:var(--indigo); margin: .15rem 0 0;"></p>
+        <span class="brand-pill" id="remainingPillResult" style="display:none; margin-top: .35rem;"></span>
+      </div>
+    </div>
+
+    <h3 class="step-title" style="margin: 1rem 0;">✨ Your Try-On</h3>
     <img id="resultImage" class="result-image" src="" alt="Try-on result">
     <div class="result-actions">
       <button id="downloadBtn" class="btn btn-secondary" onclick="downloadResult()">⬇ Download</button>
@@ -468,42 +483,66 @@
     // (brandHeader stays hidden — was causing only the brand's icon to show
     //  with the TIF wordmark cropped out underneath.)
 
-    document.getElementById('productName').textContent = qrInfo.product_name;
-    document.getElementById('brandName').textContent = qrInfo.brand?.name || '—';
+    // Populates both the upload-view product card AND the result-view mirror
+    // (IDs suffixed with "Result"). Pass null/undefined to skip an element.
+    const setBoth = (baseId, text) => {
+      [document.getElementById(baseId), document.getElementById(baseId + 'Result')]
+        .filter(Boolean).forEach(el => { el.textContent = text; });
+    };
+    const showBoth = (baseId, display = 'block') => {
+      [document.getElementById(baseId), document.getElementById(baseId + 'Result')]
+        .filter(Boolean).forEach(el => { el.style.display = display; });
+    };
+
+    setBoth('productName', qrInfo.product_name);
+    setBoth('brandName', qrInfo.brand?.name || '—');
+
     if (qrInfo.display_image_url) {
-      const img = document.getElementById('productImage');
-      img.src = qrInfo.display_image_url;
-      img.style.display = 'block';
-      img.onload = () => document.getElementById('productImagePlaceholder').style.display = 'none';
+      ['productImage', 'productImageResult'].forEach(id => {
+        const img = document.getElementById(id);
+        if (!img) return;
+        img.src = qrInfo.display_image_url;
+        img.style.display = 'block';
+        img.onload = () => {
+          const ph = document.getElementById(id === 'productImage' ? 'productImagePlaceholder' : 'productImagePlaceholderResult');
+          if (ph) ph.style.display = 'none';
+        };
+      });
     }
     // Show SKU / product code if available
     const sku = qrInfo.product_sku || qrInfo.product_id;
     if (sku) {
-      const skuEl = document.getElementById('productSku');
-      skuEl.textContent = sku;
-      skuEl.style.display = 'block';
+      setBoth('productSku', sku);
+      showBoth('productSku');
     }
     // Show price if available
     if (qrInfo.product_price !== null && qrInfo.product_price !== undefined) {
-      const priceEl = document.getElementById('productPrice');
-      if (priceEl) {
-        const c = qrInfo.product_currency || 'PKR';
-        const n = Number(qrInfo.product_price);
-        priceEl.textContent = c === 'PKR' ? 'Rs ' + n.toLocaleString('en-PK')
-          : c === 'USD' ? '$' + n.toFixed(2)
-          : `${c} ${n.toLocaleString()}`;
-        priceEl.style.display = 'block';
-      }
+      const c = qrInfo.product_currency || 'PKR';
+      const n = Number(qrInfo.product_price);
+      const formatted = c === 'PKR' ? 'Rs ' + n.toLocaleString('en-PK')
+        : c === 'USD' ? '$' + n.toFixed(2)
+        : `${c} ${n.toLocaleString()}`;
+      setBoth('productPrice', formatted);
+      showBoth('productPrice');
     }
-    // Show description if available
+    // Show description if available (upload view only — result view stays compact)
     if (qrInfo.product_description) {
       const descEl = document.getElementById('productDescription');
-      descEl.textContent = qrInfo.product_description;
-      descEl.style.display = 'block';
+      if (descEl) {
+        descEl.textContent = qrInfo.product_description;
+        descEl.style.display = 'block';
+      }
     }
-    if (qrInfo.remaining !== null && !qrInfo.requires_passcode) {
-      document.getElementById('remainingPill').textContent = `${qrInfo.remaining} tries left`;
-      document.getElementById('remainingPill').style.display = 'inline-block';
+    // "Tries left" pill — value source depends on flow: passcode flow uses
+    // validatedPasscode.remaining (set on validate + decremented after each
+    // try-on); QR-without-passcode uses qrInfo.remaining.
+    const remaining = validatedPasscode?.remaining ?? qrInfo.remaining;
+    if (remaining !== null && remaining !== undefined) {
+      const label = validatedPasscode
+        ? `${remaining} ${remaining === 1 ? 'try' : 'tries'} left on your code`
+        : `${remaining} tries left`;
+      setBoth('remainingPill', label);
+      showBoth('remainingPill', 'inline-block');
     }
   }
 
@@ -543,10 +582,8 @@
       validatedPasscode = { code, passcode_id: data.passcode_id, remaining: data.remaining };
       hide('passcodeView');
       document.getElementById('uploadStepNum').textContent = '2';
-      if (data.remaining !== undefined && data.remaining !== null) {
-        document.getElementById('remainingPill').textContent = `${data.remaining} ${data.remaining === 1 ? 'try' : 'tries'} left on your code`;
-        document.getElementById('remainingPill').style.display = 'inline-block';
-      }
+      // Refresh both upload + result pills from the just-updated validatedPasscode.
+      renderProductHeader();
       show('uploadView');
     } catch (err) {
       errEl.textContent = 'Network error. Try again.';
@@ -644,6 +681,16 @@
           preload.onerror = reject;
         });
       } catch { /* fall through — show whatever we have */ }
+
+      // One try-on consumed a credit — decrement the in-memory counter so the
+      // result view's "tries left" pill (and the upload view, if the user goes
+      // back) reflects the new total.
+      if (validatedPasscode && typeof validatedPasscode.remaining === 'number') {
+        validatedPasscode.remaining = Math.max(0, validatedPasscode.remaining - 1);
+      } else if (qrInfo && typeof qrInfo.remaining === 'number') {
+        qrInfo.remaining = Math.max(0, qrInfo.remaining - 1);
+      }
+      renderProductHeader();
 
       document.getElementById('resultImage').src = resultUrl;
       hide('processingView');
