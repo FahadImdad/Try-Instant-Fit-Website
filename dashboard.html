@@ -1223,13 +1223,18 @@
       padding: 1rem 1.1rem 1.1rem;
       box-shadow: var(--shadow-sm);
     }
+    /* <summary> is the clickable header; collapses/expands the list below.
+       List markers / native arrows are hidden — we use a custom ▾ caret. */
     .topup-history-head {
       display: flex;
       align-items: baseline;
-      justify-content: space-between;
       gap: .75rem;
-      margin-bottom: .85rem;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+      padding: .15rem 0;
     }
+    .topup-history-head::-webkit-details-marker { display: none; }
     .topup-history-head h3 {
       margin: 0;
       font-size: .95rem;
@@ -1239,6 +1244,20 @@
     .topup-history-sub {
       font-size: .78rem;
       color: var(--muted);
+      margin-left: auto;     /* push to the right edge before the caret */
+    }
+    .topup-history-head::after {
+      content: '▾';
+      color: var(--muted);
+      font-size: .85rem;
+      margin-left: .5rem;
+      transition: transform .15s ease;
+    }
+    .topup-history details[open] > .topup-history-head::after {
+      transform: rotate(180deg);
+    }
+    .topup-history details > .topup-history-list {
+      margin-top: .85rem;
     }
     .topup-history-list {
       display: grid;
@@ -1626,13 +1645,17 @@
             </div>
           </div>
 
-          <!-- Top-up history (one bar per top-up, FIFO-allocated) -->
+          <!-- Top-up history (one bar per top-up, FIFO-allocated).
+               Wrapped in <details open> so brands can collapse it once they've
+               glanced at it — saves vertical space when they have 10+ top-ups. -->
           <div id="topupHistory" class="topup-history" style="display: none; margin-bottom: 1.25rem;">
-            <div class="topup-history-head">
-              <h3>Top-up history</h3>
-              <span class="topup-history-sub" id="topupHistorySub"></span>
-            </div>
-            <div id="topupHistoryList" class="topup-history-list"></div>
+            <details open>
+              <summary class="topup-history-head">
+                <h3>Top-up history</h3>
+                <span class="topup-history-sub" id="topupHistorySub"></span>
+              </summary>
+              <div id="topupHistoryList" class="topup-history-list"></div>
+            </details>
           </div>
 
           <!-- Stat cards -->
