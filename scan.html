@@ -834,23 +834,42 @@
     const productName = qrInfo?.product_name || 'this outfit';
     const shareText = `Check out how ${productName} looks on me — Try Instant Fit`;
 
+    // Step 1: mobile primary path — share the watermarked image file via the
+    // OS share sheet. On desktop this branch is skipped because canShare()
+    // returns false for files.
     if (blob && navigator.canShare) {
       const file = new File([blob], buildResultFilename(), { type: 'image/png' });
       if (navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ title: 'My virtual try-on', text: shareText, files: [file] });
           return;
-        } catch (err) { /* user cancelled or share failed */ }
+        } catch (err) {
+          if (err?.name === 'AbortError') return; // user cancelled the share
+          /* other failure — fall through to URL share */
+        }
       }
     }
 
-    // No file-share support → URL share. No clipboard "Link copied!"
-    // fallback by design — the user wants share to open the OS popup or
-    // do nothing, never just copy a link.
+    // Step 2: desktop / file-share-unsupported — share just the URL via the
+    // OS share sheet (Windows Share, macOS Share Sheet, etc.).
     if (navigator.share) {
       try {
         await navigator.share({ title: 'My virtual try-on', text: shareText, url: resultUrl });
-      } catch (err) { /* user cancelled or share failed */ }
+        return;
+      } catch (err) {
+        if (err?.name === 'AbortError') return; // user cancelled — don't fall through to clipboard
+        /* API failed (e.g. Chrome-on-Windows where the sheet never opens) — fall through */
+      }
+    }
+
+    // Step 3: desktop fallback — neither share path worked. Copy the result
+    // URL to clipboard so the user has something to paste. Only reached when
+    // the share sheet itself didn't appear, not on user cancel.
+    try {
+      await navigator.clipboard.writeText(resultUrl);
+      alert('Link copied! Paste it anywhere to share.');
+    } catch {
+      alert('Copy this link: ' + resultUrl);
     }
   }
 
