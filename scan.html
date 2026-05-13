@@ -262,6 +262,44 @@
 
     /* Make sure all images scale */
     img { max-width: 100%; }
+
+    /* Collapsible product description (shown on upload view + result view).
+       Uses native <details>/<summary> so no JS toggle is needed. */
+    .product-details {
+      margin: 0 0 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      background: rgba(0,0,0,.015);
+    }
+    .product-details summary {
+      cursor: pointer;
+      padding: .7rem .85rem;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--text);
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+    .product-details summary::-webkit-details-marker { display: none; }
+    .product-details summary::after {
+      content: '▾';
+      color: var(--muted);
+      transition: transform .15s ease;
+      font-size: .8rem;
+    }
+    .product-details[open] summary::after { transform: rotate(180deg); }
+    .product-details .pd-body {
+      padding: 0 .85rem .85rem;
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.5;
+      margin: 0;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
@@ -317,7 +355,10 @@
         <span class="brand-pill" id="remainingPill" style="display:none; margin-top: .35rem;"></span>
       </div>
     </div>
-    <p id="productDescription" style="display:none; color:var(--muted); font-size:.9rem; margin: .25rem 0 1rem; line-height: 1.5;"></p>
+    <details id="productDetailsBlock" class="product-details" style="display:none;">
+      <summary>Product details</summary>
+      <p id="productDescription" class="pd-body"></p>
+    </details>
     <h3 class="step-title"><span class="step-num" id="uploadStepNum">1</span> Add Your Photo</h3>
     <p style="color:var(--muted); font-size:.88rem; margin: 0 0 .6rem;">Stand against a plain background, full body, facing forward — best results.</p>
     <p style="color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: .65rem .85rem; border-radius: 8px; font-size: .78rem; margin: 0 0 1rem; line-height: 1.5; font-weight: 600;">🔒 <strong>Privacy:</strong> Your photo is used only for this try-on. It's never saved on our servers and can't be recovered later.</p>
@@ -378,6 +419,11 @@
         <span class="brand-pill" id="remainingPillResult" style="display:none; margin-top: .35rem;"></span>
       </div>
     </div>
+
+    <details id="productDetailsBlockResult" class="product-details" style="display:none; margin-top: 1rem;">
+      <summary>Product details</summary>
+      <p id="productDescriptionResult" class="pd-body"></p>
+    </details>
 
     <h3 class="step-title" style="margin: 1rem 0;">✨ Your Try-On</h3>
     <img id="resultImage" class="result-image" src="" alt="Try-on result">
@@ -525,13 +571,14 @@
       setBoth('productPrice', formatted);
       showBoth('productPrice');
     }
-    // Show description if available (upload view only — result view stays compact)
+    // Show description on BOTH views, inside a collapsible <details> dropdown
+    // so it doesn't dominate the layout when long. Brand-provided copy means
+    // we treat it as text (.textContent) not HTML.
     if (qrInfo.product_description) {
-      const descEl = document.getElementById('productDescription');
-      if (descEl) {
-        descEl.textContent = qrInfo.product_description;
-        descEl.style.display = 'block';
-      }
+      setBoth('productDescription', qrInfo.product_description);
+      // The wrappers are <details> elements; reveal them with the default
+      // 'block' display so they participate in flow.
+      showBoth('productDetailsBlock');
     }
     // "Tries left" pill — value source depends on flow: passcode flow uses
     // validatedPasscode.remaining (set on validate + decremented after each
