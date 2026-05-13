@@ -813,36 +813,46 @@
     }
   }
 
-  // Guard against a Chrome-on-Windows quirk where the Web Share UI sometimes
-  // doesn't resolve cleanly (e.g. share dialog dismissed without picking a
-  // target), leaving navigator.share() in a permanent "in progress" state
-  // and every subsequent call throwing InvalidStateError until the user
-  // restarts Chrome. We track our own in-flight flag to drop rapid clicks
-  // and gracefully degrade to clipboard on any error other than user cancel.
+  // Share = the SAME watermarked image the Download button saves, sent to
+  // the native OS share sheet. No text, no URL, no caption — just the
+  // image. The watermark is baked in so branding travels with the photo
+  // wherever the user posts it.
+  //
+  // _sharePending guards against a Chrome-on-Windows quirk where the Web
+  // Share UI sometimes doesn't resolve cleanly, leaving navigator.share()
+  // in a permanent "in progress" state. The flag drops rapid clicks; any
+  // failure (InvalidStateError, no file-share support, etc.) degrades to
+  // a clipboard URL fallback so the user always gets something.
   let _sharePending = false;
   async function shareResult() {
     if (!resultUrl) return;
-    if (_sharePending) return; // ignore double-clicks while a share is open
+    if (_sharePending) return;
 
-    if (navigator.share) {
+    if (navigator.canShare) {
       _sharePending = true;
       try {
-        await navigator.share({
-          title: 'My virtual try-on',
-          text: `Check out how ${qrInfo.product_name} looks on me!`,
-          url: resultUrl,
-        });
-        return;
+        const blob = await makeWatermarkedBlob();
+        const file = new File([blob], buildResultFilename(), { type: 'image/png' });
+
+        if (navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file] });
+            return;
+          } catch (err) {
+            if (err && err.name === 'AbortError') return; // user cancelled
+            console.warn('[share]', err && err.name, err && err.message);
+            // fall through to clipboard
+          }
+        }
       } catch (err) {
-        // User cancelled the share UI — leave them be
-        if (err && err.name === 'AbortError') return;
-        // InvalidStateError or anything else — fall through to clipboard
-        console.warn('[share]', err && err.name, err && err.message);
+        console.warn('[share] could not prepare image:', err);
+        // fall through to clipboard
       } finally {
         _sharePending = false;
       }
     }
 
+    // Fallback when file-share isn't available (most desktop browsers)
     navigator.clipboard.writeText(resultUrl);
     alert('Link copied! Paste it anywhere to share.');
   }
