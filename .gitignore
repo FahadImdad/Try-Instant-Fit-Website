@@ -1,1 +1,5 @@
 .vercel
+
+# Local-only: heavy source PNGs + temp trash (not for production)
+assets/animation assets/
+TRASH/
