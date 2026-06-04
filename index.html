@@ -190,11 +190,19 @@
        ════════════════════════════════════════════════ */
     @media (max-width: 768px) {
       /* Less vertical space between sections so the page isn't endless */
-      .section { padding: 3rem 0 !important; }
-      .section-hd { margin-bottom: 2rem; }
-      h1 { font-size: clamp(2rem, 8vw, 2.6rem) !important; }
-      h2 { font-size: clamp(1.6rem, 6vw, 2.1rem) !important; }
-      .section-hd p { font-size: .98rem; }
+      .section { padding: 2.75rem 0 !important; }
+      .section-hd { margin-bottom: 1.75rem; }
+      h1 { font-size: clamp(1.9rem, 8vw, 2.4rem) !important; }
+      h2 { font-size: clamp(1.5rem, 6vw, 2rem) !important; }
+      .section-hd p { font-size: .95rem; }
+
+      /* HERO: show the animation FIRST (it's the proof), text below */
+      .hero { padding: 2rem 0 2.5rem !important; }
+      .hero-grid { display: flex !important; flex-direction: column; gap: 1.75rem !important; }
+      .hero-visual { order: -1; max-width: 320px !important; }
+      .hero-text h1 { margin-bottom: .85rem; }
+      .hero-text p { margin-bottom: 1.25rem; font-size: 1rem; }
+      .hero-cta { margin-bottom: 1.25rem; }
 
       /* New product two-column → single column, tighter */
       .prod-layout { gap: 1rem !important; }
@@ -204,12 +212,11 @@
       /* Privacy cards a little tighter */
       .privacy-card { padding: 1.5rem 1.25rem; }
 
-      /* Animation showcase: fit nicely, not too tall */
-      .hero-visual { max-width: 300px !important; }
       .flow-caption { font-size: 1rem; padding: 1rem 1rem 1.7rem; }
-
-      /* Steps stack to single column on small phones for readability */
       .steps-row { gap: 1.5rem; }
+
+      /* Hide heavy/secondary sections on mobile (busy vendors want the essentials) */
+      .m-hide { display: none !important; }
     }
     @media (max-width: 480px) {
       .section { padding: 2.5rem 0 !important; }
@@ -250,17 +257,16 @@
 
       <!-- Left: Text -->
       <div class="hero-text animate-up">
-        <div class="pill pill-cyan">📱 Scan & Wear - Now Live</div>
-        <h1>Let Customers <em>Scan & Try Before They Buy</em></h1>
-        <p>Every product gets a link and a QR code. Share the link online or put the QR in your shop. The customer opens it, adds a selfie, and sees the outfit on themselves. No app needed.</p>
+        <div class="pill pill-cyan">📱 Now Live</div>
+        <h1>See the Outfit <em>On You</em> Before You Buy</h1>
+        <p>Customers scan, add a selfie, and see the clothes on themselves. Fewer returns. More sales.</p>
         <div class="hero-cta">
-          <a href="/register" class="btn btn-primary btn-lg">Register Now →</a>
-          <a href="#products" class="btn btn-outline-white btn-lg">See How It Works</a>
+          <a href="/register" class="btn btn-primary btn-lg">Start Free →</a>
         </div>
         <div class="hero-trust">
-          <span>Private by default</span>
-          <span>No app download</span>
-          <span>Live in days</span>
+          <span>Private</span>
+          <span>No app</span>
+          <span>Start in minutes</span>
         </div>
       </div>
 
@@ -304,7 +310,7 @@
 </section>
 
 <!-- ── Brand Strip ── -->
-<div class="brand-strip">
+<div class="brand-strip m-hide">
   <div class="container">
     <div class="brand-strip-inner">
       <p>Built for Pakistani fashion retail</p>
@@ -399,7 +405,7 @@
 </section>
 
 <!-- ── Before / After Comparison ── -->
-<section class="section">
+<section class="section m-hide">
   <div class="container">
     <div class="section-hd">
       <div class="pill pill-green">The Difference</div>
@@ -505,7 +511,7 @@
 </section>
 
 <!-- ── Why It Works ── -->
-<section class="section bg-surface">
+<section class="section bg-surface m-hide">
   <div class="container">
     <div class="section-hd">
       <div class="pill pill-amber">Why It Works</div>
@@ -587,7 +593,7 @@
 </section>
 
 <!-- ── Tech Band ── -->
-<div class="tech-band">
+<div class="tech-band m-hide">
   <div class="container">
     <div class="tech-logos">
       <span class="tech-logo">Built for fashion retail</span>
