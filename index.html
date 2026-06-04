@@ -41,15 +41,16 @@
       position: absolute;
       inset: 0;
       background-size: cover;
-      background-position: center;
+      background-position: center top;   /* keep heads/phone anchored consistently */
       opacity: 0;
-      transform: scale(1.06);
-      transition: opacity .8s ease, transform 4.5s ease;
+      transform: scale(1.04);
+      transition: opacity 1.15s ease-in-out, transform 5s ease-out;
       will-change: opacity, transform;
     }
     .flow-frame.is-active {
       opacity: 1;
-      transform: scale(1);           /* slow Ken Burns drift while visible */
+      transform: scale(1);           /* gentle, consistent Ken Burns drift */
+      z-index: 1;
     }
     /* soft gradient so caption text is always readable */
     .flow-stage::after {
@@ -582,8 +583,8 @@
       'See it on you',
       'Instantly. ✨'
     ];
-    var HOLD = 1500;
-    var HOLD_LAST = 2800;
+    var HOLD = 1700;
+    var HOLD_LAST = 3000;
     var i = 0;
 
     // Build progress dots
