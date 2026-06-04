@@ -125,6 +125,40 @@
       .reveal { opacity: 1; transform: none; transition: none; }
       .prod-card:hover, .card:hover, .testi-card:hover, .btn:hover { transform: none; }
     }
+
+    /* ── Product section: two-column (card + highlights) ── */
+    .prod-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      gap: 2.5rem;
+      align-items: center;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .prod-highlights { display: flex; flex-direction: column; gap: 1rem; }
+    .ph-tile {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl, 24px);
+      padding: 1.4rem 1.5rem;
+      box-shadow: var(--sh0);
+      transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s ease, border-color .3s ease;
+    }
+    .ph-tile:hover { transform: translateY(-4px); box-shadow: var(--sh2); border-color: rgba(0,200,232,.3); }
+    .ph-ico {
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      border-radius: var(--r-md, 12px);
+      background: var(--surface2, #f1f5f9);
+      margin-bottom: .85rem;
+    }
+    .ph-tile h4 { font-size: 1.02rem; margin-bottom: .3rem; }
+    .ph-tile p { font-size: .86rem; color: var(--muted); margin: 0; line-height: 1.6; }
+
+    @media (max-width: 860px) {
+      .prod-layout { grid-template-columns: 1fr; max-width: 480px; gap: 1.25rem; }
+    }
   </style>
 </head>
 <body>
@@ -231,7 +265,8 @@
       <p>Every product gets its own try-on link and QR code. Share the link online or place the QR in-store. Customers upload a selfie and see how the outfit looks on them, instantly.</p>
     </div>
 
-    <div style="max-width:480px;margin:0 auto;">
+    <div class="prod-layout">
+      <!-- Left: the product card -->
       <div class="prod-card">
         <div class="prod-stripe green"></div>
         <div class="prod-body">
@@ -249,6 +284,25 @@
           <div class="prod-price"><strong data-usd="0.125">$0.125</strong> per try-on · No setup fee</div>
           <a href="/register" class="btn btn-primary" style="margin-top:1.25rem;width:100%;">Register Now →</a>
           <a href="#how-it-works" class="btn btn-secondary" style="margin-top:.5rem;width:100%;">See How It Works</a>
+        </div>
+      </div>
+
+      <!-- Right: highlight tiles -->
+      <div class="prod-highlights">
+        <div class="ph-tile">
+          <div class="ph-ico">🔗</div>
+          <h4>One Link, One QR — Per Product</h4>
+          <p>Every item you add generates its own shareable link and a printable QR. No setup, no code.</p>
+        </div>
+        <div class="ph-tile">
+          <div class="ph-ico">🌐</div>
+          <h4>Works Online &amp; In-Store</h4>
+          <p>Drop the link into your website, Instagram, or WhatsApp — or place the QR anywhere customers shop.</p>
+        </div>
+        <div class="ph-tile">
+          <div class="ph-ico">🎛️</div>
+          <h4>You Stay in Control</h4>
+          <p>Turn an access code on or off per product, set try-limits per customer, and track every try-on.</p>
         </div>
       </div>
     </div>
