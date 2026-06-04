@@ -184,6 +184,42 @@
     @media (max-width: 640px) {
       .privacy-band { grid-template-columns: 1fr; max-width: 420px; }
     }
+
+    /* ════════════════════════════════════════════════
+       MOBILE TIGHTENING — shorter, cleaner on phones
+       ════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      /* Less vertical space between sections so the page isn't endless */
+      .section { padding: 3rem 0 !important; }
+      .section-hd { margin-bottom: 2rem; }
+      h1 { font-size: clamp(2rem, 8vw, 2.6rem) !important; }
+      h2 { font-size: clamp(1.6rem, 6vw, 2.1rem) !important; }
+      .section-hd p { font-size: .98rem; }
+
+      /* New product two-column → single column, tighter */
+      .prod-layout { gap: 1rem !important; }
+      .prod-highlights { gap: .75rem; }
+      .ph-tile { padding: 1.1rem 1.2rem; }
+
+      /* Privacy cards a little tighter */
+      .privacy-card { padding: 1.5rem 1.25rem; }
+
+      /* Animation showcase: fit nicely, not too tall */
+      .hero-visual { max-width: 300px !important; }
+      .flow-caption { font-size: 1rem; padding: 1rem 1rem 1.7rem; }
+
+      /* Steps stack to single column on small phones for readability */
+      .steps-row { gap: 1.5rem; }
+    }
+    @media (max-width: 480px) {
+      .section { padding: 2.5rem 0 !important; }
+      .steps-row { grid-template-columns: 1fr !important; }
+      .hero-visual { max-width: 280px !important; }
+      .container { padding: 0 1.1rem; }
+      /* Keep floating badges inside the screen on narrow phones */
+      .badge-top-left { left: 50% !important; transform: translateX(-105px) !important; font-size: .72rem; padding: .45rem .75rem; }
+      .badge-bot-right { right: 50% !important; transform: translateX(105px) !important; font-size: .72rem; padding: .45rem .75rem; }
+    }
   </style>
 </head>
 <body>
