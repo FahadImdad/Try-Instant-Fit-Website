@@ -57,6 +57,9 @@
       transform: scale(1);           /* gentle, consistent Ken Burns drift */
       z-index: 1;
     }
+    /* Fallback: if JS hasn't toggled is-active yet, still show frame 1 */
+    .flow-frame:first-child { opacity: 1; }
+    .flow-frame.is-active ~ .flow-frame:first-child { opacity: 1; }
     /* soft gradient so caption text is always readable */
     .flow-stage::after {
       content: "";
@@ -136,6 +139,16 @@
       margin: 0 auto;
     }
     .prod-highlights { display: flex; flex-direction: column; gap: 1rem; }
+    .prod-tiles {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .prod-tiles .ph-tile { text-align: center; }
+    .prod-tiles .ph-ico { margin: 0 auto .75rem; }
+    @media (max-width: 860px) { .prod-tiles { grid-template-columns: 1fr 1fr; } }
     .ph-tile {
       background: #fff;
       border: 1px solid var(--border);
@@ -197,9 +210,17 @@
       .section-hd p { font-size: .95rem; }
 
       /* HERO: show the animation FIRST (it's the proof), text below */
-      .hero { padding: 2rem 0 2.5rem !important; }
+      .hero { padding: 2rem 0 2.5rem !important; overflow: visible !important; }
       .hero-grid { display: flex !important; flex-direction: column; gap: 1.75rem !important; }
-      .hero-visual { order: -1; max-width: 320px !important; }
+      /* Force the animation visible on mobile - never let the fade-in
+         animation or order shuffle leave it at opacity:0 */
+      .hero-visual {
+        order: -1;
+        max-width: 320px !important;
+        width: 100%;
+        opacity: 1 !important;
+        animation: none !important;
+      }
       .hero-text h1 { margin-bottom: .85rem; }
       .hero-text p { margin-bottom: 1.25rem; font-size: 1rem; }
       .hero-cta { margin-bottom: 1.25rem; }
@@ -258,15 +279,10 @@
       <!-- Left: Text -->
       <div class="hero-text animate-up">
         <div class="pill pill-cyan">📱 Now Live</div>
-        <h1>See the Outfit <em>On You</em> Before You Buy</h1>
-        <p>Customers scan, add a selfie, and see the clothes on themselves. Fewer returns. More sales.</p>
+        <h1>See It <em>On You</em> Before You Buy</h1>
+        <p>Customers add a selfie and see the outfit on themselves. Fewer returns, more sales.</p>
         <div class="hero-cta">
           <a href="/register" class="btn btn-primary btn-lg">Start Free →</a>
-        </div>
-        <div class="hero-trust">
-          <span>Private</span>
-          <span>No app</span>
-          <span>Start in minutes</span>
         </div>
       </div>
 
@@ -327,56 +343,30 @@
 <section class="section bg-surface" id="products">
   <div class="container">
     <div class="section-hd">
-      <div class="pill pill-brand">Our Product</div>
-      <h2>Scan &amp; Wear</h2>
-      <p>Each product gets a link and a QR. Customers add a selfie and see the outfit on themselves, in seconds.</p>
+      <div class="pill pill-brand">What You Get</div>
+      <h2>Simple for You</h2>
     </div>
 
-    <div class="prod-layout">
-      <!-- Left: the product card -->
-      <div class="prod-card">
-        <div class="prod-stripe green"></div>
-        <div class="prod-body">
-          <div class="prod-icon green"><img src="https://cdn-icons-png.flaticon.com/512/3913/3913276.png" alt="QR scan"></div>
-          <div class="pill pill-green" style="margin-bottom:.75rem;">Available Now</div>
-          <h3>Scan &amp; Wear</h3>
-          <p>Each product gets a link and a QR. Share the link online or put the QR in your shop. Customers add a selfie and see the outfit on themselves. You can turn on a code to limit tries.</p>
-          <ul class="feat-list">
-            <li>A link and a QR for every product</li>
-            <li>Use online or in your shop</li>
-            <li>Optional code to limit tries</li>
-            <li>No app needed, works on any phone</li>
-            <li>See your try-on numbers anytime</li>
-            <li>Private: photos stay with the customer</li>
-          </ul>
-          <div class="prod-price"><strong data-usd="0.125">$0.125</strong> per try-on · No setup fee</div>
-          <a href="/register" class="btn btn-primary" style="margin-top:1.25rem;width:100%;">Register Now →</a>
-          <a href="#how-it-works" class="btn btn-secondary" style="margin-top:.5rem;width:100%;">See How It Works</a>
-        </div>
+    <div class="prod-tiles">
+      <div class="ph-tile">
+        <div class="ph-ico">🔗</div>
+        <h4>A Link and a QR</h4>
+        <p>Every product gets both.</p>
       </div>
-
-      <!-- Right: highlight tiles -->
-      <div class="prod-highlights">
-        <div class="ph-tile">
-          <div class="ph-ico">🔗</div>
-          <h4>A Link and a QR</h4>
-          <p>Every product gets both. Ready to use right away.</p>
-        </div>
-        <div class="ph-tile">
-          <div class="ph-ico">🌐</div>
-          <h4>Online or In Your Shop</h4>
-          <p>Put the link on Instagram or WhatsApp. Or put the QR in your shop.</p>
-        </div>
-        <div class="ph-tile">
-          <div class="ph-ico">🎛️</div>
-          <h4>You Are in Control</h4>
-          <p>Turn the code on or off. Set how many tries each person gets.</p>
-        </div>
-        <div class="ph-tile">
-          <div class="ph-ico">🔒</div>
-          <h4>Private</h4>
-          <p>Customer photos stay with the customer. Your products stay yours.</p>
-        </div>
+      <div class="ph-tile">
+        <div class="ph-ico">🌐</div>
+        <h4>Online or In Shop</h4>
+        <p>Link for online. QR for your shop.</p>
+      </div>
+      <div class="ph-tile">
+        <div class="ph-ico">🎛️</div>
+        <h4>You Control It</h4>
+        <p>Turn the code on or off. Set limits.</p>
+      </div>
+      <div class="ph-tile">
+        <div class="ph-ico">📱</div>
+        <h4>No App Needed</h4>
+        <p>Works on any phone.</p>
       </div>
     </div>
   </div>
