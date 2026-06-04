@@ -705,12 +705,9 @@
       if (validatedPasscode?.passcode_id) {
         fd.append('passcode_id', validatedPasscode.passcode_id);
       }
-      // Scan & Wear uses Gemini Flash 3.1 @ 512px exclusively.
-      // Garment is pre-isolated at QR creation, so each try-on = 1 AI call (~$0.045).
-      fd.append('provider', 'fallback');
-      fd.append('gemini_model', 'gemini-3.1-flash-image-preview');
-      fd.append('output_resolution', '512');
-
+      // Garment is pre-isolated at QR creation, so each try-on is a single AI call.
+      // Model + output resolution are locked server-side; nothing about the AI
+      // engine is sent from or exposed to the client.
       const res = await fetch(`${API}/api/widget/try-on`, { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Try-on failed');
