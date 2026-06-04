@@ -561,78 +561,75 @@
 <!-- ── Animated try-on showcase (Apple-style cross-fade loop) ── -->
 <script>
 (function () {
-  const stage = document.getElementById('flowStage');
-  if (!stage) return;
-  const frames = Array.from(stage.querySelectorAll('.flow-frame'));
-  const captionEl = document.getElementById('flowCaption');
-  const dotsEl = document.getElementById('flowDots');
-  if (!frames.length) return;
+  function initFlow() {
+    var stage = document.getElementById('flowStage');
+    if (!stage) return;
+    var frames = Array.prototype.slice.call(stage.querySelectorAll('.flow-frame'));
+    var captionEl = document.getElementById('flowCaption');
+    var dotsEl = document.getElementById('flowDots');
+    if (frames.length < 2) return;
 
-  // One caption per step. Empty string = no caption shown for that frame.
-  const captions = [
-    'Scan the tag, open the link',   // 1 looking at phone
-    'Enter your store code',          // 2 passcode
-    'Tap to start',                   // 3 continue
-    'Pick the outfit',                // 4 product
-    'Add your photo',                 // 5 take photo
-    'Snap a quick selfie',            // 6 selfie
-    'Your photo, ready',              // 7 photo loaded
-    'Tap “Try It On”',                // 8 try it now
-    'AI works its magic…',            // 9 generating
-    'See it on you',                  // 10 result
-    'Instantly. ✨'                    // 11 transformation
-  ];
-  const HOLD = 2200;       // ms each frame is shown
-  const HOLD_LAST = 3600;  // linger on the transformation
-  let i = 0;
+    var captions = [
+      'Scan the tag, open the link',
+      'Enter your store code',
+      'Tap to start',
+      'Pick the outfit',
+      'Add your photo',
+      'Snap a quick selfie',
+      'Your photo, ready',
+      'Tap "Try It On"',
+      'AI works its magic…',
+      'See it on you',
+      'Instantly. ✨'
+    ];
+    var HOLD = 2200;
+    var HOLD_LAST = 3600;
+    var i = 0;
 
-  // Build progress dots
-  frames.forEach(() => {
-    const d = document.createElement('span');
-    dotsEl.appendChild(d);
-  });
-  const dots = Array.from(dotsEl.children);
+    // Build progress dots
+    if (dotsEl) {
+      for (var k = 0; k < frames.length; k++) {
+        dotsEl.appendChild(document.createElement('span'));
+      }
+    }
+    var dots = dotsEl ? Array.prototype.slice.call(dotsEl.children) : [];
 
-  function show(n) {
-    frames.forEach((f, idx) => f.classList.toggle('is-active', idx === n));
-    dots.forEach((d, idx) => d.classList.toggle('on', idx === n));
-    // caption fade out → swap → fade in
-    captionEl.classList.remove('show');
-    setTimeout(() => {
-      captionEl.textContent = captions[n] || '';
-      if (captions[n]) captionEl.classList.add('show');
-    }, 350);
+    function show(n) {
+      for (var f = 0; f < frames.length; f++) {
+        if (f === n) frames[f].classList.add('is-active');
+        else frames[f].classList.remove('is-active');
+      }
+      for (var d = 0; d < dots.length; d++) {
+        if (d === n) dots[d].classList.add('on');
+        else dots[d].classList.remove('on');
+      }
+      if (captionEl) {
+        captionEl.classList.remove('show');
+        setTimeout(function () {
+          captionEl.textContent = captions[n] || '';
+          if (captions[n]) captionEl.classList.add('show');
+        }, 350);
+      }
+    }
+
+    var timer = null;
+    function tick() {
+      var delay = (i === frames.length - 1) ? HOLD_LAST : HOLD;
+      timer = setTimeout(function () {
+        i = (i + 1) % frames.length;
+        show(i);
+        tick();
+      }, delay);
+    }
+
+    show(0);
+    tick();
   }
 
-  let timer;
-  function tick() {
-    const delay = (i === frames.length - 1) ? HOLD_LAST : HOLD;
-    timer = setTimeout(() => {
-      i = (i + 1) % frames.length;
-      show(i);
-      tick();
-    }, delay);
-  }
-
-  // Respect reduced-motion: just show the final result, no loop
-  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduce) {
-    i = frames.length - 1;
-    show(i);
-    return;
-  }
-
-  show(0);
-  tick();
-
-  // Pause when off-screen (battery / perf friendly)
-  if ('IntersectionObserver' in window) {
-    new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) { if (!timer) tick(); }
-        else { clearTimeout(timer); timer = null; }
-      });
-    }, { threshold: 0.15 }).observe(stage);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFlow);
+  } else {
+    initFlow();
   }
 })();
 </script>

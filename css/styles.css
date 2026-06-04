@@ -445,7 +445,10 @@ textarea.form-control{min-height:110px;resize:vertical}
   .hero-text p{max-width:100%;margin-left:auto;margin-right:auto}
   .hero-cta{justify-content:center}
   .hero-trust{justify-content:center}
-  .hero-visual{display:none}
+  /* Show the animated try-on showcase on mobile (it's the product proof) */
+  .hero-visual{display:block;max-width:340px;margin:0 auto}
+  .badge-top-left{top:-12px;left:50%;transform:translateX(-130px)}
+  .badge-bot-right{bottom:-12px;right:50%;transform:translateX(130px)}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
   .stat-item::after{display:none}
   .product-showcase{grid-template-columns:1fr;gap:2rem}
