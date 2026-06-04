@@ -46,15 +46,13 @@
       position: absolute;
       inset: 0;
       background-size: cover;
-      background-position: center top;   /* keep heads/phone anchored consistently */
+      background-position: center top;
       opacity: 0;
-      transform: scale(1.04);
-      transition: opacity 1.15s ease-in-out, transform 5s ease-out;
-      will-change: opacity, transform;
+      transition: opacity .9s ease-in-out;   /* clean cross-fade, no zoom drift */
+      will-change: opacity;
     }
     .flow-frame.is-active {
       opacity: 1;
-      transform: scale(1);           /* gentle, consistent Ken Burns drift */
       z-index: 1;
     }
     /* Fallback: if JS hasn't toggled is-active yet, still show frame 1 */
@@ -321,6 +319,16 @@
         </div>
       </div>
 
+    </div>
+  </div>
+</section>
+
+<!-- ── What Is It (simple explainer) ── -->
+<section class="section" style="padding-top:3.5rem;padding-bottom:1rem;">
+  <div class="container">
+    <div style="max-width:760px;margin:0 auto;text-align:center;">
+      <h2 style="margin-bottom:.75rem;">A Trial Room on the Phone</h2>
+      <p style="font-size:1.05rem;">Your customer picks an outfit, adds a selfie, and sees it on themselves in seconds. No trial room, no app. Just their phone.</p>
     </div>
   </div>
 </section>
