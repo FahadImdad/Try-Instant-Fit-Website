@@ -687,6 +687,42 @@
     document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
   });
 
+  // ── Smooth-scroll for in-page links + keep the URL clean (no #hash) ──
+  (function () {
+    function scrollToId(id) {
+      var el = document.getElementById(id);
+      if (!el) return false;
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return true;
+    }
+    // Intercept clicks on links that point to a section on this page
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href]');
+      if (!a) return;
+      var href = a.getAttribute('href');
+      // matches "#products", "/#products", "/index.html#products"
+      var m = href && href.match(/#([a-zA-Z0-9_-]+)$/);
+      if (!m) return;
+      var id = m[1];
+      if (document.getElementById(id)) {
+        e.preventDefault();
+        scrollToId(id);
+        // close mobile menu if open
+        var menu = document.getElementById('navMenu');
+        if (menu) menu.classList.remove('active');
+        // keep the address bar clean
+        if (history.replaceState) history.replaceState(null, '', '/');
+      }
+    });
+    // If we arrived from another page with a #hash, scroll then clean the URL
+    if (window.location.hash) {
+      var id = window.location.hash.slice(1);
+      setTimeout(function () {
+        if (scrollToId(id) && history.replaceState) history.replaceState(null, '', '/');
+      }, 60);
+    }
+  })();
+
   // FAQ accordion
   function toggleFaq(el) {
     const item = el.closest('.faq-item');
