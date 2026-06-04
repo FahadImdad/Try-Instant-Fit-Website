@@ -9,118 +9,6 @@
   <link rel="apple-touch-icon" href="/assets/website-icon.png">
   <link rel="stylesheet" href="css/styles.css">
   <style>
-    /* ════════════════════════════════════════════════
-       DARK FUTURISTIC THEME — full-page override
-       Transforms the light layout into a premium dark,
-       neon-glow AI aesthetic that matches the hero imagery.
-       ════════════════════════════════════════════════ */
-    :root {
-      --d-bg:      #070b18;     /* page base */
-      --d-bg2:     #0b1226;     /* raised surface */
-      --d-card:    #0e1730;     /* card */
-      --d-border:  rgba(255,255,255,.08);
-      --d-border2: rgba(0,200,232,.22);
-      --d-text:    #eef2fb;
-      --d-muted:   #97a3c0;
-    }
-
-    body { background: var(--d-bg); color: var(--d-text); }
-
-    /* Ambient glow blobs behind the whole page */
-    body::before {
-      content: "";
-      position: fixed; inset: 0; z-index: -1; pointer-events: none;
-      background:
-        radial-gradient(700px 500px at 12% 8%, rgba(0,120,255,.10), transparent 60%),
-        radial-gradient(650px 520px at 88% 22%, rgba(0,200,232,.08), transparent 60%),
-        radial-gradient(800px 600px at 50% 110%, rgba(90,103,242,.10), transparent 60%);
-    }
-
-    /* Kill the light section backgrounds → dark */
-    .bg-surface, .bg-surface2, .stats-bar, .brand-strip, .section-alt { background: transparent !important; }
-    .brand-strip, .stats-bar { border-color: var(--d-border) !important; }
-
-    /* Headings + text */
-    h1,h2,h3,h4,h5 { color: #fff !important; }
-    .section-hd p, .section-hd h2 { color: #fff; }
-    .section-hd p { color: var(--d-muted) !important; }
-    p { color: var(--d-muted); }
-
-    /* Navbar → translucent dark glass */
-    .navbar {
-      background: rgba(8,12,24,.72) !important;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border-bottom: 1px solid var(--d-border) !important;
-    }
-    .navbar.scrolled { box-shadow: 0 8px 30px rgba(0,0,0,.5) !important; }
-    .nav-link { color: var(--d-muted) !important; }
-    .nav-link:hover { color: #fff !important; background: rgba(255,255,255,.06) !important; }
-    .logo, .logo span { color: #fff; }
-
-    /* Pills → glowing glass chips */
-    .pill {
-      background: rgba(0,200,232,.10) !important;
-      color: #67e8f9 !important;
-      border: 1px solid rgba(0,200,232,.25);
-      backdrop-filter: blur(8px);
-    }
-    .pill-brand { background: rgba(90,103,242,.12) !important; color: #a5b4ff !important; border-color: rgba(90,103,242,.3); }
-    .pill-green { background: rgba(16,185,129,.12) !important; color: #5ee9b5 !important; border-color: rgba(16,185,129,.3); }
-    .pill-amber { background: rgba(245,158,11,.12) !important; color: #fcd34d !important; border-color: rgba(245,158,11,.3); }
-
-    /* Cards / panels → dark glass with neon edge on hover */
-    .card, .testi-card, .compare-col, .faq-item, .prod-card, .step-item {
-      background: var(--d-card) !important;
-      border: 1px solid var(--d-border) !important;
-      color: var(--d-text);
-      box-shadow: 0 10px 40px rgba(0,0,0,.35) !important;
-    }
-    .card:hover, .testi-card:hover, .prod-card:hover {
-      border-color: var(--d-border2) !important;
-      box-shadow: 0 18px 50px rgba(0,0,0,.5), 0 0 40px rgba(0,200,232,.10) !important;
-    }
-    .compare-col.after { background: rgba(0,200,232,.05) !important; border-color: var(--d-border2) !important; }
-    .compare-item, .faq-a, .feat-list li { color: var(--d-muted) !important; }
-    .card h4, .card h3, .testi-card .testi-quote, .step-item h4 { color: #fff !important; }
-    .testi-quote { color: var(--d-text) !important; }
-    .faq-q { color: #fff !important; }
-    .faq-icon { background: rgba(255,255,255,.06) !important; color: #fff; }
-
-    /* Step dots → glowing */
-    .step-dot {
-      background: var(--grad) !important; color:#fff;
-      box-shadow: 0 0 24px rgba(0,200,232,.4);
-    }
-
-    /* Buttons */
-    .btn-secondary, .btn-outline-dark {
-      background: rgba(255,255,255,.05) !important;
-      color: #fff !important;
-      border: 1px solid var(--d-border) !important;
-    }
-    .btn-secondary:hover, .btn-outline-dark:hover { border-color: var(--d-border2) !important; color:#fff !important; background: rgba(0,200,232,.08) !important; }
-    .btn-primary { box-shadow: 0 8px 30px rgba(90,103,242,.35); }
-    .btn-primary:hover { box-shadow: 0 12px 40px rgba(0,200,232,.45) !important; }
-
-    /* Pricing card */
-    .pricing-badge { background: var(--grad) !important; }
-    [data-usd], .prod-price strong { color: #fff !important; }
-
-    /* Brand strip labels */
-    .brand-strip p { color: var(--d-muted) !important; }
-    .brand-logo { color: #cbd5f0 !important; }
-
-    /* Tech band */
-    .tech-band { border-color: var(--d-border) !important; background: transparent !important; }
-    .tech-logo { color: var(--d-muted) !important; }
-
-    /* Footer → seamless dark */
-    .footer { background: #05080f !important; border-top: 1px solid var(--d-border); }
-
-    /* Section dividers (soft) */
-    .section { border-top: 1px solid rgba(255,255,255,.04); }
-
     /* Coming-soon product card overlay */
     .prod-card.upcoming { opacity: .68; position: relative; pointer-events: none; }
     .prod-card.upcoming .pill-soon {
@@ -141,18 +29,13 @@
     .flow-stage {
       position: relative;
       width: 100%;
-      max-width: 500px;
+      max-width: 480px;
       margin: 0 auto;
       aspect-ratio: 1 / 1;
       border-radius: var(--r-2xl, 32px);
       overflow: hidden;
       background: #0b1430;
-      border: 1px solid rgba(0,200,232,.25);
-      box-shadow:
-        0 30px 80px rgba(0,0,0,.55),
-        0 0 0 1px rgba(255,255,255,.04),
-        0 0 90px rgba(0,200,232,.22),
-        0 0 140px rgba(90,103,242,.18);
+      box-shadow: var(--sh3, 0 24px 64px rgba(0,0,0,.13)), 0 0 80px rgba(90,103,242,.18);
     }
     .flow-frame {
       position: absolute;
