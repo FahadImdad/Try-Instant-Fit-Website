@@ -4046,7 +4046,8 @@
     qrReportContext = {
       productName: productName || null,
       productId: (images && images.productId) || null,
-      resultUrl: (images && images.isolated) || null,
+      resultUrl: (images && images.isolated) || null,   // the bad processed image (proof)
+      uploadedUrl: (images && images.uploaded) || null, // the original photo (for compare)
     };
     // Reset the report form each time the modal opens.
     const rf = document.getElementById('qrReportForm');
@@ -4062,7 +4063,7 @@
 
   // ── Vendor "report bad processed image" (mirrors the customer try-on report;
   //    lands in the same admin reports queue; credit refunded on approval) ──
-  let qrReportContext = { productName: null, productId: null, resultUrl: null };
+  let qrReportContext = { productName: null, productId: null, resultUrl: null, uploadedUrl: null };
 
   function toggleQrReport() {
     const f = document.getElementById('qrReportForm');
@@ -4093,13 +4094,14 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type:       'image_bad',
-          source:     'brand',
-          reason:     reason,
-          message:    note || null,
-          result_url: qrReportContext.resultUrl,   // processed garment = proof
-          brand_id:   activeBrandId,
-          product_id: qrReportContext.productId,
+          type:           'image_bad',
+          source:         'brand',
+          reason:         reason,
+          message:        note || null,
+          result_url:     qrReportContext.resultUrl,    // bad processed image (proof, shown as "AI result")
+          screenshot_url: qrReportContext.uploadedUrl,  // original upload (so admin sees BOTH pics to compare)
+          brand_id:       activeBrandId,
+          product_id:     qrReportContext.productId,
         }),
       });
       const data = await safeJson(res);
