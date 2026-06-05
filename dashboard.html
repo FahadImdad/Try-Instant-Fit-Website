@@ -2206,6 +2206,39 @@
           <button id="qrSuccessDownload" class="btn btn-primary" style="flex:1;">⬇ Download QR</button>
           <button class="btn btn-secondary" style="flex:1;" onclick="copyText('qrSuccessUrl')">📋 Copy URL</button>
         </div>
+
+        <!-- Report a bad processed image (vendor side). Mirrors the customer
+             try-on report. The processed garment image is auto-attached as
+             proof; on approval the credit is refunded. -->
+        <div id="qrReportWrap" style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: .85rem;">
+          <button type="button" id="qrReportToggle" onclick="toggleQrReport()"
+            style="background: none; border: none; color: var(--muted); font-size: .8rem; font-weight: 600; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: .35rem;">
+            ⚠️ Processed image looks wrong? Report it
+          </button>
+          <div id="qrReportForm" style="display: none; margin-top: .75rem;">
+            <p style="font-size: .78rem; color: var(--muted); margin: 0 0 .6rem;">
+              If the processed try-on image is wrong (missing piece, wrong colors, distorted), report it. We'll review and refund your credit if the processing was at fault.
+            </p>
+            <div class="field" style="margin-bottom: .6rem;">
+              <label for="qrReportReason" style="font-size: .8rem;">What's wrong?</label>
+              <select id="qrReportReason">
+                <option value="">Choose a reason…</option>
+                <option value="missing_piece">A garment piece is missing</option>
+                <option value="wrong_colors">Wrong colors</option>
+                <option value="distorted">Distorted / weird shape</option>
+                <option value="wrong_garment">Wrong garment shown</option>
+                <option value="bad_quality">Blurry or bad quality</option>
+                <option value="other">Something else</option>
+              </select>
+            </div>
+            <div class="field" style="margin-bottom: .6rem;">
+              <label for="qrReportNote" style="font-size: .8rem;">Add a note (optional)</label>
+              <textarea id="qrReportNote" rows="2" placeholder="e.g. the dupatta is missing from the processed image" style="resize: vertical;"></textarea>
+            </div>
+            <div id="qrReportError" class="alert" style="display:none; margin-bottom:.6rem;"></div>
+            <button type="button" id="qrReportSubmit" class="btn btn-secondary btn-sm" onclick="submitQrReport()">Submit report</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -3584,6 +3617,7 @@
       showQrSuccess(qrData.scan_url, qrData.qr.product_name, qrData.garment_isolated, {
         uploaded: data.product.image_url,
         isolated: qrData.isolated_garment_url || data.product.isolated_garment_url,
+        productId: data.product.id,
       });
       // Refresh brand info so credits widget reflects the deduction
       if (typeof refreshDashboard === 'function') refreshDashboard();
@@ -4006,7 +4040,80 @@
       imagesBlock.style.display = 'none';
     }
 
+    // Stash context for the "report bad processed image" flow. The processed
+    // (isolated) image is the proof; productId may be undefined when this modal
+    // is opened from a context without it (then we report by name only).
+    qrReportContext = {
+      productName: productName || null,
+      productId: (images && images.productId) || null,
+      resultUrl: (images && images.isolated) || null,
+    };
+    // Reset the report form each time the modal opens.
+    const rf = document.getElementById('qrReportForm');
+    if (rf) rf.style.display = 'none';
+    const rr = document.getElementById('qrReportReason'); if (rr) rr.value = '';
+    const rn = document.getElementById('qrReportNote');   if (rn) rn.value = '';
+    const re = document.getElementById('qrReportError');  if (re) re.style.display = 'none';
+    const rt = document.getElementById('qrReportToggle');
+    if (rt) { rt.style.display = qrReportContext.resultUrl ? 'inline-flex' : 'none'; rt.disabled = false; }
+
     document.getElementById('qrSuccessModal').classList.add('open');
+  }
+
+  // ── Vendor "report bad processed image" (mirrors the customer try-on report;
+  //    lands in the same admin reports queue; credit refunded on approval) ──
+  let qrReportContext = { productName: null, productId: null, resultUrl: null };
+
+  function toggleQrReport() {
+    const f = document.getElementById('qrReportForm');
+    if (f) f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function submitQrReport() {
+    const errEl  = document.getElementById('qrReportError');
+    const btn    = document.getElementById('qrReportSubmit');
+    const reason = document.getElementById('qrReportReason').value;
+    const note   = document.getElementById('qrReportNote').value.trim();
+    errEl.style.display = 'none';
+
+    if (!reason) {
+      errEl.textContent = 'Please choose what went wrong.';
+      errEl.className = 'alert error'; errEl.style.display = 'block';
+      return;
+    }
+    if (!qrReportContext.resultUrl) {
+      errEl.textContent = 'No processed image is available to attach as proof.';
+      errEl.className = 'alert error'; errEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      const res = await fetch(`${API}/api/reports`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type:       'image_bad',
+          source:     'brand',
+          reason:     reason,
+          message:    note || null,
+          result_url: qrReportContext.resultUrl,   // processed garment = proof
+          brand_id:   activeBrandId,
+          product_id: qrReportContext.productId,
+        }),
+      });
+      const data = await safeJson(res);
+      if (!res.ok) throw new Error(data.error || 'Couldn’t submit the report. Please try again.');
+
+      // Success — replace the form with a confirmation.
+      document.getElementById('qrReportForm').innerHTML =
+        '<p style="font-size:.82rem;color:#065f46;background:#d1fae5;border:1px solid #6ee7b7;border-radius:var(--r-sm);padding:.6rem .75rem;margin:0;">✓ Thanks — we’ll review the processed image and refund your credit if the processing was at fault.</p>';
+      document.getElementById('qrReportToggle').style.display = 'none';
+    } catch (err) {
+      errEl.textContent = humanError(err, 'Couldn’t submit the report. Please try again.');
+      errEl.className = 'alert error'; errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Submit report';
+    }
   }
   function closeQrSuccessModal() { document.getElementById('qrSuccessModal').classList.remove('open'); }
   function viewQrImage(scanUrl, productName) { showQrSuccess(scanUrl, productName, undefined, null); }
