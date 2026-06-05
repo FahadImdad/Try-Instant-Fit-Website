@@ -3475,6 +3475,9 @@
                 ${(p.image_url || p.isolated_garment_url)
                   ? `<button class="btn btn-secondary btn-sm" onclick="viewProductImages(${qNameEsc}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')}, '${p.id}')">Images</button>`
                   : ''}
+                ${p.isolated_garment_url
+                  ? `<button class="btn btn-secondary btn-sm" style="color:#92400e; border-color:#fcd34d;" onclick="reportProductImage(${qNameEsc}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')}, '${p.id}')">⚠️ Report</button>`
+                  : ''}
                 <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">✏️ Edit</button>
                 ${qr.active
                   ? `<button class="btn btn-secondary btn-sm" style="color:#92400e; border-color:#fcd34d;" onclick="toggleQrActive('${qr.id}', false, ${qNameEsc})">Disable</button>`
@@ -4196,6 +4199,14 @@
     document.getElementById('viewImagesModal').classList.add('open');
   }
   function closeViewImagesModal() { document.getElementById('viewImagesModal').classList.remove('open'); }
+
+  // Direct "Report" button on a product row → open the Images modal with the
+  // report form already expanded, so the vendor lands right on it.
+  function reportProductImage(productName, uploadedUrl, isolatedUrl, productId) {
+    viewProductImages(productName, uploadedUrl, isolatedUrl, productId);
+    const form = document.getElementById('viReportForm');
+    if (form) form.style.display = 'block';
+  }
 
   // ── Report bad processed image from the "View Images" modal (existing product) ──
   let viReportContext = { productName: null, productId: null, resultUrl: null, uploadedUrl: null };
