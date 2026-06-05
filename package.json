@@ -1,8 +1,9 @@
 {
   "name": "try-instant-fit-website",
   "private": true,
+  "type": "module",
   "description": "Static marketing site + region-aware homepage middleware.",
   "dependencies": {
-    "@vercel/edge": "^1.2.2"
+    "@vercel/functions": "^3.0.0"
   }
 }
