@@ -1890,8 +1890,8 @@
             <input type="number" id="apQrLimit" min="0" placeholder="Leave blank for unlimited">
             <div class="field-hint">Cap total customers who can try this product. Useful for limited campaigns.</div>
           </div>
-          <button type="submit" class="btn btn-primary" id="apSubmit" style="width:100%; padding:.9rem;">Add Product &amp; Generate QR → (~15s)</button>
-          <p style="font-size:.78rem; color:var(--muted); text-align:center; margin: .75rem 0 0;">We'll process the image with AI and generate a printable QR. Takes about 15 seconds.</p>
+          <button type="submit" class="btn btn-primary" id="apSubmit" style="width:100%; padding:.9rem;">Add Product &amp; Generate QR → (~20s)</button>
+          <p style="font-size:.78rem; color:var(--muted); text-align:center; margin: .75rem 0 0;">We'll process the image with AI and generate a printable QR. Takes about 15–30 seconds.</p>
         </form>
       </div>
     </div>
@@ -4127,8 +4127,8 @@
           source:         'brand',
           reason:         reason,
           message:        note || null,
-          result_url:     qrReportContext.resultUrl,    // bad processed image (proof, shown as "AI result")
-          screenshot_url: qrReportContext.uploadedUrl,  // original upload (so admin sees BOTH pics to compare)
+          result_url:     qrReportContext.resultUrl,    // bad processed image -> "AI result" (after)
+          user_photo_url: qrReportContext.uploadedUrl,  // original upload -> "before" slot (side-by-side)
           brand_id:       activeBrandId,
           product_id:     qrReportContext.productId,
         }),
@@ -4233,8 +4233,8 @@
           source:         'brand',
           reason:         reason,
           message:        note || null,
-          result_url:     viReportContext.resultUrl,
-          screenshot_url: viReportContext.uploadedUrl,
+          result_url:     viReportContext.resultUrl,    // processed -> "AI result" (after)
+          user_photo_url: viReportContext.uploadedUrl,  // original -> "before" slot (side-by-side)
           brand_id:       activeBrandId,
           product_id:     viReportContext.productId,
         }),
