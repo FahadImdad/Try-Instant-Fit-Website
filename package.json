@@ -1,0 +1,8 @@
+{
+  "name": "try-instant-fit-website",
+  "private": true,
+  "description": "Static marketing site + region-aware homepage middleware.",
+  "dependencies": {
+    "@vercel/edge": "^1.2.2"
+  }
+}
