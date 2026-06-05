@@ -1646,10 +1646,10 @@
           </div>
 
           <!-- Top-up history (one bar per top-up, FIFO-allocated).
-               Wrapped in <details open> so brands can collapse it once they've
-               glanced at it — saves vertical space when they have 10+ top-ups. -->
+               Collapsed by default (<details> with no `open`) to save vertical
+               space; brands click to expand when they want the detail. -->
           <div id="topupHistory" class="topup-history" style="display: none; margin-bottom: 1.25rem;">
-            <details open>
+            <details>
               <summary class="topup-history-head">
                 <h3>Top-up history</h3>
                 <span class="topup-history-sub" id="topupHistorySub"></span>
