@@ -1908,7 +1908,9 @@
             <label>Product Image</label>
             <div style="border: 2px dashed var(--border); border-radius: var(--r-md); padding: 1.5rem 1rem; text-align: center; background: var(--surface);">
               <img id="epcdImagePreview" src="" alt="" style="max-height: 220px; max-width: 100%; border-radius: var(--r-sm); margin: 0 auto; display: block;">
-              <p style="margin: .75rem 0 0; font-size: .72rem; color: var(--muted);">⏳ Replace image — coming soon. Re-processing will cost <strong>1 credit</strong>.</p>
+              <input type="file" id="epcdImageFile" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="onReplaceImagePicked(event)">
+              <button type="button" class="btn btn-secondary btn-sm" style="margin-top:.85rem;" onclick="document.getElementById('epcdImageFile').click()">🔄 Replace Image</button>
+              <p id="epcdImageHint" style="margin: .6rem 0 0; font-size: .72rem; color: var(--muted);">Upload a new photo to re-process the garment. Costs <strong>1 credit</strong>.</p>
             </div>
           </div>
           <!-- SKU/code is auto-generated and not shown; kept hidden so the
@@ -3677,14 +3679,44 @@
   }
 
   let editingProductId = null;
+  // Holds a newly-picked photo (in the Edit modal) waiting to replace the
+  // product's image on save. null = keep the existing image.
+  let replacementImageFile = null;
 
   let editingQrId = null;
+
+  // Show a live preview when the vendor picks a replacement photo, and
+  // stash the file for submitEditProduct to upload on save.
+  function onReplaceImagePicked(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!ALLOWED.includes(file.type)) {
+      document.getElementById('epcdImageHint').innerHTML = '<span style="color:var(--danger,#dc2626);">Image must be JPG, PNG, or WebP.</span>';
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      document.getElementById('epcdImageHint').innerHTML = '<span style="color:var(--danger,#dc2626);">Image must be under 10MB.</span>';
+      e.target.value = '';
+      return;
+    }
+    replacementImageFile = file;
+    const preview = document.getElementById('epcdImagePreview');
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+    document.getElementById('epcdImageHint').innerHTML = '✅ New photo ready. It will re-process on save (<strong>1 credit</strong>).';
+  }
 
   function editProduct(id) {
     const p = allProducts.find(x => x.id === id);
     if (!p) return;
     editingProductId = id;
     document.getElementById('epcdError').className = 'alert';
+    // Reset any pending image replacement from a previous open.
+    replacementImageFile = null;
+    document.getElementById('epcdImageFile').value = '';
+    document.getElementById('epcdImageHint').innerHTML = 'Upload a new photo to re-process the garment. Costs <strong>1 credit</strong>.';
     const preview = document.getElementById('epcdImagePreview');
     if (p.image_url) {
       preview.src = p.image_url;
@@ -3765,6 +3797,22 @@
       });
       const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Could not save product changes.');
+
+      // Step 1b — replace + re-process the image, if a new one was picked.
+      // Done after the field PATCH so name/price still save even if the brand
+      // is out of credits and isolation is rejected.
+      if (replacementImageFile) {
+        btn.textContent = 'Processing image…';
+        const imgForm = new FormData();
+        imgForm.append('image', replacementImageFile);
+        const imgRes = await fetch(`${API}/api/products/${editingProductId}/replace-image`, {
+          method: 'POST',
+          body: imgForm,
+        });
+        const imgData = await safeJson(imgRes);
+        if (!imgRes.ok) throw new Error(imgData.error || 'Could not process the new image.');
+        replacementImageFile = null;
+      }
 
       // Step 2 — patch QR settings (only if this product has a QR)
       if (editingQrId) {
