@@ -1881,6 +1881,23 @@
             <label for="apDesc">Description (optional)</label>
             <textarea id="apDesc" rows="2" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
           </div>
+          <div class="field">
+            <label for="apCategory">Category</label>
+            <select id="apCategory" onchange="onCategorySelectChange('ap')">
+              <!-- options injected by populateCategorySelect() -->
+            </select>
+            <input type="text" id="apCategoryOther" placeholder="Type a category" style="display:none; margin-top:.5rem;">
+            <div class="field-hint">Helps shoppers filter your catalogue on the try-on page.</div>
+          </div>
+          <div class="field">
+            <label for="apBuyUrl">Buy Now link (optional)</label>
+            <input type="url" id="apBuyUrl" placeholder="https://yourstore.com/product">
+            <div class="field-hint">Adds a “Buy Now” button on the try-on page that opens this link.</div>
+          </div>
+          <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .75rem; background: var(--surface); border-radius: var(--r-md); margin-bottom: .75rem;">
+            <input type="checkbox" id="apShowInCatalog" style="width: auto;" checked>
+            <label for="apShowInCatalog" style="margin: 0; cursor: pointer; font-size: .9rem;">🛍️ Show in catalogue — shoppers can browse &amp; try this on from any of your products' scan pages</label>
+          </div>
           <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .75rem; background: var(--surface); border-radius: var(--r-md); margin-bottom: .75rem;">
             <input type="checkbox" id="apQrPasscode" style="width: auto;" checked>
             <label for="apQrPasscode" style="margin: 0; cursor: pointer; font-size: .9rem;">🔑 Require a passcode for this product's QR</label>
@@ -1939,6 +1956,22 @@
           <div class="field">
             <label for="epcdDesc">Description (optional)</label>
             <textarea id="epcdDesc" rows="2" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
+          </div>
+          <div class="field">
+            <label for="epcdCategory">Category</label>
+            <select id="epcdCategory" onchange="onCategorySelectChange('epcd')">
+              <!-- options injected by populateCategorySelect() -->
+            </select>
+            <input type="text" id="epcdCategoryOther" placeholder="Type a category" style="display:none; margin-top:.5rem;">
+          </div>
+          <div class="field">
+            <label for="epcdBuyUrl">Buy Now link (optional)</label>
+            <input type="url" id="epcdBuyUrl" placeholder="https://yourstore.com/product">
+            <div class="field-hint">Adds a “Buy Now” button on the try-on page. Leave blank to remove it.</div>
+          </div>
+          <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .75rem; background: var(--surface); border-radius: var(--r-md); margin-bottom: .75rem;">
+            <input type="checkbox" id="epcdShowInCatalog" style="width: auto;">
+            <label for="epcdShowInCatalog" style="margin: 0; cursor: pointer; font-size: .9rem;">🛍️ Show in catalogue — shoppers can browse &amp; try this on</label>
           </div>
 
           <!-- QR settings — only shown when this product has a QR. -->
@@ -1999,6 +2032,10 @@
               </div>
             </label>
             <div class="field-hint">Used in widget, scan page, and receipts.</div>
+          </div>
+          <div class="field" style="display: flex; align-items: flex-start; gap: .75rem; padding: .85rem; background: var(--surface); border-radius: var(--r-md);">
+            <input type="checkbox" id="epCatalogEnabled" style="width: auto; margin-top:.15rem;">
+            <label for="epCatalogEnabled" style="margin: 0; cursor: pointer; font-size: .9rem; line-height:1.4;">🛍️ <strong>Catalogue browsing</strong> — let shoppers who scan one of your products browse your whole range and try on any item you've marked “Show in catalogue”.</label>
           </div>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap: .75rem;">
             <div class="field">
@@ -3548,6 +3585,70 @@
     return `${currency} ${n.toLocaleString()}`;
   }
 
+  // ── Product categories ────────────────────────────────────────────────
+  // Fixed list tuned for the South-Asian / global fashion mix, plus an
+  // "Other" escape hatch that reveals a free-text box. The stored value is
+  // whatever ends up in the products.category column (one of these labels, or
+  // the vendor's own text). Keep labels stable — the scan-page filter groups
+  // by exact label.
+  const PRODUCT_CATEGORIES = [
+    'Shirts',
+    'T-Shirts',
+    'Trousers / Jeans',
+    'Kurtas / Eastern',
+    'Dresses',
+    'Outerwear',
+    'Activewear',
+  ];
+  const CATEGORY_OTHER = '__other__';
+  const CATEGORY_NONE  = '';
+
+  // Fill a <select id="{prefix}Category"> with the fixed list + Uncategorised
+  // + Other, then select `current` (a stored category string or null). If the
+  // stored value isn't in the fixed list, it's treated as a custom value and
+  // shown via the "Other" free-text box.
+  function populateCategorySelect(prefix, current) {
+    const sel = document.getElementById(prefix + 'Category');
+    const other = document.getElementById(prefix + 'CategoryOther');
+    if (!sel) return;
+    const cur = (current || '').trim();
+    const isKnown = PRODUCT_CATEGORIES.includes(cur);
+    const opts = [`<option value="${CATEGORY_NONE}">Uncategorised</option>`]
+      .concat(PRODUCT_CATEGORIES.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`))
+      .concat([`<option value="${CATEGORY_OTHER}">Other…</option>`]);
+    sel.innerHTML = opts.join('');
+    if (cur && !isKnown) {
+      sel.value = CATEGORY_OTHER;
+      if (other) { other.value = cur; other.style.display = 'block'; }
+    } else {
+      sel.value = cur;
+      if (other) { other.value = ''; other.style.display = 'none'; }
+    }
+  }
+
+  // Toggle the free-text box when the vendor picks "Other…".
+  function onCategorySelectChange(prefix) {
+    const sel = document.getElementById(prefix + 'Category');
+    const other = document.getElementById(prefix + 'CategoryOther');
+    if (!sel || !other) return;
+    if (sel.value === CATEGORY_OTHER) {
+      other.style.display = 'block';
+      other.focus();
+    } else {
+      other.style.display = 'none';
+      other.value = '';
+    }
+  }
+
+  // Read the chosen category back out as a string (or '' for Uncategorised).
+  function readCategoryValue(prefix) {
+    const sel = document.getElementById(prefix + 'Category');
+    const other = document.getElementById(prefix + 'CategoryOther');
+    if (!sel) return '';
+    if (sel.value === CATEGORY_OTHER) return (other?.value || '').trim();
+    return sel.value === CATEGORY_NONE ? '' : sel.value;
+  }
+
   function openAddProduct() {
     // Gate: brands without credits should top up before adding products,
     // otherwise customers who scan the QR will hit "out of credits" anyway.
@@ -3560,8 +3661,10 @@
       }
     }
     document.getElementById('apError').className = 'alert';
-    ['apName','apPrice','apDesc','apQrLimit'].forEach(id => document.getElementById(id).value = '');
+    ['apName','apPrice','apDesc','apQrLimit','apBuyUrl'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('apCurrency').value = 'PKR';
+    populateCategorySelect('ap', '');
+    document.getElementById('apShowInCatalog').checked = true;
     document.getElementById('apQrPasscode').checked = true;
     apImageFile = null;
     document.getElementById('apImageFile').value = '';
@@ -3612,6 +3715,11 @@
     if (document.getElementById('apPrice').value) fd.append('price', document.getElementById('apPrice').value);
     fd.append('currency', document.getElementById('apCurrency').value);
     if (document.getElementById('apDesc').value.trim()) fd.append('description', document.getElementById('apDesc').value.trim());
+    const apCategory = readCategoryValue('ap');
+    if (apCategory) fd.append('category', apCategory);
+    fd.append('show_in_catalog', document.getElementById('apShowInCatalog').checked ? 'true' : 'false');
+    const apBuyUrl = document.getElementById('apBuyUrl').value.trim();
+    if (apBuyUrl) fd.append('buy_url', apBuyUrl);
     fd.append('image', apImageFile);
 
     const requirePasscode = document.getElementById('apQrPasscode').checked;
@@ -3729,6 +3837,10 @@
     document.getElementById('epcdPrice').value = p.price ?? '';
     document.getElementById('epcdCurrency').value = p.currency || 'PKR';
     document.getElementById('epcdDesc').value = p.description || '';
+    populateCategorySelect('epcd', p.category || '');
+    document.getElementById('epcdBuyUrl').value = p.buy_url || '';
+    // Default-on for legacy rows where the column may be undefined.
+    document.getElementById('epcdShowInCatalog').checked = p.show_in_catalog !== false;
     document.getElementById('epcdActive').checked = p.active !== false;
 
     // Pre-fill QR settings if this product has a QR
@@ -3792,6 +3904,9 @@
           price,
           currency: document.getElementById('epcdCurrency').value,
           description: document.getElementById('epcdDesc').value.trim() || null,
+          category: readCategoryValue('epcd') || null,
+          show_in_catalog: document.getElementById('epcdShowInCatalog').checked,
+          buy_url: document.getElementById('epcdBuyUrl').value.trim(),
           active: document.getElementById('epcdActive').checked,
         }),
       });
@@ -4430,6 +4545,9 @@
     document.getElementById('epContactPosition').value = b.contact_position || '';
     document.getElementById('epContactPhone').value    = b.contact_phone    || '';
     document.getElementById('epCountry').value         = b.country          || '';
+    // Catalogue browsing master switch — default on for brands created before
+    // the column existed (undefined → checked).
+    document.getElementById('epCatalogEnabled').checked = b.catalog_enabled !== false;
 
     // Logo: clear any previously picked file, show existing logo as preview.
     epPickedLogoFile = null;
@@ -4495,6 +4613,10 @@
     };
     if (!fields.name) { errEl.textContent = 'Brand name is required.'; errEl.className = 'alert error'; return false; }
 
+    // Boolean — sent alongside the string fields (multipart as 'true'/'false',
+    // JSON as a real boolean the backend coerces).
+    const catalogEnabled = document.getElementById('epCatalogEnabled').checked;
+
     btn.disabled = true; btn.textContent = 'Saving…';
     try {
       let res;
@@ -4502,13 +4624,14 @@
         // Multipart so the new logo image goes up too.
         const fd = new FormData();
         for (const [k, v] of Object.entries(fields)) fd.append(k, v);
+        fd.append('catalog_enabled', catalogEnabled ? 'true' : 'false');
         fd.append('logo', epPickedLogoFile);
         res = await fetch(`${API}/api/brands/${activeBrandId}`, { method: 'PATCH', body: fd });
       } else {
         res = await fetch(`${API}/api/brands/${activeBrandId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(fields),
+          body: JSON.stringify({ ...fields, catalog_enabled: catalogEnabled }),
         });
       }
       const data = await res.json().catch(() => ({}));
