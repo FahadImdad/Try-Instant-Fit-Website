@@ -1267,15 +1267,12 @@
       }
     }
 
-    // Step 3: desktop fallback — neither share path worked. Copy the result
-    // URL to clipboard so the user has something to paste. Only reached when
-    // the share sheet itself didn't appear, not on user cancel.
+    // Step 3: desktop fallback — neither share path worked. Silently copy the
+    // result URL to clipboard so the user has something to paste. No alert:
+    // the share flow ends silently (file → URL share → silent) by design.
     try {
       await navigator.clipboard.writeText(resultUrl);
-      alert('Link copied! Paste it anywhere to share.');
-    } catch {
-      alert('Copy this link: ' + resultUrl);
-    }
+    } catch { /* clipboard blocked — nothing more we can do, stay silent */ }
   }
 
   // ── Custom report-reason dropdown ────────────────────────────────────
