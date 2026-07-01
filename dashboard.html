@@ -1881,13 +1881,23 @@
             <label for="apDesc">Description (optional)</label>
             <textarea id="apDesc" rows="2" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
           </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="field">
+              <label for="apAudience">For</label>
+              <select id="apAudience"><!-- injected by populateAudienceSelect() --></select>
+            </div>
+            <div class="field">
+              <label for="apGroup">Style</label>
+              <select id="apGroup" onchange="onGroupSelectChange('ap')"><!-- injected by populateGroupSelect() --></select>
+            </div>
+          </div>
           <div class="field">
             <label for="apCategory">Category</label>
             <select id="apCategory" onchange="onCategorySelectChange('ap')">
               <!-- options injected by populateCategorySelect() -->
             </select>
             <input type="text" id="apCategoryOther" placeholder="Type a category" style="display:none; margin-top:.5rem;">
-            <div class="field-hint">Helps shoppers filter your catalogue on the try-on page.</div>
+            <div class="field-hint">For &amp; Style let shoppers filter your catalogue on the try-on page.</div>
           </div>
           <div class="field">
             <label for="apBuyUrl">Buy Now link (optional)</label>
@@ -1956,6 +1966,16 @@
           <div class="field">
             <label for="epcdDesc">Description (optional)</label>
             <textarea id="epcdDesc" rows="2" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="field">
+              <label for="epcdAudience">For</label>
+              <select id="epcdAudience"><!-- injected --></select>
+            </div>
+            <div class="field">
+              <label for="epcdGroup">Style</label>
+              <select id="epcdGroup" onchange="onGroupSelectChange('epcd')"><!-- injected --></select>
+            </div>
           </div>
           <div class="field">
             <label for="epcdCategory">Category</label>
@@ -3585,38 +3605,75 @@
     return `${currency} ${n.toLocaleString()}`;
   }
 
-  // ── Product categories ────────────────────────────────────────────────
-  // Fixed list tuned for the South-Asian / global fashion mix, plus an
-  // "Other" escape hatch that reveals a free-text box. The stored value is
-  // whatever ends up in the products.category column (one of these labels, or
-  // the vendor's own text). Keep labels stable — the scan-page filter groups
-  // by exact label.
-  const PRODUCT_CATEGORIES = [
-    'Shirts',
-    'T-Shirts',
-    'Trousers / Jeans',
-    'Kurtas / Eastern',
-    'Dresses',
-    'Outerwear',
-    'Activewear',
-  ];
+  // ── Product taxonomy: Audience + Style group → Category ───────────────
+  // Two independent filter axes, both surfaced on the scan-page catalogue:
+  //   • AUDIENCE  — who it's for (Women / Men / Kids / Unisex)
+  //   • GROUP     — style group (Eastern / Western / Formal & Festive), each
+  //                 with its own category list; "Other" reveals a free-text box.
+  // Labels are drawn from how PK fashion retailers (Khaadi, Sapphire, Edenrobe,
+  // LAAM) actually label their menus. Keep them stable — the scan-page filter
+  // groups by exact label. Unstitched is intentionally excluded (can't be tried
+  // on virtually).
+  const PRODUCT_AUDIENCES = ['Women', 'Men', 'Kids', 'Unisex'];
+  const CATEGORY_GROUPS = {
+    'Eastern': ['Kurta', 'Shalwar Kameez', 'Kurta Pajama', 'Anarkali', 'Lehenga', 'Sharara / Gharara', 'Saree', 'Waistcoat', 'Kaftan / Abaya'],
+    'Western': ['Dress', 'Shirt', 'T-Shirt', 'Top / Blouse', 'Trousers / Jeans', 'Co-ord Set', 'Skirt', 'Blazer / Outerwear'],
+    'Formal & Festive': ['Formal Suit', 'Party / Festive Wear', 'Bridal / Wedding', 'Gown', 'Prince Coat / Sherwani'],
+  };
+  const GROUP_NAMES = Object.keys(CATEGORY_GROUPS);
   const CATEGORY_OTHER = '__other__';
-  const CATEGORY_NONE  = '';
+  const NONE  = '';
 
-  // Fill a <select id="{prefix}Category"> with the fixed list + Uncategorised
-  // + Other, then select `current` (a stored category string or null). If the
-  // stored value isn't in the fixed list, it's treated as a custom value and
-  // shown via the "Other" free-text box.
-  function populateCategorySelect(prefix, current) {
+  // Reverse lookup: category label → its group (for pre-selecting Group when
+  // editing a product that only has a stored category).
+  const CATEGORY_TO_GROUP = {};
+  for (const g of GROUP_NAMES) for (const c of CATEGORY_GROUPS[g]) CATEGORY_TO_GROUP[c] = g;
+
+  function populateAudienceSelect(prefix, current) {
+    const sel = document.getElementById(prefix + 'Audience');
+    if (!sel) return;
+    const cur = (current || '').trim();
+    sel.innerHTML = [`<option value="${NONE}">All / Any</option>`]
+      .concat(PRODUCT_AUDIENCES.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`))
+      .join('');
+    sel.value = PRODUCT_AUDIENCES.includes(cur) ? cur : NONE;
+  }
+
+  function populateGroupSelect(prefix, current) {
+    const sel = document.getElementById(prefix + 'Group');
+    if (!sel) return;
+    const cur = (current || '').trim();
+    sel.innerHTML = [`<option value="${NONE}">Ungrouped</option>`]
+      .concat(GROUP_NAMES.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`))
+      .concat([`<option value="${CATEGORY_OTHER}">Other…</option>`])
+      .join('');
+    sel.value = GROUP_NAMES.includes(cur) ? cur : (cur ? CATEGORY_OTHER : NONE);
+  }
+
+  // Fill Category for the currently-selected Group. If group is "Other" or
+  // ungrouped, the Category select collapses to just the free-text box.
+  function populateCategorySelect(prefix, currentCategory) {
+    const groupSel = document.getElementById(prefix + 'Group');
     const sel = document.getElementById(prefix + 'Category');
     const other = document.getElementById(prefix + 'CategoryOther');
     if (!sel) return;
-    const cur = (current || '').trim();
-    const isKnown = PRODUCT_CATEGORIES.includes(cur);
-    const opts = [`<option value="${CATEGORY_NONE}">Uncategorised</option>`]
-      .concat(PRODUCT_CATEGORIES.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`))
-      .concat([`<option value="${CATEGORY_OTHER}">Other…</option>`]);
-    sel.innerHTML = opts.join('');
+    const group = groupSel ? groupSel.value : NONE;
+    const cur = (currentCategory || '').trim();
+    const list = CATEGORY_GROUPS[group] || [];
+    const isKnown = list.includes(cur);
+
+    // No fixed list for this group → force free-text.
+    if (!list.length) {
+      sel.innerHTML = `<option value="${CATEGORY_OTHER}">Other (type below)…</option>`;
+      sel.value = CATEGORY_OTHER;
+      if (other) { other.value = cur; other.style.display = 'block'; }
+      return;
+    }
+
+    sel.innerHTML = [`<option value="${NONE}">Uncategorised</option>`]
+      .concat(list.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`))
+      .concat([`<option value="${CATEGORY_OTHER}">Other…</option>`])
+      .join('');
     if (cur && !isKnown) {
       sel.value = CATEGORY_OTHER;
       if (other) { other.value = cur; other.style.display = 'block'; }
@@ -3626,7 +3683,16 @@
     }
   }
 
-  // Toggle the free-text box when the vendor picks "Other…".
+  // Group changed → repopulate Category for the new group (reset selection).
+  function onGroupSelectChange(prefix) {
+    populateCategorySelect(prefix, '');
+    // If group itself is "Other", the category free-text is the only input.
+    const other = document.getElementById(prefix + 'CategoryOther');
+    const groupSel = document.getElementById(prefix + 'Group');
+    if (other && groupSel && groupSel.value === CATEGORY_OTHER) other.focus();
+  }
+
+  // Toggle the free-text box when the vendor picks "Other…" for Category.
   function onCategorySelectChange(prefix) {
     const sel = document.getElementById(prefix + 'Category');
     const other = document.getElementById(prefix + 'CategoryOther');
@@ -3640,13 +3706,34 @@
     }
   }
 
-  // Read the chosen category back out as a string (or '' for Uncategorised).
+  function readAudienceValue(prefix) {
+    const sel = document.getElementById(prefix + 'Audience');
+    return sel && sel.value !== NONE ? sel.value : '';
+  }
+
+  // Read the chosen group. "Other" group has no fixed label, so we return ''
+  // (the category free-text carries the meaning in that case).
+  function readGroupValue(prefix) {
+    const sel = document.getElementById(prefix + 'Group');
+    if (!sel) return '';
+    return (sel.value === NONE || sel.value === CATEGORY_OTHER) ? '' : sel.value;
+  }
+
   function readCategoryValue(prefix) {
     const sel = document.getElementById(prefix + 'Category');
     const other = document.getElementById(prefix + 'CategoryOther');
     if (!sel) return '';
     if (sel.value === CATEGORY_OTHER) return (other?.value || '').trim();
-    return sel.value === CATEGORY_NONE ? '' : sel.value;
+    return sel.value === NONE ? '' : sel.value;
+  }
+
+  // Populate all three selects at once (audience, group, category) — used on
+  // modal open. Group is inferred from the stored category when not provided.
+  function populateTaxonomy(prefix, audience, group, category) {
+    populateAudienceSelect(prefix, audience);
+    const inferredGroup = group || CATEGORY_TO_GROUP[(category || '').trim()] || '';
+    populateGroupSelect(prefix, inferredGroup);
+    populateCategorySelect(prefix, category);
   }
 
   function openAddProduct() {
@@ -3663,7 +3750,7 @@
     document.getElementById('apError').className = 'alert';
     ['apName','apPrice','apDesc','apQrLimit','apBuyUrl'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('apCurrency').value = 'PKR';
-    populateCategorySelect('ap', '');
+    populateTaxonomy('ap', '', '', '');
     document.getElementById('apShowInCatalog').checked = true;
     document.getElementById('apQrPasscode').checked = true;
     apImageFile = null;
@@ -3717,6 +3804,10 @@
     if (document.getElementById('apDesc').value.trim()) fd.append('description', document.getElementById('apDesc').value.trim());
     const apCategory = readCategoryValue('ap');
     if (apCategory) fd.append('category', apCategory);
+    const apGroup = readGroupValue('ap');
+    if (apGroup) fd.append('category_group', apGroup);
+    const apAudience = readAudienceValue('ap');
+    if (apAudience) fd.append('audience', apAudience);
     fd.append('show_in_catalog', document.getElementById('apShowInCatalog').checked ? 'true' : 'false');
     const apBuyUrl = document.getElementById('apBuyUrl').value.trim();
     if (apBuyUrl) fd.append('buy_url', apBuyUrl);
@@ -3837,7 +3928,7 @@
     document.getElementById('epcdPrice').value = p.price ?? '';
     document.getElementById('epcdCurrency').value = p.currency || 'PKR';
     document.getElementById('epcdDesc').value = p.description || '';
-    populateCategorySelect('epcd', p.category || '');
+    populateTaxonomy('epcd', p.audience || '', p.category_group || '', p.category || '');
     document.getElementById('epcdBuyUrl').value = p.buy_url || '';
     // Default-on for legacy rows where the column may be undefined.
     document.getElementById('epcdShowInCatalog').checked = p.show_in_catalog !== false;
@@ -3905,6 +3996,8 @@
           currency: document.getElementById('epcdCurrency').value,
           description: document.getElementById('epcdDesc').value.trim() || null,
           category: readCategoryValue('epcd') || null,
+          category_group: readGroupValue('epcd') || null,
+          audience: readAudienceValue('epcd') || null,
           show_in_catalog: document.getElementById('epcdShowInCatalog').checked,
           buy_url: document.getElementById('epcdBuyUrl').value.trim(),
           active: document.getElementById('epcdActive').checked,

@@ -572,6 +572,7 @@
   <div id="catalogSection" class="scan-card" style="display:none;">
     <h3 class="step-title" style="margin: 0 0 .25rem;">🛍️ More from <span id="catalogBrandName">this brand</span></h3>
     <p style="color:var(--muted); font-size:.85rem; margin: 0 0 1rem;">Tap any item to try it on with your photo.</p>
+    <div id="catalogAudienceFilters" class="catalog-filters"></div>
     <div id="catalogFilters" class="catalog-filters"></div>
     <div id="catalogGrid" class="catalog-grid"></div>
   </div>
@@ -631,8 +632,15 @@
   })();
 
   // ── Catalogue browse: "More from {Brand}" ──────────────────────────────
-  let catalogItems = [];      // [{ product_uuid, sku, name, price, currency, category, image_url, token }]
-  let catalogFilter = 'all';  // active category filter ('all' or a category label)
+  // Two independent filter axes: AUDIENCE (Women/Men/Kids/Unisex) and CATEGORY
+  // (ordered by style group Eastern → Western → Formal & Festive). Category
+  // chips reflect the active audience so the two narrow together.
+  let catalogItems = [];             // [{ product_uuid, sku, name, price, currency, category, category_group, audience, buy_url, image_url, token }]
+  let catalogAudience = 'all';       // active audience filter
+  let catalogFilter = 'all';         // active category filter
+
+  // Style-group display order, so category chips cluster sensibly.
+  const GROUP_ORDER = ['Eastern', 'Western', 'Formal & Festive'];
 
   async function loadCatalog() {
     const brandId = qrInfo?.brand?.id || qrInfo?.brand_id;
@@ -650,16 +658,55 @@
     } catch (_) { /* silent — catalogue is a non-critical enhancement */ }
   }
 
+  // Order categories by their style group, then alphabetically within a group,
+  // using the group hints present on the items themselves.
+  function orderedCategories(items) {
+    const groupOf = {};
+    items.forEach(p => {
+      const c = (p.category || '').trim();
+      if (c && !(c in groupOf)) groupOf[c] = (p.category_group || '').trim();
+    });
+    const cats = Object.keys(groupOf);
+    return cats.sort((a, b) => {
+      const ga = GROUP_ORDER.indexOf(groupOf[a]); const gb = GROUP_ORDER.indexOf(groupOf[b]);
+      const ra = ga === -1 ? GROUP_ORDER.length : ga;
+      const rb = gb === -1 ? GROUP_ORDER.length : gb;
+      return ra - rb || a.localeCompare(b);
+    });
+  }
+
   function renderCatalog() {
-    // Build the category filter chips from the categories present, plus "All".
-    const cats = Array.from(new Set(
-      catalogItems.map(p => (p.category || '').trim()).filter(Boolean)
-    )).sort();
+    // ── Axis 1: Audience chips ──────────────────────────────────────────
+    const audiences = Array.from(new Set(
+      catalogItems.map(p => (p.audience || '').trim()).filter(Boolean)
+    ));
+    const audOrder = ['Women', 'Men', 'Kids', 'Unisex'];
+    audiences.sort((a, b) => audOrder.indexOf(a) - audOrder.indexOf(b));
+    const audEl = document.getElementById('catalogAudienceFilters');
+    if (audiences.length > 1) {
+      const chips = [{ key: 'all', label: 'Everyone' }].concat(audiences.map(a => ({ key: a, label: a })));
+      audEl.innerHTML = chips.map(ch =>
+        `<button type="button" class="catalog-chip${catalogAudience === ch.key ? ' active' : ''}" data-aud="${escapeAttr(ch.key)}">${escapeHtml(ch.label)}</button>`
+      ).join('');
+      audEl.style.display = 'flex';
+      audEl.querySelectorAll('.catalog-chip').forEach(btn => {
+        btn.addEventListener('click', () => { catalogAudience = btn.dataset.aud; catalogFilter = 'all'; renderCatalog(); });
+      });
+    } else {
+      audEl.innerHTML = '';
+      audEl.style.display = 'none';
+    }
+
+    // Items matching the current audience (category chips derive from these).
+    const byAudience = catalogAudience === 'all'
+      ? catalogItems
+      : catalogItems.filter(p => (p.audience || '').trim() === catalogAudience);
+
+    // ── Axis 2: Category chips (ordered by style group) ─────────────────
+    const cats = orderedCategories(byAudience);
     const filtersEl = document.getElementById('catalogFilters');
-    // Only show filters when there's more than one category to choose between.
     if (cats.length > 1) {
-      const chips = [{ key: 'all', label: 'All' }]
-        .concat(cats.map(c => ({ key: c, label: c })));
+      const chips = [{ key: 'all', label: 'All' }].concat(cats.map(c => ({ key: c, label: c })));
       filtersEl.innerHTML = chips.map(ch =>
         `<button type="button" class="catalog-chip${catalogFilter === ch.key ? ' active' : ''}" data-cat="${escapeAttr(ch.key)}">${escapeHtml(ch.label)}</button>`
       ).join('');
@@ -672,13 +719,14 @@
       filtersEl.style.display = 'none';
     }
 
-    const visible = catalogFilter === 'all'
-      ? catalogItems
-      : catalogItems.filter(p => (p.category || '').trim() === catalogFilter);
+    // ── Grid: apply both filters ────────────────────────────────────────
+    const visible = byAudience.filter(p =>
+      catalogFilter === 'all' || (p.category || '').trim() === catalogFilter
+    );
 
     const grid = document.getElementById('catalogGrid');
     if (!visible.length) {
-      grid.innerHTML = '<div class="catalog-empty">No items in this category.</div>';
+      grid.innerHTML = '<div class="catalog-empty">No items match this filter.</div>';
       return;
     }
     grid.innerHTML = visible.map((p, i) => {
