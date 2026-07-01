@@ -20,114 +20,97 @@
       --page-bg-a: #0f1e3d;
       --page-bg-b: #1a2f5a;
     }
-    body { background: linear-gradient(180deg, var(--page-bg-a) 0%, var(--page-bg-b) 100%); min-height: 100vh; }
-    .shop-wrap { max-width: 960px; margin: 0 auto; padding: 0 1rem 3rem; }
+    * { -webkit-tap-highlight-color: transparent; }
+    body { background: var(--page-bg-a); min-height: 100vh; }
+    .shop-wrap { max-width: 720px; margin: 0 auto; padding: 0 .6rem 3rem; }
 
-    /* Powered-by strip (kept subtle so the brand leads) */
-    .shop-poweredby { text-align: center; padding: .85rem 0 0; }
-    .shop-poweredby a { display: inline-flex; align-items: center; gap: .4rem; text-decoration: none; opacity: .7; }
-    .shop-poweredby img { height: 20px; width: 20px; border-radius: 5px; }
-    .shop-poweredby span { color: rgba(255,255,255,.7); font-weight: 700; font-size: .72rem; }
-    .shop-poweredby .fit-mark { background: linear-gradient(90deg, #5a67f2, #00c8e8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-
-    /* Brand banner — the storefront hero. Tinted with the brand colour. */
-    .shop-header {
-      text-align: center; padding: 2rem 1.25rem 2.25rem; margin: 1rem 0 1.5rem;
-      border-radius: 1.25rem;
-      background:
-        radial-gradient(120% 140% at 50% 0%, color-mix(in srgb, var(--brand) 34%, transparent) 0%, transparent 62%),
-        rgba(255,255,255,.04);
-      border: 1px solid color-mix(in srgb, var(--brand) 30%, rgba(255,255,255,.08));
+    /* App-style slim top bar — sticky, compact. Brand logo + name in a row. */
+    .shop-appbar {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; gap: .6rem;
+      padding: .6rem .3rem; margin-bottom: .5rem;
+      background: color-mix(in srgb, var(--page-bg-a) 88%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,.08);
     }
-    .shop-brand-logo { max-width: 180px; max-height: 88px; object-fit: contain; margin: 0 auto .6rem; display: block; filter: drop-shadow(0 6px 18px rgba(0,0,0,.35)); }
-    .shop-brand { color: #fff; font-size: 1.8rem; font-weight: 800; letter-spacing: -.01em; margin: 0 0 .3rem; }
-    .shop-sub { color: rgba(255,255,255,.72); font-size: .85rem; margin: 0; }
-    .shop-visit {
-      display: inline-block; margin-top: .9rem; padding: .45rem 1rem;
-      border-radius: var(--r-full); font-size: .78rem; font-weight: 700; text-decoration: none;
-      background: color-mix(in srgb, var(--brand) 22%, transparent);
-      color: #fff; border: 1px solid color-mix(in srgb, var(--brand) 45%, transparent);
-      transition: background .15s;
-    }
-    .shop-visit:hover { background: color-mix(in srgb, var(--brand) 34%, transparent); }
-
-    /* Back bar */
     .shop-back {
-      display: inline-flex; align-items: center; gap: .4rem;
+      flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border-radius: 50%;
       background: rgba(255,255,255,.1); color: #fff; border: none;
-      padding: .5rem .9rem; border-radius: var(--r-full); font-size: .85rem;
-      font-weight: 600; cursor: pointer; font-family: inherit; text-decoration: none;
-      margin-bottom: 1rem; transition: background .15s;
+      font-size: 1.1rem; cursor: pointer; text-decoration: none; transition: background .15s;
     }
-    .shop-back:hover { background: rgba(255,255,255,.18); }
+    .shop-back:hover { background: rgba(255,255,255,.2); }
+    .shop-brand-logo { height: 30px; width: 30px; object-fit: contain; border-radius: 8px; background: #fff; flex: 0 0 auto; display: none; }
+    .shop-brand { color: #fff; font-size: 1.05rem; font-weight: 800; margin: 0; line-height: 1.1; letter-spacing: -.01em; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .shop-visit {
+      flex: 0 0 auto; padding: .38rem .7rem; border-radius: var(--r-full);
+      font-size: .72rem; font-weight: 700; text-decoration: none;
+      background: color-mix(in srgb, var(--brand) 26%, transparent);
+      color: #fff; border: 1px solid color-mix(in srgb, var(--brand) 45%, transparent);
+    }
+    .shop-sub { display: none; }  /* app bar stays compact — no subtitle line */
 
-    /* Controls card */
-    .shop-controls {
-      background: #fff; border-radius: 1rem; padding: 1rem;
-      box-shadow: 0 8px 32px rgba(0,0,0,.28); margin-bottom: 1.25rem;
-    }
+    /* Controls — flat app-style, not a floating card. */
+    .shop-controls { padding: .2rem .3rem .6rem; margin-bottom: .6rem; }
     .shop-search {
-      width: 100%; box-sizing: border-box; padding: .8rem 1rem;
-      border: 1.5px solid var(--border); border-radius: var(--r-md);
-      font-size: 1rem; font-family: inherit; outline: none; margin-bottom: .85rem;
+      width: 100%; box-sizing: border-box; padding: .7rem .9rem;
+      border: none; border-radius: 12px; font-size: .95rem; font-family: inherit; outline: none;
+      margin-bottom: .6rem; background: rgba(255,255,255,.94);
     }
-    .shop-search:focus { border-color: var(--brand); }
+    .shop-search:focus { box-shadow: 0 0 0 2px var(--brand); }
 
-    .filter-row { margin-bottom: .6rem; }
-    .filter-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 .35rem; }
-    .chip-row { display: flex; gap: .4rem; overflow-x: auto; padding-bottom: .3rem; scrollbar-width: none; }
+    .filter-row { margin-bottom: .45rem; }
+    .filter-label { display: none; }  /* chips are self-explanatory; save vertical space */
+    .chip-row { display: flex; gap: .4rem; overflow-x: auto; padding-bottom: .15rem; scrollbar-width: none; }
     .chip-row::-webkit-scrollbar { display: none; }
     .chip {
-      flex: 0 0 auto; padding: .4rem .85rem; border: 1.5px solid var(--border);
-      border-radius: var(--r-full); background: #fff; font-size: .8rem; font-weight: 600;
-      color: var(--muted); cursor: pointer; white-space: nowrap; font-family: inherit; transition: all .15s;
+      flex: 0 0 auto; padding: .38rem .8rem; border: 1px solid rgba(255,255,255,.18);
+      border-radius: var(--r-full); background: rgba(255,255,255,.08); font-size: .78rem; font-weight: 600;
+      color: rgba(255,255,255,.85); cursor: pointer; white-space: nowrap; font-family: inherit; transition: all .15s;
     }
-    .chip:hover { border-color: var(--brand); color: var(--text); }
+    .chip:hover { border-color: rgba(255,255,255,.4); }
     .chip.active { background: var(--brand); border-color: var(--brand); color: var(--brand-contrast); }
 
-    .shop-toolbar { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-top: .5rem; }
-    .shop-count { font-size: .82rem; color: var(--muted); }
-    .shop-sort { padding: .5rem .7rem; border: 1.5px solid var(--border); border-radius: var(--r-md); font-size: .82rem; font-family: inherit; background: #fff; color: var(--text); }
+    .shop-toolbar { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-top: .4rem; }
+    .shop-count { font-size: .78rem; color: rgba(255,255,255,.55); }
+    .shop-sort { padding: .4rem .6rem; border: 1px solid rgba(255,255,255,.18); border-radius: 9px; font-size: .78rem; font-family: inherit; background: rgba(255,255,255,.08); color: #fff; }
+    .shop-sort option { color: #111; }
 
-    /* Grid — 2 up on phones, scaling up on wider screens. */
-    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .7rem; }
-    @media (min-width: 480px) { .shop-grid { gap: 1rem; } }
-    @media (min-width: 640px) { .shop-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (min-width: 900px) { .shop-grid { grid-template-columns: repeat(4, 1fr); } }
+    /* Grid — 2 up on phones (tight, app-like), scaling up on wider screens. */
+    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .55rem; }
+    @media (min-width: 560px) { .shop-grid { grid-template-columns: repeat(3, 1fr); gap: .7rem; } }
+    @media (min-width: 820px) { .shop-grid { grid-template-columns: repeat(4, 1fr); } }
 
     .card {
-      background: #fff; border-radius: 14px; overflow: hidden;
-      display: flex; flex-direction: column; box-shadow: 0 6px 20px rgba(0,0,0,.22);
-      transition: transform .15s, box-shadow .15s;
+      background: #fff; border-radius: 12px; overflow: hidden;
+      display: flex; flex-direction: column; box-shadow: 0 3px 12px rgba(0,0,0,.28);
+      transition: transform .12s;
     }
-    .card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0,0,0,.3); }
+    .card:active { transform: scale(.98); }
 
-    /* Image — tap target for try-on. Contain (not crop) so full garments show
-       on a soft backdrop instead of being cut off. */
-    .card-media { display: block; position: relative; background: #f4f5f8; }
+    .card-media { display: block; background: #f0f1f4; }
     .card-img, .card-img-ph { width: 100%; aspect-ratio: 3/4; display: block; }
     .card-img { object-fit: cover; }
-    .card-img-ph { background: linear-gradient(135deg,#5a67f2,#00c8e8); display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+    .card-img-ph { background: linear-gradient(135deg,#5a67f2,#00c8e8); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
 
-    .card-body { padding: .65rem .7rem .75rem; display: flex; flex-direction: column; flex: 1; gap: .12rem; }
+    .card-body { padding: .5rem .55rem .55rem; display: flex; flex-direction: column; }
+    .card-cat { font-size: .6rem; color: var(--muted); margin: 0 0 .1rem; text-transform: uppercase; letter-spacing: .03em; }
     .card-name {
-      font-size: .82rem; font-weight: 600; color: var(--text); line-height: 1.35; margin: 0;
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-      min-height: 2.2em;   /* reserve 2 lines so cards align even with short names */
+      font-size: .78rem; font-weight: 600; color: var(--text); line-height: 1.3; margin: 0 0 .15rem;
+      display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
     }
-    .card-cat { font-size: .66rem; color: var(--muted); margin: 0; text-transform: uppercase; letter-spacing: .03em; }
-    .card-price { font-size: .92rem; font-weight: 800; color: var(--brand); margin: .15rem 0 .1rem; }
-    .card-price.empty { color: var(--muted); font-weight: 600; font-size: .8rem; }
-    .card-actions { margin-top: .5rem; display: flex; flex-direction: column; gap: .4rem; }
+    .card-price { font-size: .82rem; font-weight: 800; color: var(--brand); margin: 0 0 .5rem; }
+    .card-price.empty { display: none; }   /* no filler row when there's no price */
+    .card-actions { margin-top: auto; display: flex; flex-direction: column; gap: .35rem; }
     .card-btn {
-      width: 100%; box-sizing: border-box; padding: .6rem .4rem; border-radius: 9px;
-      font-size: .82rem; font-weight: 700; cursor: pointer; font-family: inherit; text-align: center;
-      text-decoration: none; display: flex; align-items: center; justify-content: center; gap: .3rem;
+      width: 100%; box-sizing: border-box; padding: .5rem .3rem; border-radius: 8px;
+      font-size: .78rem; font-weight: 700; cursor: pointer; font-family: inherit;
+      text-decoration: none; display: flex; align-items: center; justify-content: center; gap: .25rem;
       border: none; transition: all .15s; white-space: nowrap;
     }
     .card-btn.try { background: var(--brand); color: var(--brand-contrast); }
-    .card-btn.try:hover { background: var(--brand-dark); box-shadow: 0 6px 16px color-mix(in srgb, var(--brand) 40%, transparent); }
-    .card-btn.buy { background: #fff; color: #15803d; border: 1.5px solid #16a34a; padding: .55rem .4rem; }
+    .card-btn.try:active { background: var(--brand-dark); }
+    .card-btn.buy { background: #fff; color: #15803d; border: 1.5px solid #16a34a; padding: .45rem .3rem; }
     .card-btn.buy:hover { background: #f0fdf4; }
 
     /* States */
@@ -146,23 +129,13 @@
 <div class="shop-wrap">
 
   <!-- Subtle platform strip — the brand leads, TIF stays in the background. -->
-  <div class="shop-poweredby">
-    <a href="/" target="_blank" aria-label="Try Instant Fit">
-      <img src="/assets/website-icon.png" alt="">
-      <span>Powered by Try Instant<span class="fit-mark">Fit</span></span>
-    </a>
-  </div>
-
-  <!-- Brand banner — themed with the brand's colour + logo. -->
-  <div class="shop-header">
-    <img id="brandLogo" class="shop-brand-logo" src="" alt="" style="display:none;">
+  <!-- App-style top bar: back · brand logo + name · visit store. Sticky. -->
+  <div class="shop-appbar">
+    <a id="backLink" class="shop-back" href="#" aria-label="Back" style="display:none;">←</a>
+    <img id="brandLogo" class="shop-brand-logo" src="" alt="">
     <h1 id="brandName" class="shop-brand">Catalogue</h1>
-    <p class="shop-sub">Browse the collection · tap any item to try it on</p>
-    <a id="visitLink" class="shop-visit" href="#" target="_blank" rel="noopener" style="display:none;">🌐 Visit store</a>
+    <a id="visitLink" class="shop-visit" href="#" target="_blank" rel="noopener" style="display:none;">Visit store</a>
   </div>
-
-  <!-- Back — only shown when we arrived from a product scan page (has a return). -->
-  <a id="backLink" class="shop-back" href="#" style="display:none;">← Back</a>
 
   <!-- Loading -->
   <div id="loadingView" class="shop-state">
