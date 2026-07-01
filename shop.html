@@ -77,7 +77,7 @@
     .shop-sort option { color: #111; }
 
     /* Grid — 2 up on phones (tight, app-like), scaling up on wider screens. */
-    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .55rem; }
+    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .55rem; align-items: start; }
     @media (min-width: 560px) { .shop-grid { grid-template-columns: repeat(3, 1fr); gap: .7rem; } }
     @media (min-width: 820px) { .shop-grid { grid-template-columns: repeat(4, 1fr); } }
 
@@ -101,7 +101,9 @@
     }
     .card-price { font-size: .82rem; font-weight: 800; color: var(--brand); margin: 0 0 .5rem; }
     .card-price.empty { display: none; }   /* no filler row when there's no price */
-    .card-actions { margin-top: auto; display: flex; flex-direction: column; gap: .35rem; }
+    /* No margin-top:auto — cards size to content (see .shop-grid align-items:start),
+       so short cards don't stretch tall with wasted white space. */
+    .card-actions { display: flex; flex-direction: column; gap: .35rem; }
     .card-btn {
       width: 100%; box-sizing: border-box; padding: .5rem .3rem; border-radius: 8px;
       font-size: .78rem; font-weight: 700; cursor: pointer; font-family: inherit;
@@ -393,7 +395,7 @@
         <div class="card-body">
           ${cat ? `<p class="card-cat">${esc(cat)}</p>` : ''}
           <a href="${href}" style="text-decoration:none;"><p class="card-name">${esc(p.name || 'Product')}</p></a>
-          ${price ? `<p class="card-price">${price}</p>` : `<p class="card-price empty">Price on request</p>`}
+          ${price ? `<p class="card-price">${price}</p>` : ''}
           <div class="card-actions">
             <a class="card-btn try" href="${href}">✨ Try On</a>
             ${buy}
