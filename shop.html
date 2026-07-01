@@ -89,33 +89,45 @@
     .shop-count { font-size: .82rem; color: var(--muted); }
     .shop-sort { padding: .5rem .7rem; border: 1.5px solid var(--border); border-radius: var(--r-md); font-size: .82rem; font-family: inherit; background: #fff; color: var(--text); }
 
-    /* Grid */
-    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .85rem; }
-    @media (min-width: 560px) { .shop-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (min-width: 800px) { .shop-grid { grid-template-columns: repeat(4, 1fr); } }
+    /* Grid — 2 up on phones, scaling up on wider screens. */
+    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .7rem; }
+    @media (min-width: 480px) { .shop-grid { gap: 1rem; } }
+    @media (min-width: 640px) { .shop-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 900px) { .shop-grid { grid-template-columns: repeat(4, 1fr); } }
 
     .card {
-      background: #fff; border-radius: var(--r-md); overflow: hidden;
-      display: flex; flex-direction: column; box-shadow: 0 4px 16px rgba(0,0,0,.18);
+      background: #fff; border-radius: 14px; overflow: hidden;
+      display: flex; flex-direction: column; box-shadow: 0 6px 20px rgba(0,0,0,.22);
+      transition: transform .15s, box-shadow .15s;
     }
-    .card-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; background: var(--surface); display: block; }
-    .card-img-ph { width: 100%; aspect-ratio: 3/4; background: linear-gradient(135deg,#5a67f2,#00c8e8); display: flex; align-items: center; justify-content: center; font-size: 2rem; }
-    .card-body { padding: .6rem .65rem .7rem; display: flex; flex-direction: column; flex: 1; }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0,0,0,.3); }
+
+    /* Image — tap target for try-on. Contain (not crop) so full garments show
+       on a soft backdrop instead of being cut off. */
+    .card-media { display: block; position: relative; background: #f4f5f8; }
+    .card-img, .card-img-ph { width: 100%; aspect-ratio: 3/4; display: block; }
+    .card-img { object-fit: cover; }
+    .card-img-ph { background: linear-gradient(135deg,#5a67f2,#00c8e8); display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+
+    .card-body { padding: .65rem .7rem .75rem; display: flex; flex-direction: column; flex: 1; gap: .12rem; }
     .card-name {
-      font-size: .85rem; font-weight: 600; color: var(--text); line-height: 1.3; margin: 0 0 .2rem;
+      font-size: .82rem; font-weight: 600; color: var(--text); line-height: 1.35; margin: 0;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+      min-height: 2.2em;   /* reserve 2 lines so cards align even with short names */
     }
-    .card-cat { font-size: .68rem; color: var(--muted); margin: 0 0 .3rem; }
-    .card-price { font-size: .9rem; font-weight: 700; color: var(--brand); margin: 0 0 .55rem; }
-    .card-actions { margin-top: auto; display: flex; flex-direction: column; gap: .4rem; }
+    .card-cat { font-size: .66rem; color: var(--muted); margin: 0; text-transform: uppercase; letter-spacing: .03em; }
+    .card-price { font-size: .92rem; font-weight: 800; color: var(--brand); margin: .15rem 0 .1rem; }
+    .card-price.empty { color: var(--muted); font-weight: 600; font-size: .8rem; }
+    .card-actions { margin-top: .5rem; display: flex; flex-direction: column; gap: .4rem; }
     .card-btn {
-      width: 100%; box-sizing: border-box; padding: .55rem; border-radius: var(--r-sm);
+      width: 100%; box-sizing: border-box; padding: .6rem .4rem; border-radius: 9px;
       font-size: .82rem; font-weight: 700; cursor: pointer; font-family: inherit; text-align: center;
-      text-decoration: none; display: block; border: none; transition: all .15s;
+      text-decoration: none; display: flex; align-items: center; justify-content: center; gap: .3rem;
+      border: none; transition: all .15s; white-space: nowrap;
     }
     .card-btn.try { background: var(--brand); color: var(--brand-contrast); }
-    .card-btn.try:hover { background: var(--brand-dark); transform: translateY(-1px); box-shadow: 0 6px 16px color-mix(in srgb, var(--brand) 40%, transparent); }
-    .card-btn.buy { background: #fff; color: #15803d; border: 1.5px solid #16a34a; }
+    .card-btn.try:hover { background: var(--brand-dark); box-shadow: 0 6px 16px color-mix(in srgb, var(--brand) 40%, transparent); }
+    .card-btn.buy { background: #fff; color: #15803d; border: 1.5px solid #16a34a; padding: .55rem .4rem; }
     .card-btn.buy:hover { background: #f0fdf4; }
 
     /* States */
@@ -394,6 +406,7 @@
     if (!list.length) { grid.innerHTML = ''; show('emptyView'); return; }
     hide('emptyView');
     grid.innerHTML = list.map(p => {
+      const href = escAttr(tryOnHref(p));
       const img = p.image_url
         ? `<img class="card-img" src="${escAttr(p.image_url)}" alt="${escAttr(p.name)}" loading="lazy">`
         : `<div class="card-img-ph">👗</div>`;
@@ -403,13 +416,13 @@
         ? `<a class="card-btn buy" href="${escAttr(p.buy_url)}" target="_blank" rel="noopener">🛒 Buy Now</a>`
         : '';
       return `<div class="card">
-        <a href="${escAttr(tryOnHref(p))}" style="text-decoration:none;">${img}</a>
+        <a class="card-media" href="${href}" aria-label="Try on ${escAttr(p.name)}">${img}</a>
         <div class="card-body">
-          <a href="${escAttr(tryOnHref(p))}" style="text-decoration:none;"><p class="card-name">${esc(p.name || 'Product')}</p></a>
           ${cat ? `<p class="card-cat">${esc(cat)}</p>` : ''}
-          ${price ? `<p class="card-price">${price}</p>` : '<p class="card-price" style="color:var(--muted);font-weight:500;">—</p>'}
+          <a href="${href}" style="text-decoration:none;"><p class="card-name">${esc(p.name || 'Product')}</p></a>
+          ${price ? `<p class="card-price">${price}</p>` : `<p class="card-price empty">Price on request</p>`}
           <div class="card-actions">
-            <a class="card-btn try" href="${escAttr(tryOnHref(p))}">✨ Try It On</a>
+            <a class="card-btn try" href="${href}">✨ Try On</a>
             ${buy}
           </div>
         </div>
