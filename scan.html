@@ -629,8 +629,11 @@
         show('uploadView');
       }
       // Load the brand's browsable catalogue in the background — non-blocking,
-      // so a catalogue failure never holds up the primary try-on flow.
+      // so a catalogue failure never holds up the primary try-on flow. The
+      // catalogue card only reveals on the upload/result step (see
+      // maybeShowCatalog), never on the passcode gate.
       loadCatalog();
+      maybeShowCatalog();
     } catch (err) {
       showError('📡', 'Connection error', 'Please check your internet and try again.');
     }
@@ -641,6 +644,8 @@
   // page (/shop/:brandId). Here we just decide whether to show the "View Full
   // Catalogue" button: only when the brand has catalogue browsing enabled and
   // has at least one browsable item. Non-blocking — a failure just hides it.
+  let catalogReady = false;   // true once we've confirmed the catalogue is browsable
+
   async function loadCatalog() {
     const brandId = qrInfo?.brand?.id || qrInfo?.brand_id;
     if (!brandId) return;
@@ -653,8 +658,20 @@
       if (!items.length) return;                                  // empty → stay hidden
       document.getElementById('catalogBrandName').textContent = qrInfo?.brand?.name || 'this brand';
       document.getElementById('viewCatalogBtn').href = `/shop/${encodeURIComponent(brandId)}`;
-      show('catalogSection');
+      catalogReady = true;
+      maybeShowCatalog();
     } catch (_) { /* silent — catalogue is a non-critical enhancement */ }
+  }
+
+  // Reveal the catalogue card ONLY once the shopper is on the upload/result
+  // step — never on the passcode gate (it was popping in there and looked like
+  // a slow load). Called both when the catalogue check finishes and when the
+  // upload/result view is shown, so whichever happens last still reveals it.
+  function maybeShowCatalog() {
+    if (!catalogReady) return;
+    const onUpload = document.getElementById('uploadView').style.display === 'block';
+    const onResult = document.getElementById('resultView').style.display === 'block';
+    document.getElementById('catalogSection').style.display = (onUpload || onResult) ? 'block' : 'none';
   }
 
   function renderProductHeader() {
@@ -807,6 +824,7 @@
       // Refresh both upload + result pills from the just-updated validatedPasscode.
       renderProductHeader();
       show('uploadView');
+      maybeShowCatalog();   // now past the passcode gate → catalogue may show
     } catch (err) {
       errEl.textContent = 'Network error. Try again.';
       errEl.className = 'alert error';
@@ -866,6 +884,7 @@
     errEl.className = 'alert';
 
     hide('uploadView');
+    hide('catalogSection');   // keep the processing screen focused
     show('processingView');
 
     try {
@@ -918,9 +937,11 @@
       document.getElementById('resultImage').src = resultUrl;
       hide('processingView');
       show('resultView');
+      maybeShowCatalog();
     } catch (err) {
       hide('processingView');
       show('uploadView');
+      maybeShowCatalog();
       showUploadError(err.message || 'Try-on failed. Please try again.');
     }
   }
@@ -929,6 +950,7 @@
     resetPhoto();
     hide('resultView');
     show('uploadView');
+    maybeShowCatalog();
   }
 
   // Build a safe filename from the product name. Falls back to a generic name

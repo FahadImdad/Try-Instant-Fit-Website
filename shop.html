@@ -11,18 +11,45 @@
   <link rel="apple-touch-icon" href="/assets/website-icon.png">
   <link rel="stylesheet" href="/css/styles.css">
   <style>
-    body { background: linear-gradient(180deg, #0f1e3d 0%, #1a2f5a 100%); min-height: 100vh; }
-    .shop-wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+    /* Brand theme variables — overridden at runtime from the brand's
+       primary_color. Defaults keep the standard Try Instant Fit look. */
+    :root {
+      --brand: #5a67f2;                 /* brand accent (buttons, price, active chips) */
+      --brand-dark: #4a56d0;            /* darker shade for hovers */
+      --brand-contrast: #ffffff;        /* text on top of the brand colour */
+      --page-bg-a: #0f1e3d;
+      --page-bg-b: #1a2f5a;
+    }
+    body { background: linear-gradient(180deg, var(--page-bg-a) 0%, var(--page-bg-b) 100%); min-height: 100vh; }
+    .shop-wrap { max-width: 960px; margin: 0 auto; padding: 0 1rem 3rem; }
 
-    /* Header */
-    .shop-header { text-align: center; padding: 1rem 0 1.25rem; }
-    .shop-logo { display: inline-flex; align-items: center; gap: .55rem; text-decoration: none; margin-bottom: .75rem; }
-    .shop-logo img { height: 40px; width: 40px; border-radius: 10px; }
-    .shop-logo span { color: #fff; font-weight: 800; font-size: 1.15rem; }
-    .shop-logo .fit-mark { background: linear-gradient(90deg, #5a67f2, #00c8e8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-    .shop-brand { color: #fff; font-size: 1.5rem; font-weight: 800; margin: .5rem 0 .15rem; }
-    .shop-brand-logo { max-width: 160px; max-height: 64px; object-fit: contain; margin: 0 auto .25rem; display: block; filter: drop-shadow(0 4px 12px rgba(0,0,0,.25)); }
-    .shop-sub { color: rgba(255,255,255,.6); font-size: .82rem; }
+    /* Powered-by strip (kept subtle so the brand leads) */
+    .shop-poweredby { text-align: center; padding: .85rem 0 0; }
+    .shop-poweredby a { display: inline-flex; align-items: center; gap: .4rem; text-decoration: none; opacity: .7; }
+    .shop-poweredby img { height: 20px; width: 20px; border-radius: 5px; }
+    .shop-poweredby span { color: rgba(255,255,255,.7); font-weight: 700; font-size: .72rem; }
+    .shop-poweredby .fit-mark { background: linear-gradient(90deg, #5a67f2, #00c8e8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+    /* Brand banner — the storefront hero. Tinted with the brand colour. */
+    .shop-header {
+      text-align: center; padding: 2rem 1.25rem 2.25rem; margin: 1rem 0 1.5rem;
+      border-radius: 1.25rem;
+      background:
+        radial-gradient(120% 140% at 50% 0%, color-mix(in srgb, var(--brand) 34%, transparent) 0%, transparent 62%),
+        rgba(255,255,255,.04);
+      border: 1px solid color-mix(in srgb, var(--brand) 30%, rgba(255,255,255,.08));
+    }
+    .shop-brand-logo { max-width: 180px; max-height: 88px; object-fit: contain; margin: 0 auto .6rem; display: block; filter: drop-shadow(0 6px 18px rgba(0,0,0,.35)); }
+    .shop-brand { color: #fff; font-size: 1.8rem; font-weight: 800; letter-spacing: -.01em; margin: 0 0 .3rem; }
+    .shop-sub { color: rgba(255,255,255,.72); font-size: .85rem; margin: 0; }
+    .shop-visit {
+      display: inline-block; margin-top: .9rem; padding: .45rem 1rem;
+      border-radius: var(--r-full); font-size: .78rem; font-weight: 700; text-decoration: none;
+      background: color-mix(in srgb, var(--brand) 22%, transparent);
+      color: #fff; border: 1px solid color-mix(in srgb, var(--brand) 45%, transparent);
+      transition: background .15s;
+    }
+    .shop-visit:hover { background: color-mix(in srgb, var(--brand) 34%, transparent); }
 
     /* Back bar */
     .shop-back {
@@ -44,7 +71,7 @@
       border: 1.5px solid var(--border); border-radius: var(--r-md);
       font-size: 1rem; font-family: inherit; outline: none; margin-bottom: .85rem;
     }
-    .shop-search:focus { border-color: var(--cyan); }
+    .shop-search:focus { border-color: var(--brand); }
 
     .filter-row { margin-bottom: .6rem; }
     .filter-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 .35rem; }
@@ -55,8 +82,8 @@
       border-radius: var(--r-full); background: #fff; font-size: .8rem; font-weight: 600;
       color: var(--muted); cursor: pointer; white-space: nowrap; font-family: inherit; transition: all .15s;
     }
-    .chip:hover { border-color: var(--cyan); color: var(--text); }
-    .chip.active { background: var(--indigo, #5a67f2); border-color: var(--indigo, #5a67f2); color: #fff; }
+    .chip:hover { border-color: var(--brand); color: var(--text); }
+    .chip.active { background: var(--brand); border-color: var(--brand); color: var(--brand-contrast); }
 
     .shop-toolbar { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-top: .5rem; }
     .shop-count { font-size: .82rem; color: var(--muted); }
@@ -79,15 +106,15 @@
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     }
     .card-cat { font-size: .68rem; color: var(--muted); margin: 0 0 .3rem; }
-    .card-price { font-size: .9rem; font-weight: 700; color: var(--indigo, #5a67f2); margin: 0 0 .55rem; }
+    .card-price { font-size: .9rem; font-weight: 700; color: var(--brand); margin: 0 0 .55rem; }
     .card-actions { margin-top: auto; display: flex; flex-direction: column; gap: .4rem; }
     .card-btn {
       width: 100%; box-sizing: border-box; padding: .55rem; border-radius: var(--r-sm);
       font-size: .82rem; font-weight: 700; cursor: pointer; font-family: inherit; text-align: center;
       text-decoration: none; display: block; border: none; transition: all .15s;
     }
-    .card-btn.try { background: linear-gradient(135deg,#5a67f2,#00c8e8); color: #fff; }
-    .card-btn.try:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(90,103,242,.3); }
+    .card-btn.try { background: var(--brand); color: var(--brand-contrast); }
+    .card-btn.try:hover { background: var(--brand-dark); transform: translateY(-1px); box-shadow: 0 6px 16px color-mix(in srgb, var(--brand) 40%, transparent); }
     .card-btn.buy { background: #fff; color: #15803d; border: 1.5px solid #16a34a; }
     .card-btn.buy:hover { background: #f0fdf4; }
 
@@ -106,14 +133,20 @@
 
 <div class="shop-wrap">
 
-  <div class="shop-header">
-    <a href="/" class="shop-logo" aria-label="Try Instant Fit">
+  <!-- Subtle platform strip — the brand leads, TIF stays in the background. -->
+  <div class="shop-poweredby">
+    <a href="/" target="_blank" aria-label="Try Instant Fit">
       <img src="/assets/website-icon.png" alt="">
-      <span>Try Instant<span class="fit-mark">Fit</span></span>
+      <span>Powered by Try Instant<span class="fit-mark">Fit</span></span>
     </a>
+  </div>
+
+  <!-- Brand banner — themed with the brand's colour + logo. -->
+  <div class="shop-header">
     <img id="brandLogo" class="shop-brand-logo" src="" alt="" style="display:none;">
     <h1 id="brandName" class="shop-brand">Catalogue</h1>
     <p class="shop-sub">Browse the collection · tap any item to try it on</p>
+    <a id="visitLink" class="shop-visit" href="#" target="_blank" rel="noopener" style="display:none;">🌐 Visit store</a>
   </div>
 
   <!-- Back — only shown when we arrived from a product scan page (has a return). -->
@@ -225,7 +258,39 @@
     }
   })();
 
+  // ── Brand theming ──────────────────────────────────────────────────────
+  // Parse "#rrggbb" / "#rgb" → {r,g,b}, or null if unusable.
+  function parseHex(hex) {
+    if (typeof hex !== 'string') return null;
+    let h = hex.trim().replace(/^#/, '');
+    if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+    return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+  }
+  // Readable text colour (black/white) for a given background.
+  function contrastOn({r,g,b}) {
+    // Perceived luminance (sRGB) — light bg → dark text, dark bg → white text.
+    const L = (0.299*r + 0.587*g + 0.114*b) / 255;
+    return L > 0.62 ? '#111111' : '#ffffff';
+  }
+  // Darken a colour by `amt` (0–1) for hover states.
+  function darken({r,g,b}, amt) {
+    const f = v => Math.max(0, Math.round(v * (1 - amt)));
+    return `rgb(${f(r)}, ${f(g)}, ${f(b)})`;
+  }
+
+  function applyBrandTheme() {
+    const rgb = parseHex(brand?.primary_color);
+    if (!rgb) return; // no/invalid colour → keep default TIF theme
+    const root = document.documentElement.style;
+    const hex = brand.primary_color.trim();
+    root.setProperty('--brand', hex);
+    root.setProperty('--brand-dark', darken(rgb, 0.18));
+    root.setProperty('--brand-contrast', contrastOn(rgb));
+  }
+
   function renderBrandHeader() {
+    applyBrandTheme();
     const name = brand?.name || 'Catalogue';
     document.title = `${name} — Try Instant Fit`;
     $('brandName').textContent = name;
@@ -234,6 +299,14 @@
       l.src = brand.logo_url;
       l.style.display = 'block';
       l.onerror = () => { l.style.display = 'none'; };
+    }
+    // "Visit store" link to the brand's own website, if they set one.
+    if (brand?.website_url) {
+      const v = $('visitLink');
+      let url = brand.website_url.trim();
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      v.href = url;
+      v.style.display = 'inline-block';
     }
   }
 
