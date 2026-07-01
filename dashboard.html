@@ -1855,6 +1855,10 @@
                 <p style="margin: .15rem 0 0; font-size: .72rem; color: var(--muted);">JPG/PNG/WebP up to 10MB</p>
               </div>
               <img id="apImagePreview" style="display: none; max-height: 220px; max-width: 100%; border-radius: var(--r-sm); margin: 0 auto;">
+              <!-- Shown after a photo is picked so replacing is a clear button
+                   (matches the Edit Product modal). Stops the click from also
+                   bubbling to the drop-zone, which would open the picker twice. -->
+              <button type="button" id="apImageReplaceBtn" class="btn btn-secondary btn-sm" style="display: none; margin-top:.85rem;" onclick="event.stopPropagation(); document.getElementById('apImageFile').click();">🔄 Replace Image</button>
             </div>
           </div>
           <div class="field">
@@ -3758,6 +3762,7 @@
     document.getElementById('apImagePreview').style.display = 'none';
     document.getElementById('apImagePreview').src = '';
     document.getElementById('apImageHint').style.display = 'block';
+    document.getElementById('apImageReplaceBtn').style.display = 'none';
     document.getElementById('addProductModal').classList.add('open');
   }
   function closeAddProduct() { document.getElementById('addProductModal').classList.remove('open'); }
@@ -3777,7 +3782,11 @@
       if (f.size > 10*1024*1024) { alert('Max 10MB.'); return; }
       apImageFile = f;
       const r = new FileReader();
-      r.onload = e => { pv.src = e.target.result; pv.style.display = 'block'; hint.style.display = 'none'; };
+      r.onload = e => {
+        pv.src = e.target.result; pv.style.display = 'block'; hint.style.display = 'none';
+        const replaceBtn = document.getElementById('apImageReplaceBtn');
+        if (replaceBtn) replaceBtn.style.display = 'inline-flex';
+      };
       r.readAsDataURL(f);
     }
     ['dragenter','dragover'].forEach(evt => dz.addEventListener(evt, e => {
