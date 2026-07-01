@@ -233,12 +233,18 @@
     .btn-block.primary:disabled { opacity: .6; cursor: not-allowed; transform: none; box-shadow: none; }
     /* Vendor Buy Now — green so it reads as a purchase action distinct from
        the gradient try-on CTA. Block <a> styled like a button. */
+    /* Buy Now — secondary action. Outlined so it complements (not competes
+       with) the gradient "Try It On" primary CTA above it. */
     .btn-block.buy-now {
-      display: block;
-      background: #16a34a;
-      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      background: #fff;
+      color: #15803d;
+      border: 1.5px solid #16a34a;
     }
-    .btn-block.buy-now:hover { background: #15803d; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(22,163,74,.3); }
+    .btn-block.buy-now:hover { background: #f0fdf4; border-color: #15803d; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(22,163,74,.18); }
 
     .alert {
       padding: .75rem 1rem;
@@ -565,16 +571,15 @@
     </div>
   </div>
 
-  <!-- "More from {Brand}" — browse the brand's catalogue and try on any item.
-       Hidden until the catalogue endpoint returns at least one product AND the
-       brand has catalogue browsing enabled. Lives outside the step cards so it
-       persists across upload / result views. -->
-  <div id="catalogSection" class="scan-card" style="display:none;">
-    <h3 class="step-title" style="margin: 0 0 .25rem;">🛍️ More from <span id="catalogBrandName">this brand</span></h3>
-    <p style="color:var(--muted); font-size:.85rem; margin: 0 0 1rem;">Tap any item to try it on with your photo.</p>
-    <div id="catalogAudienceFilters" class="catalog-filters"></div>
-    <div id="catalogFilters" class="catalog-filters"></div>
-    <div id="catalogGrid" class="catalog-grid"></div>
+  <!-- Catalogue entry point — a single button that opens the brand's full
+       shopping catalogue (search + filters + try-on for every item). Shown
+       only when the brand has catalogue browsing enabled and has items.
+       Replaces the old cramped inline grid. -->
+  <div id="catalogSection" class="scan-card" style="display:none; text-align:center;">
+    <div style="font-size:1.8rem; margin-bottom:.35rem;">🛍️</div>
+    <h3 style="font-size:1.05rem; margin:0 0 .3rem;">Explore the full collection</h3>
+    <p style="color:var(--muted); font-size:.85rem; margin:0 0 1rem;">Browse everything from <span id="catalogBrandName">this brand</span> and try on any item with your photo.</p>
+    <a id="viewCatalogBtn" class="btn-block primary" href="#" style="display:block; text-decoration:none; text-align:center;">View Full Catalogue →</a>
   </div>
 
   <div class="scan-footer">
@@ -631,213 +636,25 @@
     }
   })();
 
-  // ── Catalogue browse: "More from {Brand}" ──────────────────────────────
-  // Two independent filter axes: AUDIENCE (Women/Men/Kids/Unisex) and CATEGORY
-  // (ordered by style group Eastern → Western → Formal & Festive). Category
-  // chips reflect the active audience so the two narrow together.
-  let catalogItems = [];             // [{ product_uuid, sku, name, price, currency, category, category_group, audience, buy_url, image_url, token }]
-  let catalogAudience = 'all';       // active audience filter
-  let catalogFilter = 'all';         // active category filter
-
-  // Style-group display order, so category chips cluster sensibly.
-  const GROUP_ORDER = ['Eastern', 'Western', 'Formal & Festive'];
-
+  // ── Catalogue entry point ──────────────────────────────────────────────
+  // The full browse/search/filter experience lives on a dedicated storefront
+  // page (/shop/:brandId). Here we just decide whether to show the "View Full
+  // Catalogue" button: only when the brand has catalogue browsing enabled and
+  // has at least one browsable item. Non-blocking — a failure just hides it.
   async function loadCatalog() {
     const brandId = qrInfo?.brand?.id || qrInfo?.brand_id;
     if (!brandId) return;
     try {
-      const exclude = qrInfo?.product_uuid ? `&exclude=${encodeURIComponent(qrInfo.product_uuid)}` : '';
-      const res = await fetch(`${API}/api/brands/${brandId}/catalog?limit=60${exclude}`);
+      // limit=1 — we only need to know the catalogue is on and non-empty.
+      const res = await fetch(`${API}/api/brands/${brandId}/catalog?limit=1`);
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.catalog_enabled === false) return;     // brand turned it off → stay hidden
-      catalogItems = Array.isArray(data.products) ? data.products : [];
-      if (!catalogItems.length) return;                          // nothing browsable → stay hidden
+      if (!res.ok || data.catalog_enabled === false) return;      // off → stay hidden
+      const items = Array.isArray(data.products) ? data.products : [];
+      if (!items.length) return;                                  // empty → stay hidden
       document.getElementById('catalogBrandName').textContent = qrInfo?.brand?.name || 'this brand';
-      renderCatalog();
+      document.getElementById('viewCatalogBtn').href = `/shop/${encodeURIComponent(brandId)}`;
       show('catalogSection');
     } catch (_) { /* silent — catalogue is a non-critical enhancement */ }
-  }
-
-  // Order categories by their style group, then alphabetically within a group,
-  // using the group hints present on the items themselves.
-  function orderedCategories(items) {
-    const groupOf = {};
-    items.forEach(p => {
-      const c = (p.category || '').trim();
-      if (c && !(c in groupOf)) groupOf[c] = (p.category_group || '').trim();
-    });
-    const cats = Object.keys(groupOf);
-    return cats.sort((a, b) => {
-      const ga = GROUP_ORDER.indexOf(groupOf[a]); const gb = GROUP_ORDER.indexOf(groupOf[b]);
-      const ra = ga === -1 ? GROUP_ORDER.length : ga;
-      const rb = gb === -1 ? GROUP_ORDER.length : gb;
-      return ra - rb || a.localeCompare(b);
-    });
-  }
-
-  function renderCatalog() {
-    // ── Axis 1: Audience chips ──────────────────────────────────────────
-    const audiences = Array.from(new Set(
-      catalogItems.map(p => (p.audience || '').trim()).filter(Boolean)
-    ));
-    const audOrder = ['Women', 'Men', 'Kids', 'Unisex'];
-    audiences.sort((a, b) => audOrder.indexOf(a) - audOrder.indexOf(b));
-    const audEl = document.getElementById('catalogAudienceFilters');
-    if (audiences.length > 1) {
-      const chips = [{ key: 'all', label: 'Everyone' }].concat(audiences.map(a => ({ key: a, label: a })));
-      audEl.innerHTML = chips.map(ch =>
-        `<button type="button" class="catalog-chip${catalogAudience === ch.key ? ' active' : ''}" data-aud="${escapeAttr(ch.key)}">${escapeHtml(ch.label)}</button>`
-      ).join('');
-      audEl.style.display = 'flex';
-      audEl.querySelectorAll('.catalog-chip').forEach(btn => {
-        btn.addEventListener('click', () => { catalogAudience = btn.dataset.aud; catalogFilter = 'all'; renderCatalog(); });
-      });
-    } else {
-      audEl.innerHTML = '';
-      audEl.style.display = 'none';
-    }
-
-    // Items matching the current audience (category chips derive from these).
-    const byAudience = catalogAudience === 'all'
-      ? catalogItems
-      : catalogItems.filter(p => (p.audience || '').trim() === catalogAudience);
-
-    // ── Axis 2: Category chips (ordered by style group) ─────────────────
-    const cats = orderedCategories(byAudience);
-    const filtersEl = document.getElementById('catalogFilters');
-    if (cats.length > 1) {
-      const chips = [{ key: 'all', label: 'All' }].concat(cats.map(c => ({ key: c, label: c })));
-      filtersEl.innerHTML = chips.map(ch =>
-        `<button type="button" class="catalog-chip${catalogFilter === ch.key ? ' active' : ''}" data-cat="${escapeAttr(ch.key)}">${escapeHtml(ch.label)}</button>`
-      ).join('');
-      filtersEl.style.display = 'flex';
-      filtersEl.querySelectorAll('.catalog-chip').forEach(btn => {
-        btn.addEventListener('click', () => { catalogFilter = btn.dataset.cat; renderCatalog(); });
-      });
-    } else {
-      filtersEl.innerHTML = '';
-      filtersEl.style.display = 'none';
-    }
-
-    // ── Grid: apply both filters ────────────────────────────────────────
-    const visible = byAudience.filter(p =>
-      catalogFilter === 'all' || (p.category || '').trim() === catalogFilter
-    );
-
-    const grid = document.getElementById('catalogGrid');
-    if (!visible.length) {
-      grid.innerHTML = '<div class="catalog-empty">No items match this filter.</div>';
-      return;
-    }
-    grid.innerHTML = visible.map((p, i) => {
-      const isCurrent = qrInfo && p.product_uuid && p.product_uuid === qrInfo.product_uuid;
-      const img = p.image_url
-        ? `<img class="ci-img" src="${escapeAttr(p.image_url)}" alt="${escapeAttr(p.name)}" loading="lazy">`
-        : `<div class="ci-img-placeholder">👗</div>`;
-      const price = formatCatalogPrice(p.price, p.currency);
-      return `<button type="button" class="catalog-item" data-idx="${i}"${isCurrent ? ' disabled' : ''}>
-        ${img}
-        <div class="ci-body">
-          <p class="ci-name">${escapeHtml(p.name || 'Product')}</p>
-          ${price ? `<p class="ci-price">${price}</p>` : ''}
-          ${isCurrent ? '<p class="ci-current">Viewing now</p>' : ''}
-        </div>
-      </button>`;
-    }).join('');
-    grid.querySelectorAll('.catalog-item:not([disabled])').forEach(btn => {
-      btn.addEventListener('click', () => selectCatalogProduct(visible[parseInt(btn.dataset.idx, 10)]));
-    });
-  }
-
-  function formatCatalogPrice(price, currency) {
-    if (price === null || price === undefined || price === '') return '';
-    const n = Number(price);
-    if (!Number.isFinite(n)) return '';
-    const c = currency || 'PKR';
-    return c === 'PKR' ? 'Rs ' + n.toLocaleString('en-PK')
-      : c === 'USD' ? '$' + n.toFixed(2)
-      : `${c} ${n.toLocaleString()}`;
-  }
-
-  // Swap a tapped catalogue product into the active try-on flow. We re-look-up
-  // its scan token so passcode / limit rules for THAT product apply correctly,
-  // then drop the shopper on the upload step — keeping the photo they already
-  // chose so they can try item after item without re-uploading.
-  async function selectCatalogProduct(item) {
-    if (!item) return;
-    const keptPhoto = userPhoto;                 // preserve across the swap
-    const grid = document.getElementById('catalogGrid');
-
-    // Prefer the product's own QR token (proven flow, correct counters).
-    if (item.token) {
-      try {
-        const res = await fetch(`${API}/api/qr/lookup?token=${encodeURIComponent(item.token)}`);
-        const data = await res.json().catch(() => ({}));
-        if (res.ok) {
-          qrInfo = data;
-          validatedPasscode = null;              // new product = fresh passcode context
-          swapToProduct(keptPhoto);
-          return;
-        }
-      } catch (_) { /* fall through to product_uuid path */ }
-    }
-
-    // Fallback: no usable token — drive try-on by product_uuid. Synthesise a
-    // minimal qrInfo so the rest of the page (header, try-on POST) works.
-    qrInfo = {
-      qr_id: null,
-      brand: qrInfo?.brand || null,
-      brand_id: qrInfo?.brand?.id || qrInfo?.brand_id || null,
-      product_uuid: item.product_uuid,
-      product_id: item.sku,
-      product_sku: item.sku,
-      product_name: item.name,
-      product_price: item.price ?? null,
-      product_currency: item.currency || null,
-      product_description: item.description || null,
-      product_buy_url: item.buy_url || null,
-      display_image_url: item.image_url || null,
-      requires_passcode: false,
-      remaining: null,
-    };
-    validatedPasscode = null;
-    swapToProduct(keptPhoto);
-  }
-
-  // Shared post-swap UI reset: show the chosen product on the upload step,
-  // restore the kept photo (if any) so Try It On is immediately available,
-  // refresh the catalogue (to exclude the now-current item), and scroll up.
-  function swapToProduct(keptPhoto) {
-    hide('passcodeView'); hide('processingView'); hide('resultView'); hide('errorView');
-    document.getElementById('uploadStepNum').textContent = '1';
-    renderProductHeader();
-
-    if (keptPhoto) {
-      // Re-bind the kept photo + preview so they can try on right away.
-      userPhoto = keptPhoto;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        uploadPreview.src = ev.target.result;
-        sourcePicker.style.display = 'none';
-        previewWrap.style.display = 'block';
-        document.getElementById('tryOnBtn').disabled = false;
-      };
-      reader.readAsDataURL(keptPhoto);
-    } else {
-      resetPhoto();
-    }
-
-    show('uploadView');
-    // Exclude the newly-active product from the grid + refresh "Viewing now".
-    renderCatalog();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function escapeAttr(s) {
-    return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-  function escapeHtml(s) {
-    return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   function renderProductHeader() {

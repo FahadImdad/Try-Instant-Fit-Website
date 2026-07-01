@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catalogue — Try Instant Fit</title>
+  <meta name="description" content="Browse the collection and try any item on with your photo.">
+  <!-- Absolute asset paths — this page is served at a multi-segment clean URL
+       (/shop/:brandId), so relative paths would 404. -->
+  <link rel="icon" type="image/jpeg" href="/assets/website-icon.png">
+  <link rel="apple-touch-icon" href="/assets/website-icon.png">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    body { background: linear-gradient(180deg, #0f1e3d 0%, #1a2f5a 100%); min-height: 100vh; }
+    .shop-wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+
+    /* Header */
+    .shop-header { text-align: center; padding: 1rem 0 1.25rem; }
+    .shop-logo { display: inline-flex; align-items: center; gap: .55rem; text-decoration: none; margin-bottom: .75rem; }
+    .shop-logo img { height: 40px; width: 40px; border-radius: 10px; }
+    .shop-logo span { color: #fff; font-weight: 800; font-size: 1.15rem; }
+    .shop-logo .fit-mark { background: linear-gradient(90deg, #5a67f2, #00c8e8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .shop-brand { color: #fff; font-size: 1.5rem; font-weight: 800; margin: .5rem 0 .15rem; }
+    .shop-brand-logo { max-width: 160px; max-height: 64px; object-fit: contain; margin: 0 auto .25rem; display: block; filter: drop-shadow(0 4px 12px rgba(0,0,0,.25)); }
+    .shop-sub { color: rgba(255,255,255,.6); font-size: .82rem; }
+
+    /* Back bar */
+    .shop-back {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: rgba(255,255,255,.1); color: #fff; border: none;
+      padding: .5rem .9rem; border-radius: var(--r-full); font-size: .85rem;
+      font-weight: 600; cursor: pointer; font-family: inherit; text-decoration: none;
+      margin-bottom: 1rem; transition: background .15s;
+    }
+    .shop-back:hover { background: rgba(255,255,255,.18); }
+
+    /* Controls card */
+    .shop-controls {
+      background: #fff; border-radius: 1rem; padding: 1rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,.28); margin-bottom: 1.25rem;
+    }
+    .shop-search {
+      width: 100%; box-sizing: border-box; padding: .8rem 1rem;
+      border: 1.5px solid var(--border); border-radius: var(--r-md);
+      font-size: 1rem; font-family: inherit; outline: none; margin-bottom: .85rem;
+    }
+    .shop-search:focus { border-color: var(--cyan); }
+
+    .filter-row { margin-bottom: .6rem; }
+    .filter-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 .35rem; }
+    .chip-row { display: flex; gap: .4rem; overflow-x: auto; padding-bottom: .3rem; scrollbar-width: none; }
+    .chip-row::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: 0 0 auto; padding: .4rem .85rem; border: 1.5px solid var(--border);
+      border-radius: var(--r-full); background: #fff; font-size: .8rem; font-weight: 600;
+      color: var(--muted); cursor: pointer; white-space: nowrap; font-family: inherit; transition: all .15s;
+    }
+    .chip:hover { border-color: var(--cyan); color: var(--text); }
+    .chip.active { background: var(--indigo, #5a67f2); border-color: var(--indigo, #5a67f2); color: #fff; }
+
+    .shop-toolbar { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-top: .5rem; }
+    .shop-count { font-size: .82rem; color: var(--muted); }
+    .shop-sort { padding: .5rem .7rem; border: 1.5px solid var(--border); border-radius: var(--r-md); font-size: .82rem; font-family: inherit; background: #fff; color: var(--text); }
+
+    /* Grid */
+    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .85rem; }
+    @media (min-width: 560px) { .shop-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 800px) { .shop-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .card {
+      background: #fff; border-radius: var(--r-md); overflow: hidden;
+      display: flex; flex-direction: column; box-shadow: 0 4px 16px rgba(0,0,0,.18);
+    }
+    .card-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; background: var(--surface); display: block; }
+    .card-img-ph { width: 100%; aspect-ratio: 3/4; background: linear-gradient(135deg,#5a67f2,#00c8e8); display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+    .card-body { padding: .6rem .65rem .7rem; display: flex; flex-direction: column; flex: 1; }
+    .card-name {
+      font-size: .85rem; font-weight: 600; color: var(--text); line-height: 1.3; margin: 0 0 .2rem;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .card-cat { font-size: .68rem; color: var(--muted); margin: 0 0 .3rem; }
+    .card-price { font-size: .9rem; font-weight: 700; color: var(--indigo, #5a67f2); margin: 0 0 .55rem; }
+    .card-actions { margin-top: auto; display: flex; flex-direction: column; gap: .4rem; }
+    .card-btn {
+      width: 100%; box-sizing: border-box; padding: .55rem; border-radius: var(--r-sm);
+      font-size: .82rem; font-weight: 700; cursor: pointer; font-family: inherit; text-align: center;
+      text-decoration: none; display: block; border: none; transition: all .15s;
+    }
+    .card-btn.try { background: linear-gradient(135deg,#5a67f2,#00c8e8); color: #fff; }
+    .card-btn.try:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(90,103,242,.3); }
+    .card-btn.buy { background: #fff; color: #15803d; border: 1.5px solid #16a34a; }
+    .card-btn.buy:hover { background: #f0fdf4; }
+
+    /* States */
+    .shop-state { text-align: center; color: #fff; padding: 3rem 1rem; }
+    .shop-state .spinner { width: 44px; height: 44px; border: 4px solid rgba(255,255,255,.15); border-top-color: #00c8e8; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 1rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .shop-empty { text-align: center; color: rgba(255,255,255,.7); padding: 2.5rem 1rem; font-size: .95rem; }
+
+    .shop-footer { text-align: center; color: rgba(255,255,255,.45); font-size: .75rem; padding: 2rem 1rem 0; }
+    .shop-footer a { color: rgba(255,255,255,.7); }
+    img { max-width: 100%; }
+  </style>
+</head>
+<body>
+
+<div class="shop-wrap">
+
+  <div class="shop-header">
+    <a href="/" class="shop-logo" aria-label="Try Instant Fit">
+      <img src="/assets/website-icon.png" alt="">
+      <span>Try Instant<span class="fit-mark">Fit</span></span>
+    </a>
+    <img id="brandLogo" class="shop-brand-logo" src="" alt="" style="display:none;">
+    <h1 id="brandName" class="shop-brand">Catalogue</h1>
+    <p class="shop-sub">Browse the collection · tap any item to try it on</p>
+  </div>
+
+  <!-- Back — only shown when we arrived from a product scan page (has a return). -->
+  <a id="backLink" class="shop-back" href="#" style="display:none;">← Back</a>
+
+  <!-- Loading -->
+  <div id="loadingView" class="shop-state">
+    <div class="spinner"></div>
+    <p>Loading the catalogue…</p>
+  </div>
+
+  <!-- Error -->
+  <div id="errorView" class="shop-state" style="display:none;">
+    <div style="font-size:3rem; margin-bottom:.5rem;">🛍️</div>
+    <h2 id="errorTitle" style="margin:0 0 .5rem;">Catalogue unavailable</h2>
+    <p id="errorMsg" style="color:rgba(255,255,255,.65);">This brand hasn't enabled catalogue browsing yet.</p>
+  </div>
+
+  <!-- Main -->
+  <div id="mainView" style="display:none;">
+    <div class="shop-controls">
+      <input type="search" id="searchInput" class="shop-search" placeholder="🔎  Search by name…" autocomplete="off">
+      <div class="filter-row" id="audienceRow" style="display:none;">
+        <p class="filter-label">For</p>
+        <div class="chip-row" id="audienceChips"></div>
+      </div>
+      <div class="filter-row" id="categoryRow" style="display:none;">
+        <p class="filter-label">Category</p>
+        <div class="chip-row" id="categoryChips"></div>
+      </div>
+      <div class="shop-toolbar">
+        <span class="shop-count" id="resultCount"></span>
+        <select id="sortSelect" class="shop-sort">
+          <option value="newest">Newest</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="grid" class="shop-grid"></div>
+    <div id="emptyView" class="shop-empty" style="display:none;">No items match your search or filters.</div>
+  </div>
+
+  <div class="shop-footer">
+    Powered by <a href="https://tryinstantfit.com" target="_blank">Try Instant Fit</a>
+  </div>
+
+</div>
+
+<script>
+  // Same-origin API via Vercel rewrite (see vercel.json).
+  const API = '';
+
+  let allItems = [];
+  let brand = null;
+  const state = { search: '', audience: 'all', category: 'all', sort: 'newest' };
+
+  const GROUP_ORDER = ['Eastern', 'Western', 'Formal & Festive'];
+  const AUD_ORDER = ['Women', 'Men', 'Kids', 'Unisex'];
+
+  function $(id) { return document.getElementById(id); }
+  function show(id) { $(id).style.display = 'block'; }
+  function hide(id) { $(id).style.display = 'none'; }
+  function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function escAttr(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // Read brandId from /shop/:brandId (clean URL) or ?brand= fallback.
+  function getBrandId() {
+    const m = window.location.pathname.match(/\/shop\/([^/?#]+)/);
+    if (m) return decodeURIComponent(m[1]);
+    return new URLSearchParams(window.location.search).get('brand') || '';
+  }
+
+  (async function init() {
+    const brandId = getBrandId();
+    if (!brandId) return showError('No brand', 'This catalogue link is missing its brand.');
+
+    // Show a Back link when we came from a product page (so browsing feels
+    // connected). history.length > 1 means there's somewhere to go back to.
+    if (document.referrer || window.history.length > 1) {
+      const back = $('backLink');
+      back.style.display = 'inline-flex';
+      back.addEventListener('click', (e) => { e.preventDefault(); history.back(); });
+    }
+
+    try {
+      const res = await fetch(`${API}/api/brands/${brandId}/catalog?limit=120`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return showError('Catalogue unavailable', "We couldn't load this catalogue.");
+      if (data.catalog_enabled === false) return showError('Catalogue is off', 'This brand has turned off catalogue browsing.');
+      allItems = Array.isArray(data.products) ? data.products : [];
+      brand = data.brand || null;
+
+      renderBrandHeader();
+      if (!allItems.length) {
+        hide('loadingView');
+        showError('Nothing here yet', 'This brand has no items in their catalogue right now.');
+        return;
+      }
+      buildFilters();
+      wireControls();
+      hide('loadingView');
+      show('mainView');
+      render();
+    } catch (_) {
+      showError('Connection error', 'Please check your internet and try again.');
+    }
+  })();
+
+  function renderBrandHeader() {
+    const name = brand?.name || 'Catalogue';
+    document.title = `${name} — Try Instant Fit`;
+    $('brandName').textContent = name;
+    if (brand?.logo_url) {
+      const l = $('brandLogo');
+      l.src = brand.logo_url;
+      l.style.display = 'block';
+      l.onerror = () => { l.style.display = 'none'; };
+    }
+  }
+
+  function buildFilters() {
+    // Audience chips
+    const auds = Array.from(new Set(allItems.map(p => (p.audience||'').trim()).filter(Boolean)))
+      .sort((a,b) => AUD_ORDER.indexOf(a) - AUD_ORDER.indexOf(b));
+    if (auds.length > 1) {
+      $('audienceChips').innerHTML = [{k:'all',l:'Everyone'}].concat(auds.map(a=>({k:a,l:a})))
+        .map(c => `<button type="button" class="chip${state.audience===c.k?' active':''}" data-aud="${escAttr(c.k)}">${esc(c.l)}</button>`).join('');
+      show('audienceRow');
+      $('audienceChips').querySelectorAll('.chip').forEach(b =>
+        b.addEventListener('click', () => { state.audience = b.dataset.aud; state.category = 'all'; rebuildCategoryChips(); render(); syncChips(); }));
+    }
+    rebuildCategoryChips();
+  }
+
+  // Category chips depend on the active audience (so the two narrow together),
+  // ordered by style group.
+  function rebuildCategoryChips() {
+    const pool = state.audience === 'all' ? allItems : allItems.filter(p => (p.audience||'').trim() === state.audience);
+    const groupOf = {};
+    pool.forEach(p => { const c = (p.category||'').trim(); if (c && !(c in groupOf)) groupOf[c] = (p.category_group||'').trim(); });
+    const cats = Object.keys(groupOf).sort((a,b) => {
+      const ra = GROUP_ORDER.indexOf(groupOf[a]); const rb = GROUP_ORDER.indexOf(groupOf[b]);
+      return (ra===-1?9:ra) - (rb===-1?9:rb) || a.localeCompare(b);
+    });
+    if (cats.length > 1) {
+      $('categoryChips').innerHTML = [{k:'all',l:'All'}].concat(cats.map(c=>({k:c,l:c})))
+        .map(c => `<button type="button" class="chip${state.category===c.k?' active':''}" data-cat="${escAttr(c.k)}">${esc(c.l)}</button>`).join('');
+      show('categoryRow');
+      $('categoryChips').querySelectorAll('.chip').forEach(b =>
+        b.addEventListener('click', () => { state.category = b.dataset.cat; render(); syncChips(); }));
+    } else {
+      hide('categoryRow');
+    }
+  }
+
+  // Reflect active state on chips without a full rebuild (keeps scroll position).
+  function syncChips() {
+    document.querySelectorAll('#audienceChips .chip').forEach(b => b.classList.toggle('active', b.dataset.aud === state.audience));
+    document.querySelectorAll('#categoryChips .chip').forEach(b => b.classList.toggle('active', b.dataset.cat === state.category));
+  }
+
+  function wireControls() {
+    $('searchInput').addEventListener('input', (e) => { state.search = e.target.value.trim().toLowerCase(); render(); });
+    $('sortSelect').addEventListener('change', (e) => { state.sort = e.target.value; render(); });
+  }
+
+  function fmtPrice(price, currency) {
+    if (price === null || price === undefined || price === '') return '';
+    const n = Number(price); if (!Number.isFinite(n)) return '';
+    const c = currency || 'PKR';
+    return c === 'PKR' ? 'Rs ' + n.toLocaleString('en-PK')
+      : c === 'USD' ? '$' + n.toFixed(2)
+      : `${c} ${n.toLocaleString()}`;
+  }
+
+  function currentList() {
+    let list = allItems.slice();
+    if (state.audience !== 'all') list = list.filter(p => (p.audience||'').trim() === state.audience);
+    if (state.category !== 'all') list = list.filter(p => (p.category||'').trim() === state.category);
+    if (state.search) list = list.filter(p => (p.name||'').toLowerCase().includes(state.search));
+    const num = v => (v === null || v === undefined || v === '') ? Infinity : Number(v);
+    switch (state.sort) {
+      case 'price_asc':  list.sort((a,b) => num(a.price) - num(b.price)); break;
+      case 'price_desc': list.sort((a,b) => num(b.price) - num(a.price)); break;
+      case 'name':       list.sort((a,b) => (a.name||'').localeCompare(b.name||'')); break;
+      // 'newest' — keep endpoint order (already newest-first)
+    }
+    return list;
+  }
+
+  // Try-on link for an item: prefer its own scan token (proven flow); fall
+  // back to the product page by uuid if somehow tokenless.
+  function tryOnHref(p) {
+    if (p.token) return `/scan/${encodeURIComponent(p.token)}`;
+    return `/scan?product=${encodeURIComponent(p.product_uuid)}`;
+  }
+
+  function render() {
+    const list = currentList();
+    $('resultCount').textContent = `${list.length} item${list.length === 1 ? '' : 's'}`;
+    const grid = $('grid');
+    if (!list.length) { grid.innerHTML = ''; show('emptyView'); return; }
+    hide('emptyView');
+    grid.innerHTML = list.map(p => {
+      const img = p.image_url
+        ? `<img class="card-img" src="${escAttr(p.image_url)}" alt="${escAttr(p.name)}" loading="lazy">`
+        : `<div class="card-img-ph">👗</div>`;
+      const price = fmtPrice(p.price, p.currency);
+      const cat = (p.category || '').trim();
+      const buy = p.buy_url
+        ? `<a class="card-btn buy" href="${escAttr(p.buy_url)}" target="_blank" rel="noopener">🛒 Buy Now</a>`
+        : '';
+      return `<div class="card">
+        <a href="${escAttr(tryOnHref(p))}" style="text-decoration:none;">${img}</a>
+        <div class="card-body">
+          <a href="${escAttr(tryOnHref(p))}" style="text-decoration:none;"><p class="card-name">${esc(p.name || 'Product')}</p></a>
+          ${cat ? `<p class="card-cat">${esc(cat)}</p>` : ''}
+          ${price ? `<p class="card-price">${price}</p>` : '<p class="card-price" style="color:var(--muted);font-weight:500;">—</p>'}
+          <div class="card-actions">
+            <a class="card-btn try" href="${escAttr(tryOnHref(p))}">✨ Try It On</a>
+            ${buy}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function showError(title, msg) {
+    hide('loadingView'); hide('mainView');
+    $('errorTitle').textContent = title;
+    $('errorMsg').textContent = msg;
+    show('errorView');
+  }
+</script>
+
+</body>
+</html>

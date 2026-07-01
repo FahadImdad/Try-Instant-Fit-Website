@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/api/:path*",  "destination": "https://api.tryinstantfit.com/api/:path*" },
     { "source": "/scan/:token", "destination": "/scan.html?token=:token" },
+    { "source": "/shop/:brandId", "destination": "/shop.html?brand=:brandId" },
     { "source": "/admin",       "destination": "/admin.html" },
     { "source": "/dashboard",   "destination": "/dashboard.html" },
     { "source": "/contact",     "destination": "/demo.html" },
