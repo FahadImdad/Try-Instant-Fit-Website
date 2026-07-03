@@ -1680,7 +1680,11 @@
                 <h3>👕 Products & QRs</h3>
                 <p>Each product comes with its own printable QR. Add a product → QR auto-generated.</p>
               </div>
-              <button class="btn btn-primary btn-sm" onclick="openAddProduct()">+ Add Product</button>
+              <div style="display:flex; gap:.5rem; flex-wrap:wrap; align-items:center;">
+                <button class="btn btn-secondary btn-sm" type="button" onclick="openMyCatalogue()">🛍️ My Catalogue</button>
+                <button class="btn btn-secondary btn-sm" type="button" id="copyCatalogueBtn" onclick="copyCatalogueLink()">🔗 Copy link</button>
+                <button class="btn btn-primary btn-sm" onclick="openAddProduct()">+ Add Product</button>
+              </div>
             </div>
             <div class="sticky-list-bar">
               <input type="search" id="productSearch" placeholder="🔎  Search by name, SKU, or price…" oninput="renderUnified()">
@@ -2056,6 +2060,13 @@
               </div>
             </label>
             <div class="field-hint">Used in widget, scan page, and receipts.</div>
+          </div>
+          <div class="field">
+            <label for="epBrandColor">Brand Colour</label>
+            <div style="display:flex; align-items:center; gap:.75rem;">
+              <input type="color" id="epBrandColor" value="#5a67f2" style="width:56px; height:38px; border:1px solid var(--border); border-radius:8px; padding:2px; background:#fff; cursor:pointer; flex:0 0 auto;">
+              <div class="field-hint" style="margin:0; flex:1;">Themes your catalogue page — buttons, prices &amp; filters use this colour. <span id="epColorVal" style="font-family:ui-monospace,monospace;"></span></div>
+            </div>
           </div>
           <div class="field" style="display: flex; align-items: flex-start; gap: .75rem; padding: .85rem; background: var(--surface); border-radius: var(--r-md);">
             <input type="checkbox" id="epCatalogEnabled" style="width: auto; margin-top:.15rem;">
@@ -3740,6 +3751,30 @@
     populateCategorySelect(prefix, category);
   }
 
+  // ── My Catalogue — the brand's public storefront (/shop/:brandId) ──────
+  // Vendors share this link on Instagram/WhatsApp; shoppers browse + try on.
+  function catalogueUrl() {
+    return `${location.origin}/shop/${encodeURIComponent(activeBrandId)}`;
+  }
+  function openMyCatalogue() {
+    if (!activeBrandId) return;
+    window.open(catalogueUrl(), '_blank', 'noopener');
+  }
+  async function copyCatalogueLink() {
+    if (!activeBrandId) return;
+    const btn = document.getElementById('copyCatalogueBtn');
+    try {
+      await navigator.clipboard.writeText(catalogueUrl());
+      const original = btn.textContent;
+      btn.textContent = '✓ Copied';
+      setTimeout(() => { btn.textContent = original; }, 1600);
+    } catch (_) {
+      // Clipboard blocked — open the catalogue instead so the vendor can
+      // copy from the address bar. No alert popups.
+      openMyCatalogue();
+    }
+  }
+
   function openAddProduct() {
     // Gate: brands without credits should top up before adding products,
     // otherwise customers who scan the QR will hit "out of credits" anyway.
@@ -4650,6 +4685,11 @@
     // Catalogue browsing master switch — default on for brands created before
     // the column existed (undefined → checked).
     document.getElementById('epCatalogEnabled').checked = b.catalog_enabled !== false;
+    // Brand colour — themes the public catalogue. Default = TIF indigo.
+    const colorInput = document.getElementById('epBrandColor');
+    colorInput.value = /^#[0-9a-fA-F]{6}$/.test(b.primary_color || '') ? b.primary_color : '#5a67f2';
+    document.getElementById('epColorVal').textContent = colorInput.value;
+    colorInput.oninput = () => { document.getElementById('epColorVal').textContent = colorInput.value; };
 
     // Logo: clear any previously picked file, show existing logo as preview.
     epPickedLogoFile = null;
@@ -4712,6 +4752,7 @@
       contact_position: document.getElementById('epContactPosition').value.trim(),
       contact_phone:    document.getElementById('epContactPhone').value.trim(),
       country:          document.getElementById('epCountry').value.trim().toUpperCase(),
+      primary_color:    document.getElementById('epBrandColor').value,
     };
     if (!fields.name) { errEl.textContent = 'Brand name is required.'; errEl.className = 'alert error'; return false; }
 
