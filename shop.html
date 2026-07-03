@@ -95,19 +95,12 @@
 
     .shop-toolbar { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-top: .45rem; }
     .shop-count { font-size: .78rem; color: rgba(255,255,255,.55); }
-    /* Sort — native <select> paints itself dark on some Chromium builds no
-       matter what CSS says (verified via computed-style vs pixel forensics).
-       Bulletproof pattern: a styled pill with the select stretched invisibly
-       on top — our pixels, native picker UX. */
-    .sort-wrap {
-      position: relative; display: inline-flex; align-items: center; gap: .4rem;
-      background: #fff; color: var(--text); border-radius: 10px;
-      padding: .48rem .8rem; font-size: .8rem; font-weight: 600;
-    }
-    .sort-wrap > svg { width: 12px; height: 12px; color: #64748b; flex: 0 0 auto; }
-    .sort-wrap select {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      opacity: 0; cursor: pointer; font-size: 16px; /* no iOS zoom on focus */
+    .shop-sort {
+      padding: .45rem 1.9rem .45rem .75rem; border: none; border-radius: 10px;
+      font-size: .8rem; font-weight: 600; font-family: inherit; cursor: pointer;
+      background: rgba(255,255,255,.95) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right .6rem center;
+      color: var(--text); appearance: none; -webkit-appearance: none;
+      color-scheme: light; /* stop dark-mode UA form styling from painting the control dark */
     }
     .shop-search { color-scheme: light; }
 
@@ -257,16 +250,12 @@
       </div>
       <div class="shop-toolbar">
         <span class="shop-count" id="resultCount"></span>
-        <div class="sort-wrap">
-          <span id="sortLabel">Newest</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-          <select id="sortSelect" aria-label="Sort products">
-            <option value="newest">Newest</option>
-            <option value="price_asc">Price: Low to High</option>
-            <option value="price_desc">Price: High to Low</option>
-            <option value="name">Name A–Z</option>
-          </select>
-        </div>
+        <select id="sortSelect" class="shop-sort" aria-label="Sort products">
+          <option value="newest">Newest</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="name">Name A–Z</option>
+        </select>
       </div>
     </div>
 
@@ -443,11 +432,7 @@
 
   function wireControls() {
     $('searchInput').addEventListener('input', (e) => { state.search = e.target.value.trim().toLowerCase(); render(); });
-    $('sortSelect').addEventListener('change', (e) => {
-      state.sort = e.target.value;
-      $('sortLabel').textContent = e.target.options[e.target.selectedIndex].text;
-      render();
-    });
+    $('sortSelect').addEventListener('change', (e) => { state.sort = e.target.value; render(); });
     $('clearFilters').addEventListener('click', () => {
       state.search = ''; state.audience = 'all'; state.category = 'all';
       $('searchInput').value = '';
