@@ -517,7 +517,7 @@
     <div class="scan-loading" style="color: var(--text); padding: 2rem 1rem;">
       <div class="spinner" style="border-color: var(--border); border-top-color: var(--cyan);"></div>
       <h3 style="margin: 1rem 0 .25rem;">Generating your try-on…</h3>
-      <p id="processingMsg" style="color: var(--muted); font-size: .85rem; transition: opacity .3s;">This usually takes 10–30 seconds.</p>
+      <p style="color: var(--muted); font-size: .85rem;">This usually takes 10–30 seconds.</p>
     </div>
   </div>
 
@@ -885,30 +885,6 @@
     errEl.className = 'alert error';
   }
 
-  // ── Processing status messages — rotate during the AI wait so the shopper
-  // sees progress, not a frozen screen. ──
-  const PROC_MSGS = [
-    'Analyzing your photo…',
-    'Fitting the outfit on you…',
-    'Matching lighting and drape…',
-    'Polishing the final look…',
-  ];
-  let procTimer = null;
-  function startProcessingMsgs() {
-    const el = document.getElementById('processingMsg');
-    stopProcessingMsgs();
-    let i = -1;
-    el.textContent = 'This usually takes 10–30 seconds.';
-    procTimer = setInterval(() => {
-      i = (i + 1) % PROC_MSGS.length;
-      el.style.opacity = '0';
-      setTimeout(() => { el.textContent = PROC_MSGS[i]; el.style.opacity = '1'; }, 300);
-    }, 4000);
-  }
-  function stopProcessingMsgs() {
-    if (procTimer) { clearInterval(procTimer); procTimer = null; }
-  }
-
   // ── Run try-on ──
   async function runTryOn() {
     if (!userPhoto || !qrInfo) return;
@@ -917,7 +893,6 @@
 
     hide('uploadView');
     show('processingView');
-    startProcessingMsgs();
 
     try {
       const fd = new FormData();
@@ -967,11 +942,9 @@
       renderProductHeader();
 
       document.getElementById('resultImage').src = resultUrl;
-      stopProcessingMsgs();
       hide('processingView');
       show('resultView');
     } catch (err) {
-      stopProcessingMsgs();
       hide('processingView');
       show('uploadView');
       showUploadError(err.message || 'Try-on failed. Please try again.');
