@@ -277,6 +277,25 @@
     /* Make sure all images scale */
     img { max-width: 100%; }
 
+    /* ── View transitions — each step card slides in as it appears. Applied
+       by show() (re-triggered every time a view is revealed). Transform/
+       opacity only; disabled under prefers-reduced-motion. ── */
+    @keyframes viewIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .view-in { animation: viewIn .32s cubic-bezier(.22,.68,.31,1) both; }
+    /* Try-on result reveals with a soft scale — the "ta-da" moment. Restarts
+       naturally each time the result view goes display:none → block. */
+    @keyframes resultIn {
+      from { opacity: 0; transform: scale(.96); }
+      to   { opacity: 1; transform: none; }
+    }
+    #resultView .result-image { animation: resultIn .5s cubic-bezier(.22,.68,.31,1) .06s both; }
+    @media (prefers-reduced-motion: reduce) {
+      .view-in, #resultView .result-image { animation: none; }
+    }
+
     /* ── Catalogue browse ── */
     .catalog-filters {
       display: flex;
@@ -1259,7 +1278,15 @@
   }
 
   // ── Helpers ──
-  function show(id) { document.getElementById(id).style.display = 'block'; }
+  // show() also re-triggers the entrance animation so every step change
+  // (passcode → upload → processing → result) slides in smoothly.
+  function show(id) {
+    const el = document.getElementById(id);
+    el.style.display = 'block';
+    el.classList.remove('view-in');
+    void el.offsetWidth; // force reflow so the animation restarts
+    el.classList.add('view-in');
+  }
   function hide(id) { document.getElementById(id).style.display = 'none'; }
   function showError(icon, title, message) {
     hide('loadingView');

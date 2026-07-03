@@ -10,116 +10,189 @@
   <link rel="icon" type="image/jpeg" href="/assets/website-icon.png">
   <link rel="apple-touch-icon" href="/assets/website-icon.png">
   <link rel="stylesheet" href="/css/styles.css">
+  <!-- Cormorant: elegant serif for the brand identity (luxury fashion feel).
+       Body/UI stays Inter from the shared stylesheet. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600;700&display=swap" rel="stylesheet">
   <style>
     /* Brand theme variables — overridden at runtime from the brand's
        primary_color. Defaults keep the standard Try Instant Fit look. */
     :root {
       --brand: #5a67f2;                 /* brand accent (buttons, price, active chips) */
-      --brand-dark: #4a56d0;            /* darker shade for hovers */
+      --brand-dark: #4a56d0;            /* darker shade for hovers/gradients */
       --brand-contrast: #ffffff;        /* text on top of the brand colour */
       --page-bg-a: #0f1e3d;
-      --page-bg-b: #1a2f5a;
+      --serif: 'Cormorant', Georgia, serif;
+      --ease-out: cubic-bezier(.22, .68, .31, 1);
     }
     * { -webkit-tap-highlight-color: transparent; }
     body { background: var(--page-bg-a); min-height: 100vh; }
-    .shop-wrap { max-width: 720px; margin: 0 auto; padding: 0 .6rem 3rem; }
+    .shop-wrap { max-width: 720px; margin: 0 auto; padding: 0 .7rem 3rem; }
 
-    /* App-style slim top bar — sticky, compact. Brand logo + name in a row. */
+    /* ── App bar — slim, sticky, glass. Brand name in elegant serif. ── */
     .shop-appbar {
       position: sticky; top: 0; z-index: 20;
       display: flex; align-items: center; gap: .6rem;
-      padding: .6rem .3rem; margin-bottom: .5rem;
-      background: color-mix(in srgb, var(--page-bg-a) 88%, transparent);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: .55rem .2rem; margin-bottom: .35rem;
+      background: color-mix(in srgb, var(--page-bg-a) 82%, transparent);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255,255,255,.09);
     }
     .shop-back {
       flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
-      width: 34px; height: 34px; border-radius: 50%;
+      width: 40px; height: 40px; border-radius: 50%;
       background: rgba(255,255,255,.1); color: #fff; border: none;
-      font-size: 1.1rem; cursor: pointer; text-decoration: none; transition: background .15s;
+      cursor: pointer; text-decoration: none; transition: background .15s;
     }
     .shop-back:hover { background: rgba(255,255,255,.2); }
-    .shop-brand-logo { height: 30px; width: 30px; object-fit: contain; border-radius: 8px; background: #fff; flex: 0 0 auto; display: none; }
-    .shop-brand { color: #fff; font-size: 1.05rem; font-weight: 800; margin: 0; line-height: 1.1; letter-spacing: -.01em; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .shop-back svg { width: 18px; height: 18px; }
+    .shop-brand-logo { height: 32px; width: 32px; object-fit: contain; border-radius: 9px; background: #fff; flex: 0 0 auto; display: none; }
+    .shop-brand {
+      color: #fff; font-family: var(--serif); font-size: 1.45rem; font-weight: 700;
+      margin: 0; line-height: 1; letter-spacing: .02em; flex: 1; min-width: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     .shop-visit {
-      flex: 0 0 auto; padding: .38rem .7rem; border-radius: var(--r-full);
+      flex: 0 0 auto; padding: .42rem .8rem; border-radius: var(--r-full);
       font-size: .72rem; font-weight: 700; text-decoration: none;
       background: color-mix(in srgb, var(--brand) 26%, transparent);
       color: #fff; border: 1px solid color-mix(in srgb, var(--brand) 45%, transparent);
+      transition: background .15s;
     }
-    .shop-sub { display: none; }  /* app bar stays compact — no subtitle line */
+    .shop-visit:hover { background: color-mix(in srgb, var(--brand) 40%, transparent); }
 
-    /* Controls — flat app-style, not a floating card. */
-    .shop-controls { padding: .2rem .3rem .6rem; margin-bottom: .6rem; }
+    /* ── Controls — flat on the dark bg, app-like. ── */
+    .shop-controls { padding: .35rem .1rem .6rem; margin-bottom: .5rem; }
+    .search-wrap { position: relative; margin-bottom: .6rem; }
+    .search-wrap svg {
+      position: absolute; left: .85rem; top: 50%; transform: translateY(-50%);
+      width: 16px; height: 16px; color: #7c8598; pointer-events: none;
+    }
     .shop-search {
-      width: 100%; box-sizing: border-box; padding: .7rem .9rem;
-      border: none; border-radius: 12px; font-size: .95rem; font-family: inherit; outline: none;
-      margin-bottom: .6rem; background: rgba(255,255,255,.94);
+      width: 100%; box-sizing: border-box; padding: .72rem .9rem .72rem 2.4rem;
+      border: none; border-radius: 12px; font-size: 1rem; font-family: inherit; outline: none;
+      background: rgba(255,255,255,.95); color: var(--text);
+      transition: box-shadow .2s var(--ease-out);
     }
     .shop-search:focus { box-shadow: 0 0 0 2px var(--brand); }
+    .shop-search::placeholder { color: #94a3b8; }
 
     .filter-row { margin-bottom: .45rem; }
-    .filter-label { display: none; }  /* chips are self-explanatory; save vertical space */
+    .filter-label { display: none; }
     .chip-row { display: flex; gap: .4rem; overflow-x: auto; padding-bottom: .15rem; scrollbar-width: none; }
     .chip-row::-webkit-scrollbar { display: none; }
     .chip {
-      flex: 0 0 auto; padding: .38rem .8rem; border: 1px solid rgba(255,255,255,.18);
-      border-radius: var(--r-full); background: rgba(255,255,255,.08); font-size: .78rem; font-weight: 600;
-      color: rgba(255,255,255,.85); cursor: pointer; white-space: nowrap; font-family: inherit; transition: all .15s;
+      flex: 0 0 auto; padding: .42rem .85rem; border: 1px solid rgba(255,255,255,.16);
+      border-radius: var(--r-full); background: rgba(255,255,255,.07); font-size: .8rem; font-weight: 600;
+      color: rgba(255,255,255,.88); cursor: pointer; white-space: nowrap; font-family: inherit;
+      transition: background .18s var(--ease-out), border-color .18s, color .18s, transform .12s;
     }
     .chip:hover { border-color: rgba(255,255,255,.4); }
+    .chip:active { transform: scale(.95); }
     .chip.active { background: var(--brand); border-color: var(--brand); color: var(--brand-contrast); }
 
-    .shop-toolbar { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-top: .4rem; }
+    .shop-toolbar { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-top: .45rem; }
     .shop-count { font-size: .78rem; color: rgba(255,255,255,.55); }
-    .shop-sort { padding: .4rem .6rem; border: 1px solid rgba(255,255,255,.18); border-radius: 9px; font-size: .78rem; font-family: inherit; background: rgba(255,255,255,.08); color: #fff; }
-    .shop-sort option { color: #111; }
+    .shop-sort {
+      padding: .45rem 1.9rem .45rem .75rem; border: none; border-radius: 10px;
+      font-size: .8rem; font-weight: 600; font-family: inherit; cursor: pointer;
+      background: rgba(255,255,255,.95) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right .6rem center;
+      color: var(--text); appearance: none; -webkit-appearance: none;
+    }
 
-    /* Grid — 2 up on phones (tight, app-like), scaling up on wider screens. */
-    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .55rem; align-items: start; }
-    @media (min-width: 560px) { .shop-grid { grid-template-columns: repeat(3, 1fr); gap: .7rem; } }
+    /* ── Grid — cards size to their own content. ── */
+    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .6rem; align-items: start; }
+    @media (min-width: 560px) { .shop-grid { grid-template-columns: repeat(3, 1fr); gap: .75rem; } }
     @media (min-width: 820px) { .shop-grid { grid-template-columns: repeat(4, 1fr); } }
 
+    /* Staggered entrance — transform/opacity only (60fps), 40ms per card,
+       cap handled in JS. Disabled under prefers-reduced-motion (global layer). */
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: none; }
+    }
     .card {
-      background: #fff; border-radius: 12px; overflow: hidden;
-      display: flex; flex-direction: column; box-shadow: 0 3px 12px rgba(0,0,0,.28);
-      transition: transform .12s;
+      background: #fff; border-radius: 14px; overflow: hidden;
+      display: flex; flex-direction: column;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25), 0 8px 24px rgba(0,0,0,.18);
+      transition: transform .15s var(--ease-out);
+      animation: cardIn .5s var(--ease-out) both;
+      animation-delay: calc(var(--i, 0) * 42ms);
     }
-    .card:active { transform: scale(.98); }
+    .card:active { transform: scale(.975); }
+    @media (prefers-reduced-motion: reduce) { .card { animation: none; } }
 
-    .card-media { display: block; background: #f0f1f4; }
-    .card-img, .card-img-ph { width: 100%; aspect-ratio: 3/4; display: block; }
-    .card-img { object-fit: cover; }
-    .card-img-ph { background: linear-gradient(135deg,#5a67f2,#00c8e8); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+    /* Image frame — BULLETPROOF fill: the frame owns the 3/4 ratio and the
+       image absolutely fills it (immune to global img rules). No letterboxing. */
+    .card-media {
+      position: relative; display: block; aspect-ratio: 3 / 4;
+      overflow: hidden; background: #eceef2;
+    }
+    .card-media img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; object-position: top center;
+      opacity: 0; transition: opacity .45s var(--ease-out);
+    }
+    .card-media img.loaded { opacity: 1; }
+    .card-media .ph {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 75%, #000), var(--brand));
+      color: rgba(255,255,255,.85);
+    }
+    .card-media .ph svg { width: 34px; height: 34px; }
 
-    .card-body { padding: .5rem .55rem .55rem; display: flex; flex-direction: column; }
-    .card-cat { font-size: .6rem; color: var(--muted); margin: 0 0 .1rem; text-transform: uppercase; letter-spacing: .03em; }
+    .card-body { padding: .55rem .6rem .6rem; display: flex; flex-direction: column; }
+    .card-cat {
+      font-size: .58rem; font-weight: 700; color: #94a3b8; margin: 0 0 .12rem;
+      text-transform: uppercase; letter-spacing: .09em;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     .card-name {
-      font-size: .78rem; font-weight: 600; color: var(--text); line-height: 1.3; margin: 0 0 .15rem;
-      display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+      font-size: .8rem; font-weight: 600; color: var(--text); line-height: 1.32; margin: 0 0 .18rem;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     }
-    .card-price { font-size: .82rem; font-weight: 800; color: var(--brand); margin: 0 0 .5rem; }
-    .card-price.empty { display: none; }   /* no filler row when there's no price */
-    /* No margin-top:auto — cards size to content (see .shop-grid align-items:start),
-       so short cards don't stretch tall with wasted white space. */
-    .card-actions { display: flex; flex-direction: column; gap: .35rem; }
+    .card-price {
+      font-size: .84rem; font-weight: 800; color: var(--brand); margin: 0 0 .5rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .card-actions { display: flex; flex-direction: column; gap: .38rem; }
     .card-btn {
-      width: 100%; box-sizing: border-box; padding: .5rem .3rem; border-radius: 8px;
-      font-size: .78rem; font-weight: 700; cursor: pointer; font-family: inherit;
-      text-decoration: none; display: flex; align-items: center; justify-content: center; gap: .25rem;
-      border: none; transition: all .15s; white-space: nowrap;
+      width: 100%; box-sizing: border-box; padding: .55rem .4rem; border-radius: 9px;
+      font-size: .79rem; font-weight: 700; cursor: pointer; font-family: inherit;
+      text-decoration: none; display: flex; align-items: center; justify-content: center; gap: .35rem;
+      border: none; transition: filter .15s, transform .12s; white-space: nowrap;
     }
-    .card-btn.try { background: var(--brand); color: var(--brand-contrast); }
-    .card-btn.try:active { background: var(--brand-dark); }
-    .card-btn.buy { background: #fff; color: #15803d; border: 1.5px solid #16a34a; padding: .45rem .3rem; }
+    .card-btn svg { width: 14px; height: 14px; flex: 0 0 auto; }
+    .card-btn:active { transform: scale(.97); }
+    .card-btn.try {
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: var(--brand-contrast);
+      box-shadow: 0 3px 10px color-mix(in srgb, var(--brand) 35%, transparent);
+    }
+    .card-btn.try:hover { filter: brightness(1.08); }
+    .card-btn.buy { background: #fff; color: #15803d; border: 1.5px solid #16a34a; padding: .48rem .4rem; }
     .card-btn.buy:hover { background: #f0fdf4; }
+
+    /* ── Skeleton loading — shimmer grid instead of a blocking spinner. ── */
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .skel-card { background: rgba(255,255,255,.05); border-radius: 14px; overflow: hidden; }
+    .skel-media { aspect-ratio: 3 / 4; }
+    .skel-line { height: 10px; border-radius: 6px; margin: .55rem .6rem; }
+    .skel-line.short { width: 45%; }
+    .skel-btn { height: 30px; border-radius: 9px; margin: .3rem .6rem .6rem; }
+    .skel-media, .skel-line, .skel-btn {
+      background: linear-gradient(90deg, rgba(255,255,255,.05) 25%, rgba(255,255,255,.13) 50%, rgba(255,255,255,.05) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s linear infinite;
+    }
 
     /* States */
     .shop-state { text-align: center; color: #fff; padding: 3rem 1rem; }
-    .shop-state .spinner { width: 44px; height: 44px; border: 4px solid rgba(255,255,255,.15); border-top-color: #00c8e8; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 1rem; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .shop-state svg { width: 44px; height: 44px; color: rgba(255,255,255,.5); margin-bottom: .75rem; }
     .shop-empty { text-align: center; color: rgba(255,255,255,.7); padding: 2.5rem 1rem; font-size: .95rem; }
+    .shop-empty .chip { margin-top: .85rem; }
 
     .shop-footer { text-align: center; color: rgba(255,255,255,.45); font-size: .75rem; padding: 2rem 1rem 0; }
     .shop-footer a { color: rgba(255,255,255,.7); }
@@ -130,43 +203,49 @@
 
 <div class="shop-wrap">
 
-  <!-- Subtle platform strip — the brand leads, TIF stays in the background. -->
-  <!-- App-style top bar: back · brand logo + name · visit store. Sticky. -->
+  <!-- App-style top bar: back · brand logo + name (serif) · visit store. Sticky glass. -->
   <div class="shop-appbar">
-    <a id="backLink" class="shop-back" href="#" aria-label="Back" style="display:none;">←</a>
+    <a id="backLink" class="shop-back" href="#" aria-label="Back" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </a>
     <img id="brandLogo" class="shop-brand-logo" src="" alt="">
     <h1 id="brandName" class="shop-brand">Catalogue</h1>
     <a id="visitLink" class="shop-visit" href="#" target="_blank" rel="noopener" style="display:none;">Visit store</a>
   </div>
 
-  <!-- Loading -->
-  <div id="loadingView" class="shop-state">
-    <div class="spinner"></div>
-    <p>Loading the catalogue…</p>
+  <!-- Loading — skeleton grid (content shape, not a blocking spinner) -->
+  <div id="loadingView">
+    <div class="shop-grid" aria-hidden="true">
+      <div class="skel-card"><div class="skel-media"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-btn"></div></div>
+      <div class="skel-card"><div class="skel-media"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-btn"></div></div>
+      <div class="skel-card"><div class="skel-media"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-btn"></div></div>
+      <div class="skel-card"><div class="skel-media"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-btn"></div></div>
+    </div>
   </div>
 
   <!-- Error -->
   <div id="errorView" class="shop-state" style="display:none;">
-    <div style="font-size:3rem; margin-bottom:.5rem;">🛍️</div>
-    <h2 id="errorTitle" style="margin:0 0 .5rem;">Catalogue unavailable</h2>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    <h2 id="errorTitle" style="margin:0 0 .5rem; color:#fff;">Catalogue unavailable</h2>
     <p id="errorMsg" style="color:rgba(255,255,255,.65);">This brand hasn't enabled catalogue browsing yet.</p>
   </div>
 
   <!-- Main -->
   <div id="mainView" style="display:none;">
     <div class="shop-controls">
-      <input type="search" id="searchInput" class="shop-search" placeholder="🔎  Search by name…" autocomplete="off">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" id="searchInput" class="shop-search" placeholder="Search products…" autocomplete="off">
+      </div>
       <div class="filter-row" id="audienceRow" style="display:none;">
-        <p class="filter-label">For</p>
         <div class="chip-row" id="audienceChips"></div>
       </div>
       <div class="filter-row" id="categoryRow" style="display:none;">
-        <p class="filter-label">Category</p>
         <div class="chip-row" id="categoryChips"></div>
       </div>
       <div class="shop-toolbar">
         <span class="shop-count" id="resultCount"></span>
-        <select id="sortSelect" class="shop-sort">
+        <select id="sortSelect" class="shop-sort" aria-label="Sort products">
           <option value="newest">Newest</option>
           <option value="price_asc">Price: Low to High</option>
           <option value="price_desc">Price: High to Low</option>
@@ -176,7 +255,10 @@
     </div>
 
     <div id="grid" class="shop-grid"></div>
-    <div id="emptyView" class="shop-empty" style="display:none;">No items match your search or filters.</div>
+    <div id="emptyView" class="shop-empty" style="display:none;">
+      <p style="color:rgba(255,255,255,.7); margin:0;">No items match your search or filters.</p>
+      <button type="button" id="clearFilters" class="chip">Clear filters</button>
+    </div>
   </div>
 
   <div class="shop-footer">
@@ -195,6 +277,11 @@
 
   const GROUP_ORDER = ['Eastern', 'Western', 'Formal & Festive'];
   const AUD_ORDER = ['Women', 'Men', 'Kids', 'Unisex'];
+
+  // Inline SVG icons (no emoji as icons). Stroke follows currentColor.
+  const ICON_TRY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>';
+  const ICON_BAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
+  const ICON_DRESS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>';
 
   function $(id) { return document.getElementById(id); }
   function show(id) { $(id).style.display = 'block'; }
@@ -341,6 +428,11 @@
   function wireControls() {
     $('searchInput').addEventListener('input', (e) => { state.search = e.target.value.trim().toLowerCase(); render(); });
     $('sortSelect').addEventListener('change', (e) => { state.sort = e.target.value; render(); });
+    $('clearFilters').addEventListener('click', () => {
+      state.search = ''; state.audience = 'all'; state.category = 'all';
+      $('searchInput').value = '';
+      rebuildCategoryChips(); render(); syncChips();
+    });
   }
 
   function fmtPrice(price, currency) {
@@ -380,29 +472,32 @@
     const grid = $('grid');
     if (!list.length) { grid.innerHTML = ''; show('emptyView'); return; }
     hide('emptyView');
-    grid.innerHTML = list.map(p => {
+    grid.innerHTML = list.map((p, i) => {
       const href = escAttr(tryOnHref(p));
-      const img = p.image_url
-        ? `<img class="card-img" src="${escAttr(p.image_url)}" alt="${escAttr(p.name)}" loading="lazy">`
-        : `<div class="card-img-ph">👗</div>`;
+      const media = p.image_url
+        ? `<img src="${escAttr(p.image_url)}" alt="${escAttr(p.name)}" loading="lazy" onload="this.classList.add('loaded')">`
+        : `<span class="ph">${ICON_DRESS}</span>`;
       const price = fmtPrice(p.price, p.currency);
       const cat = (p.category || '').trim();
       const buy = p.buy_url
-        ? `<a class="card-btn buy" href="${escAttr(p.buy_url)}" target="_blank" rel="noopener">🛒 Buy Now</a>`
+        ? `<a class="card-btn buy" href="${escAttr(p.buy_url)}" target="_blank" rel="noopener">${ICON_BAG}Buy Now</a>`
         : '';
-      return `<div class="card">
-        <a class="card-media" href="${href}" aria-label="Try on ${escAttr(p.name)}">${img}</a>
+      return `<div class="card" style="--i:${Math.min(i, 9)}">
+        <a class="card-media" href="${href}" aria-label="Try on ${escAttr(p.name)}">${media}</a>
         <div class="card-body">
           ${cat ? `<p class="card-cat">${esc(cat)}</p>` : ''}
           <a href="${href}" style="text-decoration:none;"><p class="card-name">${esc(p.name || 'Product')}</p></a>
           ${price ? `<p class="card-price">${price}</p>` : ''}
           <div class="card-actions">
-            <a class="card-btn try" href="${href}">✨ Try On</a>
+            <a class="card-btn try" href="${href}">${ICON_TRY}Try On</a>
             ${buy}
           </div>
         </div>
       </div>`;
     }).join('');
+    // Images already in the browser cache can fire `load` before the inline
+    // handler is attached — mark those visible immediately.
+    grid.querySelectorAll('.card-media img').forEach(im => { if (im.complete) im.classList.add('loaded'); });
   }
 
   function showError(title, msg) {
