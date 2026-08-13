@@ -175,8 +175,9 @@
           <input type="color" id="regColor" value="#5a67f2" style="height: 48px; padding: .25rem;">
           <div class="field-hint">Used in your QR scan page accents.</div>
         </div>
-        <div class="field" style="display: flex; align-items: end; padding-bottom: 1rem;">
-          <p style="font-size:.78rem; color:var(--muted); margin: 0;">By registering, you agree to our terms. Top up later when ready.</p>
+        <div class="field" style="padding-bottom: 1rem;">
+          <label style="display:flex; gap:.55rem; align-items:flex-start; font-size:.8rem;"><input type="checkbox" id="acceptTerms" required style="width:auto; margin-top:.15rem;"> <span>I agree to the <a href="/terms" target="_blank">Terms of Service</a>.</span></label>
+          <label style="display:flex; gap:.55rem; align-items:flex-start; font-size:.8rem; margin-top:.55rem;"><input type="checkbox" id="acceptPrivacy" required style="width:auto; margin-top:.15rem;"> <span>I acknowledge the <a href="/privacy" target="_blank">Privacy Policy</a> and <a href="/refund-policy" target="_blank">Refund Policy</a>.</span></label>
         </div>
       </div>
 
@@ -397,6 +398,8 @@ async function submitRegister(e) {
   fd.append('country', document.getElementById('regCountry').value);
   fd.append('website_url', websiteVal);
   fd.append('primary_color', document.getElementById('regColor').value);
+  fd.append('accepted_terms', document.getElementById('acceptTerms').checked ? 'true' : 'false');
+  fd.append('accepted_privacy', document.getElementById('acceptPrivacy').checked ? 'true' : 'false');
   if (logoFileSelected) fd.append('logo', logoFileSelected);
 
   btn.disabled = true; btn.textContent = 'Creating account…';

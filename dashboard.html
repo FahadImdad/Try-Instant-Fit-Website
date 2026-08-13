@@ -1605,6 +1605,7 @@
           <button class="tab-btn active" role="tab" data-tab="analytics" onclick="switchTab('analytics')">📊 <span class="tab-label">Analytics</span></button>
           <button class="tab-btn" role="tab" data-tab="products" onclick="switchTab('products')">👕 <span class="tab-label">Products</span></button>
           <button class="tab-btn" role="tab" data-tab="code"     onclick="switchTab('code')">🔑 <span class="tab-label">Codes</span></button>
+          <button class="tab-btn" role="tab" data-tab="refunds"  onclick="switchTab('refunds')">↩ <span class="tab-label">Refunds</span></button>
           <button class="tab-btn" role="tab" data-tab="profile"  onclick="switchTab('profile')">👤 <span class="tab-label">Profile</span></button>
         </nav>
 
@@ -1712,6 +1713,13 @@
           </div>
         </div>
 
+        <div id="tab-refunds" class="tab-content" role="tabpanel">
+          <div class="sw-section">
+            <div class="sw-section-head"><div><h3>↩ Credit Refunds</h3><p>See when a try-on credit was returned after a report review.</p></div></div>
+            <div id="refundHistoryList" class="passcodes-list"><div class="empty-state-mini">Loading refund history…</div></div>
+          </div>
+        </div>
+
         <!-- Tab: Profile -->
         <div id="tab-profile" class="tab-content" role="tabpanel">
           <div class="sw-section profile-section">
@@ -1765,9 +1773,9 @@
             <label for="qrRequiresPasscode" style="margin: 0; cursor: pointer; font-size: .9rem;">🔑 Require a passcode to scan this QR</label>
           </div>
           <div class="field">
-            <label for="qrTotalLimit">Total try-on cap (optional)</label>
-            <input type="number" id="qrTotalLimit" min="0" placeholder="Leave blank for unlimited">
-            <div class="field-hint">Cap total try-ons on this specific QR. Useful for limited campaigns.</div>
+            <label for="qrTotalLimit">Free/open try-on cap</label>
+            <input type="number" id="qrTotalLimit" min="1" placeholder="Required when passcode is off">
+            <div class="field-hint">When reached, the QR automatically returns to passcode-required mode.</div>
           </div>
           <button type="submit" class="btn btn-primary" id="createQrSubmit" style="width:100%; padding: .9rem;">Generate QR →</button>
         </form>
@@ -1821,9 +1829,9 @@
             <div class="field-hint">Helps you remember who you gave it to.</div>
           </div>
           <div class="field">
-            <label for="epcLimit">Try-On Credits *</label>
-            <input type="number" id="epcLimit" min="1" required placeholder="e.g. 5">
-            <div class="field-hint" id="epcLimitHint">How many try-ons this customer can do (across all your products).</div>
+            <label for="epcLimit">Add Try-Ons</label>
+            <input type="number" id="epcLimit" min="1" placeholder="e.g. 5">
+            <div class="field-hint" id="epcLimitHint">Enter only the extra try-ons you want to add. Leave blank to keep the current allowance.</div>
           </div>
           <div class="field">
             <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer; font-weight:600;">
@@ -1885,6 +1893,15 @@
             <label for="apDesc">Description (optional)</label>
             <textarea id="apDesc" rows="2" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
           </div>
+          <div class="field">
+            <label for="apSizes">Available sizes</label>
+            <input type="text" id="apSizes" placeholder="e.g. XS, S, M, L, XL">
+            <div class="field-hint">Separate sizes with commas. Customers will see these before contacting you.</div>
+          </div>
+          <div class="field" style="padding:.75rem; background:var(--surface); border-radius:var(--r-md);">
+            <label style="display:flex; align-items:center; gap:.65rem; margin:0;"><input type="checkbox" id="apCustomSize" style="width:auto;"> Custom size / made-to-measure available</label>
+            <input type="text" id="apCustomSizeNote" maxlength="240" placeholder="Optional details, e.g. stitching time or contact instructions" style="margin-top:.65rem;">
+          </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="field">
               <label for="apAudience">For</label>
@@ -1909,17 +1926,17 @@
             <div class="field-hint">Adds a “Buy Now” button on the try-on page that opens this link.</div>
           </div>
           <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .75rem; background: var(--surface); border-radius: var(--r-md); margin-bottom: .75rem;">
-            <input type="checkbox" id="apShowInCatalog" style="width: auto;" checked>
-            <label for="apShowInCatalog" style="margin: 0; cursor: pointer; font-size: .9rem;">🛍️ Show in catalogue — shoppers can browse &amp; try this on from any of your products' scan pages</label>
+            <input type="checkbox" id="apShowInCatalog" style="width: auto;">
+            <label for="apShowInCatalog" style="margin: 0; cursor: pointer; font-size: .9rem;">🛍️ Include in public catalogue (new products are private by default)</label>
           </div>
           <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .75rem; background: var(--surface); border-radius: var(--r-md); margin-bottom: .75rem;">
             <input type="checkbox" id="apQrPasscode" style="width: auto;" checked>
             <label for="apQrPasscode" style="margin: 0; cursor: pointer; font-size: .9rem;">🔑 Require a passcode for this product's QR</label>
           </div>
           <div class="field">
-            <label for="apQrLimit">QR try-on cap (optional)</label>
-            <input type="number" id="apQrLimit" min="0" placeholder="Leave blank for unlimited">
-            <div class="field-hint">Cap total customers who can try this product. Useful for limited campaigns.</div>
+            <label for="apQrLimit">Free/open try-on cap</label>
+            <input type="number" id="apQrLimit" min="1" placeholder="Required when passcode is off">
+            <div class="field-hint">When this cap is reached, the QR automatically requires a passcode again.</div>
           </div>
           <button type="submit" class="btn btn-primary" id="apSubmit" style="width:100%; padding:.9rem;">Add Product &amp; Generate QR → (~20s)</button>
           <p style="font-size:.78rem; color:var(--muted); text-align:center; margin: .75rem 0 0;">We'll process the image with AI and generate a printable QR. Takes about 15–30 seconds.</p>
@@ -1971,6 +1988,14 @@
             <label for="epcdDesc">Description (optional)</label>
             <textarea id="epcdDesc" rows="2" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
           </div>
+          <div class="field">
+            <label for="epcdSizes">Available sizes</label>
+            <input type="text" id="epcdSizes" placeholder="e.g. XS, S, M, L, XL">
+          </div>
+          <div class="field" style="padding:.75rem; background:var(--surface); border-radius:var(--r-md);">
+            <label style="display:flex; align-items:center; gap:.65rem; margin:0;"><input type="checkbox" id="epcdCustomSize" style="width:auto;"> Custom size / made-to-measure available</label>
+            <input type="text" id="epcdCustomSizeNote" maxlength="240" placeholder="Optional custom-size details" style="margin-top:.65rem;">
+          </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="field">
               <label for="epcdAudience">For</label>
@@ -2008,9 +2033,9 @@
             </div>
 
             <div class="field" style="margin-bottom: .75rem;">
-              <label for="epcdQrLimit" style="font-size:.85rem;">Try-on cap (optional)</label>
-              <input type="number" id="epcdQrLimit" min="1" step="1" placeholder="Leave blank for unlimited">
-              <div class="field-hint">Stop accepting try-ons after this count. Useful for limited campaigns.</div>
+              <label for="epcdQrLimit" style="font-size:.85rem;">Free/open try-on cap</label>
+              <input type="number" id="epcdQrLimit" min="1" step="1" placeholder="Required when passcode is off">
+              <div class="field-hint">At the cap, this QR automatically returns to passcode-required mode.</div>
             </div>
 
             <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .65rem; background: white; border-radius: var(--r-sm); margin: 0;">
@@ -2021,7 +2046,7 @@
 
           <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .75rem; background: var(--surface); border-radius: var(--r-md); margin-bottom: .75rem;">
             <input type="checkbox" id="epcdActive" style="width: auto;">
-            <label for="epcdActive" style="margin: 0; cursor: pointer; font-size: .9rem;">Product is active — appears in your catalogue</label>
+            <label for="epcdActive" style="margin: 0; cursor: pointer; font-size: .9rem;">Product is active — its direct QR and try-on remain available</label>
           </div>
           <button type="submit" class="btn btn-primary" id="epcdSubmit" style="width:100%; padding:.9rem;">Save Changes →</button>
         </form>
@@ -3129,13 +3154,41 @@
   });
 
   // ── Tab switching ──
-  function switchTab(tabName) {
+  function switchTab(tabName, options = {}) {
     closeAccountMenu();
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabName));
     if (!activeBrandId) return;
     if (tabName === 'products') { loadProducts(); loadQrCodes(); }
     else if (tabName === 'code') { loadBrandPasscodes(); }
+    else if (tabName === 'refunds') { loadRefundHistory(); }
+    if (!options.fromHistory) {
+      const next = new URL(window.location.href);
+      next.searchParams.set('tab', tabName);
+      history.pushState({ dashboardTab: tabName }, '', next);
+    }
+  }
+
+  window.addEventListener('popstate', event => {
+    const tab = event.state?.dashboardTab || new URL(window.location.href).searchParams.get('tab') || 'analytics';
+    if (document.getElementById('tab-' + tab)) switchTab(tab, { fromHistory: true });
+  });
+
+  async function loadRefundHistory() {
+    const list = document.getElementById('refundHistoryList');
+    if (!activeBrandId || !list) return;
+    list.innerHTML = '<div class="empty-state-mini">Loading refund history…</div>';
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/reports?status=approved&limit=200`);
+      const data = await safeJson(res);
+      if (!res.ok) throw new Error(data.error || 'Failed to load refunds');
+      const refunds = (data.reports || []).filter(r => r.credit_refunded);
+      if (!refunds.length) { list.innerHTML = '<div class="empty-state-mini">No refunded credits yet.</div>'; return; }
+      list.innerHTML = refunds.map(r => `<div class="passcode-row" style="grid-template-columns:1fr auto;">
+        <div><strong>${escapeHtml(r.product_name || r.product_id || 'Try-on credit')}</strong><div class="field-hint">${escapeHtml(r.reason || r.type || 'Approved report')}</div></div>
+        <div style="text-align:right;"><span class="status-badge pill-active">+1 credit</span><div class="field-hint">${fmtDate(r.refund_at || r.resolved_at)}</div></div>
+      </div>`).join('');
+    } catch (err) { list.innerHTML = `<div class="empty-state-mini">⚠ ${escapeHtml(humanError(err))}</div>`; }
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -3247,12 +3300,10 @@
     document.getElementById('epcError').className = 'alert';
     document.getElementById('epcCode').value = p.code || '';
     document.getElementById('epcLabel').value = p.customer_label || '';
-    document.getElementById('epcLimit').value = p.use_limit;
-    document.getElementById('epcLimit').min = Math.max(1, p.used_count);
+    document.getElementById('epcLimit').value = '';
+    document.getElementById('epcLimit').min = 1;
     document.getElementById('epcLimitHint').textContent =
-      p.used_count > 0
-        ? `Already used ${p.used_count} — can't go below that.`
-        : 'How many try-ons this customer can do (across all your products).';
+      `${p.used_count} used · ${Math.max(0, p.use_limit - p.used_count)} remaining. Enter only extra try-ons to add.`;
     document.getElementById('epcActive').checked = !!p.active;
     document.getElementById('editPasscodeModal').classList.add('open');
   }
@@ -3275,12 +3326,10 @@
       errEl.className = 'alert error';
       return false;
     }
-    const newLimit = parseInt(document.getElementById('epcLimit').value, 10);
-    const p = allBrandPasscodes.find(x => x.id === editingPasscodeId);
-    if (!Number.isFinite(newLimit) || (p && newLimit < p.used_count)) {
-      errEl.textContent = p && p.used_count > 0
-        ? `Credits must be a number ≥ ${p.used_count} (already used).`
-        : 'Credits must be a positive number.';
+    const additionalRaw = document.getElementById('epcLimit').value.trim();
+    const additionalUses = additionalRaw === '' ? undefined : parseInt(additionalRaw, 10);
+    if (additionalUses !== undefined && (!Number.isInteger(additionalUses) || additionalUses < 1)) {
+      errEl.textContent = 'Additional try-ons must be a positive whole number.';
       errEl.className = 'alert error';
       return false;
     }
@@ -3293,7 +3342,7 @@
         body: JSON.stringify({
           code: codeClean,
           customer_label: document.getElementById('epcLabel').value.trim() || null,
-          use_limit: newLimit,
+          additional_uses: additionalUses,
           active: document.getElementById('epcActive').checked,
         }),
       });
@@ -3500,6 +3549,10 @@
       const qScanEsc  = qr ? JSON.stringify(qr.scan_url).replace(/"/g, '&quot;') : '""';
       const priceTxt  = p.price ? formatPrice(p.price, p.currency) : '—';
       const tryonsTxt = qr ? `${fmt(qr.total_used || 0)}${qr.total_limit !== null ? '/' + fmt(qr.total_limit) : ''}` : '—';
+      const sizeTxt = (p.available_sizes || []).length ? p.available_sizes.join(', ') : 'Sizes not listed';
+      const visibilityBadge = p.show_in_catalog
+        ? '<span class="pl-status pl-status-on">Catalogue</span>'
+        : '<span class="pl-status pl-status-off">Private</span>';
       const statusBadge = !p.active
         ? '<span class="pl-status pl-status-off">Off</span>'
         : qr && !qr.active
@@ -3516,8 +3569,9 @@
               : '<div class="pl-thumb pl-thumb-ph">👕</div>'}
             <div class="pl-info">
               <div class="pl-name">${escapeHtml(p.name)}</div>
-              <div class="pl-meta">${escapeHtml(p.sku)} · ${escapeHtml(priceTxt)} · ${tryonsTxt} try-on${tryonsTxt === '1' ? '' : 's'}</div>
+              <div class="pl-meta">${escapeHtml(p.sku)} · ${escapeHtml(priceTxt)} · ${tryonsTxt} try-on${tryonsTxt === '1' ? '' : 's'} · ${escapeHtml(sizeTxt)}${p.custom_size_available ? ' · Custom size' : ''}</div>
             </div>
+            ${visibilityBadge}
             ${statusBadge}
             <span class="pl-chevron">${isOpen ? '⌃' : '›'}</span>
           </div>
@@ -3527,7 +3581,7 @@
                 <img class="pl-drawer-qr" src="${qrImageUrl(qr.scan_url, 220)}" alt="QR for ${escapeHtml(p.name)}">
                 <div class="pl-drawer-meta">
                   <div><span>Try-Ons</span><strong>${fmt(qr.total_used || 0)}${qr.total_limit !== null ? ' / ' + fmt(qr.total_limit) : ''}</strong></div>
-                  <div><span>Passcode</span><strong>${qr.requires_passcode ? '🔑 Required' : 'Open'}</strong></div>
+                  <div><span>Access</span><strong>${qr.requires_passcode ? '🔑 Passcode' : `Free/open · ${Math.max(0, (qr.total_limit || 0) - (qr.total_used || 0))} left`}</strong></div>
                   <div><span>QR Status</span>${qr.active ? '<span class="status-badge pill-active">Active</span>' : '<span class="status-badge pill-inactive">Disabled</span>'}</div>
                 </div>
               </div>
@@ -3542,6 +3596,7 @@
                   ? `<button class="btn btn-secondary btn-sm" style="color:#92400e; border-color:#fcd34d;" onclick="reportProductImage(${qNameEsc}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')}, '${p.id}')">⚠️ Report</button>`
                   : ''}
                 <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">✏️ Edit</button>
+                <button class="btn btn-secondary btn-sm" onclick="toggleQrPasscode('${qr.id}', ${qr.requires_passcode}, ${qr.total_used || 0})">🔑 Passcode: ${qr.requires_passcode ? 'On' : 'Off'}</button>
                 ${qr.active
                   ? `<button class="btn btn-secondary btn-sm" style="color:#92400e; border-color:#fcd34d;" onclick="toggleQrActive('${qr.id}', false, ${qNameEsc})">Disable</button>`
                   : `<button class="btn btn-primary btn-sm" onclick="toggleQrActive('${qr.id}', true, ${qNameEsc})">Enable</button>`}
@@ -3589,7 +3644,7 @@
       const res = await fetch(`${API}/api/qr/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brand_id: activeBrandId, product_uuid: productUuid }),
+        body: JSON.stringify({ brand_id: activeBrandId, product_uuid: productUuid, requires_passcode: true }),
       });
       const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed');
@@ -3752,11 +3807,12 @@
       }
     }
     document.getElementById('apError').className = 'alert';
-    ['apName','apPrice','apDesc','apQrLimit','apBuyUrl'].forEach(id => document.getElementById(id).value = '');
+    ['apName','apPrice','apDesc','apQrLimit','apBuyUrl','apSizes','apCustomSizeNote'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('apCurrency').value = 'PKR';
     populateTaxonomy('ap', '', '', '');
-    document.getElementById('apShowInCatalog').checked = true;
+    document.getElementById('apShowInCatalog').checked = false;
     document.getElementById('apQrPasscode').checked = true;
+    document.getElementById('apCustomSize').checked = false;
     apImageFile = null;
     document.getElementById('apImageFile').value = '';
     document.getElementById('apImagePreview').style.display = 'none';
@@ -3817,6 +3873,9 @@
     if (apGroup) fd.append('category_group', apGroup);
     const apAudience = readAudienceValue('ap');
     if (apAudience) fd.append('audience', apAudience);
+    fd.append('available_sizes', document.getElementById('apSizes').value.trim());
+    fd.append('custom_size_available', document.getElementById('apCustomSize').checked ? 'true' : 'false');
+    if (document.getElementById('apCustomSizeNote').value.trim()) fd.append('custom_size_note', document.getElementById('apCustomSizeNote').value.trim());
     fd.append('show_in_catalog', document.getElementById('apShowInCatalog').checked ? 'true' : 'false');
     const apBuyUrl = document.getElementById('apBuyUrl').value.trim();
     if (apBuyUrl) fd.append('buy_url', apBuyUrl);
@@ -3824,6 +3883,12 @@
 
     const requirePasscode = document.getElementById('apQrPasscode').checked;
     const qrLimit = document.getElementById('apQrLimit').value;
+    if (!requirePasscode && (!qrLimit || parseInt(qrLimit, 10) < 1)) {
+      errEl.textContent = 'Enter a positive free/open try-on cap when passcode protection is off.';
+      errEl.className = 'alert error';
+      btn.disabled = false; btn.textContent = 'Add Product & Generate QR → (~15s)';
+      return false;
+    }
 
     try {
       // Step 1: create the product (charges 1 credit for AI processing)
@@ -3937,10 +4002,13 @@
     document.getElementById('epcdPrice').value = p.price ?? '';
     document.getElementById('epcdCurrency').value = p.currency || 'PKR';
     document.getElementById('epcdDesc').value = p.description || '';
+    document.getElementById('epcdSizes').value = (p.available_sizes || []).join(', ');
+    document.getElementById('epcdCustomSize').checked = p.custom_size_available === true;
+    document.getElementById('epcdCustomSizeNote').value = p.custom_size_note || '';
     populateTaxonomy('epcd', p.audience || '', p.category_group || '', p.category || '');
     document.getElementById('epcdBuyUrl').value = p.buy_url || '';
     // Default-on for legacy rows where the column may be undefined.
-    document.getElementById('epcdShowInCatalog').checked = p.show_in_catalog !== false;
+    document.getElementById('epcdShowInCatalog').checked = p.show_in_catalog === true;
     document.getElementById('epcdActive').checked = p.active !== false;
 
     // Pre-fill QR settings if this product has a QR
@@ -4007,6 +4075,9 @@
           category: readCategoryValue('epcd') || null,
           category_group: readGroupValue('epcd') || null,
           audience: readAudienceValue('epcd') || null,
+          available_sizes: document.getElementById('epcdSizes').value,
+          custom_size_available: document.getElementById('epcdCustomSize').checked,
+          custom_size_note: document.getElementById('epcdCustomSizeNote').value.trim() || null,
           show_in_catalog: document.getElementById('epcdShowInCatalog').checked,
           buy_url: document.getElementById('epcdBuyUrl').value.trim(),
           active: document.getElementById('epcdActive').checked,
@@ -4035,6 +4106,10 @@
       if (editingQrId) {
         const limitRaw = document.getElementById('epcdQrLimit').value;
         const total_limit = limitRaw === '' ? null : parseInt(limitRaw, 10);
+        const requiresPasscode = document.getElementById('epcdQrPasscode').checked;
+        if (!requiresPasscode && (total_limit === null || total_limit < 1)) {
+          throw new Error('Enter a positive free/open try-on cap when passcode protection is off.');
+        }
         if (total_limit !== null && (!Number.isFinite(total_limit) || total_limit < 1)) {
           throw new Error('Try-on cap must be 1 or more, or blank for unlimited.');
         }
@@ -4042,7 +4117,7 @@
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            requires_passcode: document.getElementById('epcdQrPasscode').checked,
+            requires_passcode: requiresPasscode,
             total_limit,
             active: document.getElementById('epcdQrActive').checked,
           }),
@@ -4108,7 +4183,30 @@
       const res = await fetch(url);
       if (!res.ok) throw new Error('QR fetch failed');
       const blob = await res.blob();
-      const objectUrl = URL.createObjectURL(blob);
+      const qr = await createImageBitmap(blob);
+      const canvas = document.createElement('canvas');
+      canvas.width = 920; canvas.height = 1040;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const loadLogo = src => new Promise(resolve => {
+        if (!src) return resolve(null);
+        const img = new Image(); img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img); img.onerror = () => resolve(null); img.src = src;
+      });
+      const vendorUrl = lastDashboardData?.brand?.logo_url;
+      const proxiedVendor = vendorUrl ? `${API}/api/proxy-image?url=${encodeURIComponent(vendorUrl)}` : null;
+      const [vendorLogo, tifLogo] = await Promise.all([loadLogo(proxiedVendor), loadLogo('/assets/logo.png')]);
+      let x = 60;
+      if (tifLogo) { ctx.drawImage(tifLogo, x, 38, 190, 70); x += 215; }
+      if (vendorLogo) {
+        ctx.fillStyle = '#e5e7eb'; ctx.fillRect(x - 14, 52, 1, 42);
+        ctx.drawImage(vendorLogo, x + 14, 38, 90, 70);
+      }
+      ctx.drawImage(qr, 60, 160, 800, 800);
+      ctx.fillStyle = '#111827'; ctx.font = '700 28px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText(productName || 'Scan to try on', 460, 1005);
+      const brandedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      const objectUrl = URL.createObjectURL(brandedBlob || blob);
       const a = document.createElement('a');
       a.href = objectUrl;
       a.download = qrFilename(productName);
@@ -4220,6 +4318,25 @@
     }
   }
 
+  async function toggleQrPasscode(qrId, currentlyRequired, totalUsed) {
+    const payload = { requires_passcode: !currentlyRequired };
+    if (currentlyRequired) {
+      const raw = prompt('How many free/open try-ons should be allowed before passcode protection turns on automatically?');
+      if (raw === null) return;
+      const additional = parseInt(raw, 10);
+      if (!Number.isInteger(additional) || additional < 1) { alert('Enter a positive whole number.'); return; }
+      payload.total_limit = totalUsed + additional;
+    }
+    try {
+      const res = await fetch(`${API}/api/qr/${qrId}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+      });
+      const data = await safeJson(res);
+      if (!res.ok) throw new Error(data.error || 'Could not update passcode access');
+      await loadQrCodes();
+    } catch (err) { alert(humanError(err)); }
+  }
+
   async function deleteQr(qrId, productName) {
     const confirm1 = confirm(`Delete the QR for "${productName}" permanently?\n\nThis can't be undone. All passcodes and scan history for this QR will also be deleted.\n\nIf you just want to stop customers from scanning, use "Disable" instead.`);
     if (!confirm1) return;
@@ -4266,10 +4383,16 @@
     }
 
     const totalLimitVal = document.getElementById('qrTotalLimit').value;
+    const requiresPasscode = document.getElementById('qrRequiresPasscode').checked;
+    if (!requiresPasscode && (!totalLimitVal || parseInt(totalLimitVal, 10) < 1)) {
+      errEl.textContent = 'Enter a positive free/open try-on cap when passcode protection is off.';
+      errEl.className = 'alert error';
+      return false;
+    }
     const payload = {
       brand_id: activeBrandId,
       product_uuid: productUuid,
-      requires_passcode: document.getElementById('qrRequiresPasscode').checked,
+      requires_passcode: requiresPasscode,
       total_limit: totalLimitVal ? parseInt(totalLimitVal, 10) : undefined,
     };
 

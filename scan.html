@@ -448,6 +448,7 @@
         <p id="brandName">Brand Name</p>
         <p id="productSku" style="display:none; font-size:.78rem; color:var(--muted); margin: .1rem 0 0; font-family: ui-monospace, monospace;"></p>
         <p id="productPrice" style="display:none; font-size:.95rem; font-weight:700; color:var(--indigo); margin: .15rem 0 0;"></p>
+        <p id="productSizes" style="display:none; font-size:.82rem; color:var(--text); margin:.2rem 0 0;"></p>
         <span class="brand-pill" id="remainingPill" style="display:none; margin-top: .35rem;"></span>
       </div>
     </div>
@@ -515,6 +516,7 @@
         <p id="brandNameResult">Brand Name</p>
         <p id="productSkuResult" style="display:none; font-size:.78rem; color:var(--muted); margin: .1rem 0 0; font-family: ui-monospace, monospace;"></p>
         <p id="productPriceResult" style="display:none; font-size:.95rem; font-weight:700; color:var(--indigo); margin: .15rem 0 0;"></p>
+        <p id="productSizesResult" style="display:none; font-size:.82rem; color:var(--text); margin:.2rem 0 0;"></p>
         <span class="brand-pill" id="remainingPillResult" style="display:none; margin-top: .35rem;"></span>
       </div>
     </div>
@@ -712,6 +714,14 @@
         : `${c} ${n.toLocaleString()}`;
       setBoth('productPrice', formatted);
       showBoth('productPrice');
+    }
+    const sizes = Array.isArray(qrInfo.available_sizes) ? qrInfo.available_sizes : [];
+    if (sizes.length || qrInfo.custom_size_available) {
+      const parts = [];
+      if (sizes.length) parts.push(`Sizes: ${sizes.join(', ')}`);
+      if (qrInfo.custom_size_available) parts.push(`Custom size available${qrInfo.custom_size_note ? ' — ' + qrInfo.custom_size_note : ''}`);
+      setBoth('productSizes', parts.join(' · '));
+      showBoth('productSizes');
     }
     // Show description on BOTH views, inside a collapsible <details> dropdown
     // so it doesn't dominate the layout when long. Brand-provided copy means

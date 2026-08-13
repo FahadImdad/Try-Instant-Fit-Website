@@ -386,6 +386,7 @@
         ? `<img class="card-img" src="${escAttr(p.image_url)}" alt="${escAttr(p.name)}" loading="lazy">`
         : `<div class="card-img-ph">👗</div>`;
       const price = fmtPrice(p.price, p.currency);
+      const sizes = Array.isArray(p.available_sizes) && p.available_sizes.length ? p.available_sizes.join(', ') : '';
       const cat = (p.category || '').trim();
       const buy = p.buy_url
         ? `<a class="card-btn buy" href="${escAttr(p.buy_url)}" target="_blank" rel="noopener">🛒 Buy Now</a>`
@@ -396,6 +397,8 @@
           ${cat ? `<p class="card-cat">${esc(cat)}</p>` : ''}
           <a href="${href}" style="text-decoration:none;"><p class="card-name">${esc(p.name || 'Product')}</p></a>
           ${price ? `<p class="card-price">${price}</p>` : ''}
+          ${sizes ? `<p class="card-cat"><strong>Sizes:</strong> ${esc(sizes)}</p>` : ''}
+          ${p.custom_size_available ? `<p class="card-cat"><strong>Custom size available</strong>${p.custom_size_note ? ' · ' + esc(p.custom_size_note) : ''}</p>` : ''}
           <div class="card-actions">
             <a class="card-btn try" href="${href}">✨ Try On</a>
             ${buy}
