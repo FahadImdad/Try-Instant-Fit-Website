@@ -1469,6 +1469,47 @@
       margin: 0;
     }
 
+    .setting-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: .85rem;
+      background: var(--surface);
+      border-radius: var(--r-md);
+    }
+    .setting-toggle-copy { margin: 0; cursor: pointer; font-size: .9rem; font-weight: 600; }
+    .switch-toggle { position: relative; display: inline-flex; flex: 0 0 auto; }
+    .switch-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+    .switch-toggle-track {
+      width: 3.4rem;
+      height: 1.85rem;
+      padding: 0 .42rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      border-radius: 999px;
+      background: #cbd5e1;
+      color: #334155;
+      font-size: .66rem;
+      font-weight: 800;
+      transition: background .2s ease, color .2s ease;
+    }
+    .switch-toggle-track::before {
+      content: '';
+      position: absolute;
+      left: .2rem;
+      width: 1.45rem;
+      height: 1.45rem;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 1px 4px rgba(15,23,42,.25);
+      transition: transform .2s ease;
+    }
+    .switch-toggle input:checked + .switch-toggle-track { background: var(--indigo); color: white; justify-content: flex-start; }
+    .switch-toggle input:checked + .switch-toggle-track::before { transform: translateX(1.55rem); }
+    .switch-toggle input:focus-visible + .switch-toggle-track { outline: 3px solid rgba(79,70,229,.25); outline-offset: 2px; }
+
     /* Mobile: tighter modals + responsive QR grid */
     @media (max-width: 600px) {
       .modal { padding: 1.5rem 1.25rem; max-height: 95vh; border-radius: var(--r-md) var(--r-md) 0 0; }
@@ -1768,9 +1809,12 @@
             </select>
             <div class="field-hint">Don't see your product? <a href="#" onclick="closeCreateQrModal(); openAddProduct(); return false;" style="color: var(--indigo); font-weight:600;">Add a new product first</a> — image gets pre-processed for AI.</div>
           </div>
-          <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .75rem; background: var(--surface); border-radius: var(--r-md);">
-            <input type="checkbox" id="qrRequiresPasscode" style="width: auto;" checked>
-            <label for="qrRequiresPasscode" style="margin: 0; cursor: pointer; font-size: .9rem;">🔑 Require a passcode to scan this QR</label>
+          <div class="field setting-toggle-row">
+            <label for="qrRequiresPasscode" class="setting-toggle-copy">🔑 Require a passcode to scan this QR</label>
+            <label class="switch-toggle" for="qrRequiresPasscode">
+              <input type="checkbox" id="qrRequiresPasscode" checked onchange="syncQrCapRequirement('qrRequiresPasscode','qrTotalLimit')">
+              <span class="switch-toggle-track" aria-hidden="true">On</span>
+            </label>
           </div>
           <div class="field">
             <label for="qrTotalLimit">Free/open try-on cap</label>
@@ -1929,9 +1973,12 @@
             <input type="checkbox" id="apShowInCatalog" style="width: auto;">
             <label for="apShowInCatalog" style="margin: 0; cursor: pointer; font-size: .9rem;">🛍️ Include in public catalogue (new products are private by default)</label>
           </div>
-          <div class="field" style="display: flex; align-items: center; gap: .75rem; padding: .75rem; background: var(--surface); border-radius: var(--r-md); margin-bottom: .75rem;">
-            <input type="checkbox" id="apQrPasscode" style="width: auto;" checked>
-            <label for="apQrPasscode" style="margin: 0; cursor: pointer; font-size: .9rem;">🔑 Require a passcode for this product's QR</label>
+          <div class="field setting-toggle-row" style="margin-bottom: .75rem;">
+            <label for="apQrPasscode" class="setting-toggle-copy">🔑 Require a passcode for this product's QR</label>
+            <label class="switch-toggle" for="apQrPasscode">
+              <input type="checkbox" id="apQrPasscode" checked onchange="syncQrCapRequirement('apQrPasscode','apQrLimit')">
+              <span class="switch-toggle-track" aria-hidden="true">On</span>
+            </label>
           </div>
           <div class="field">
             <label for="apQrLimit">Free/open try-on cap</label>
@@ -2027,9 +2074,12 @@
           <div id="epcdQrSection" style="display:none; padding: 1rem; background: var(--surface); border-radius: var(--r-md); margin-bottom: .75rem;">
             <div style="font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:.75rem;">QR Settings</div>
 
-            <div class="field" style="display: flex; align-items: center; gap: .75rem; margin-bottom: .75rem;">
-              <input type="checkbox" id="epcdQrPasscode" style="width: auto;">
-              <label for="epcdQrPasscode" style="margin: 0; cursor: pointer; font-size: .9rem;">🔑 Require a passcode to use this QR</label>
+            <div class="field setting-toggle-row" style="margin-bottom: .75rem; background:white;">
+              <label for="epcdQrPasscode" class="setting-toggle-copy">🔑 Require a passcode to use this QR</label>
+              <label class="switch-toggle" for="epcdQrPasscode">
+                <input type="checkbox" id="epcdQrPasscode" onchange="syncQrCapRequirement('epcdQrPasscode','epcdQrLimit')">
+                <span class="switch-toggle-track" aria-hidden="true">Off</span>
+              </label>
             </div>
 
             <div class="field" style="margin-bottom: .75rem;">
@@ -3795,6 +3845,17 @@
     populateCategorySelect(prefix, category);
   }
 
+  function syncQrCapRequirement(toggleId, limitId) {
+    const toggle = document.getElementById(toggleId);
+    const limit = document.getElementById(limitId);
+    if (!toggle || !limit) return;
+    const passcodeOn = toggle.checked;
+    limit.required = !passcodeOn;
+    limit.setAttribute('aria-required', String(!passcodeOn));
+    const state = toggle.parentElement?.querySelector('.switch-toggle-track');
+    if (state) state.textContent = passcodeOn ? 'On' : 'Off';
+  }
+
   function openAddProduct() {
     // Gate: brands without credits should top up before adding products,
     // otherwise customers who scan the QR will hit "out of credits" anyway.
@@ -3812,6 +3873,7 @@
     populateTaxonomy('ap', '', '', '');
     document.getElementById('apShowInCatalog').checked = false;
     document.getElementById('apQrPasscode').checked = true;
+    syncQrCapRequirement('apQrPasscode', 'apQrLimit');
     document.getElementById('apCustomSize').checked = false;
     apImageFile = null;
     document.getElementById('apImageFile').value = '';
@@ -4019,6 +4081,7 @@
       qrSection.style.display = 'block';
       document.getElementById('epcdQrPasscode').checked = !!qr.requires_passcode;
       document.getElementById('epcdQrLimit').value = qr.total_limit ?? '';
+      syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
       document.getElementById('epcdQrActive').checked = qr.active !== false;
     } else {
       qrSection.style.display = 'none';
@@ -4058,6 +4121,26 @@
       errEl.textContent = 'SKU is required.';
       errEl.className = 'alert error';
       return false;
+    }
+
+    let editQrSettings = null;
+    if (editingQrId) {
+      const limitRaw = document.getElementById('epcdQrLimit').value;
+      const totalLimit = limitRaw === '' ? null : parseInt(limitRaw, 10);
+      const requiresPasscode = document.getElementById('epcdQrPasscode').checked;
+      if (!requiresPasscode && (totalLimit === null || !Number.isFinite(totalLimit) || totalLimit < 1)) {
+        errEl.textContent = 'A positive free/open try-on cap is required when passcode protection is off.';
+        errEl.className = 'alert error';
+        document.getElementById('epcdQrLimit').focus();
+        return false;
+      }
+      if (totalLimit !== null && (!Number.isFinite(totalLimit) || totalLimit < 1)) {
+        errEl.textContent = 'Try-on cap must be 1 or more.';
+        errEl.className = 'alert error';
+        document.getElementById('epcdQrLimit').focus();
+        return false;
+      }
+      editQrSettings = { requiresPasscode, totalLimit };
     }
 
     btn.disabled = true; btn.textContent = 'Saving…';
@@ -4103,22 +4186,13 @@
       }
 
       // Step 2 — patch QR settings (only if this product has a QR)
-      if (editingQrId) {
-        const limitRaw = document.getElementById('epcdQrLimit').value;
-        const total_limit = limitRaw === '' ? null : parseInt(limitRaw, 10);
-        const requiresPasscode = document.getElementById('epcdQrPasscode').checked;
-        if (!requiresPasscode && (total_limit === null || total_limit < 1)) {
-          throw new Error('Enter a positive free/open try-on cap when passcode protection is off.');
-        }
-        if (total_limit !== null && (!Number.isFinite(total_limit) || total_limit < 1)) {
-          throw new Error('Try-on cap must be 1 or more, or blank for unlimited.');
-        }
+      if (editingQrId && editQrSettings) {
         const qrRes = await fetch(`${API}/api/qr/${editingQrId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            requires_passcode: requiresPasscode,
-            total_limit,
+            requires_passcode: editQrSettings.requiresPasscode,
+            total_limit: editQrSettings.totalLimit,
             active: document.getElementById('epcdQrActive').checked,
           }),
         });
@@ -4362,6 +4436,7 @@
     document.getElementById('qrProductPick').value = '';
     document.getElementById('qrTotalLimit').value = '';
     document.getElementById('qrRequiresPasscode').checked = true;
+    syncQrCapRequirement('qrRequiresPasscode', 'qrTotalLimit');
     loadProducts();  // refresh dropdown
     document.getElementById('createQrModal').classList.add('open');
   }
