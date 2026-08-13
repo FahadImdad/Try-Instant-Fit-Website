@@ -134,6 +134,10 @@ const currentYear = new Date().getFullYear();
 const footerText = document.querySelector('.footer-bottom p');
 if (footerText) {
     footerText.textContent = footerText.textContent.replace('2026', currentYear);
+    const legal = document.createElement('p');
+    legal.style.cssText = 'margin:.45rem 0 0;font-size:.8rem;';
+    legal.innerHTML = '<a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refund-policy">Refund Policy</a>';
+    footerText.insertAdjacentElement('afterend', legal);
 }
 
 // Add hover effect to stat numbers

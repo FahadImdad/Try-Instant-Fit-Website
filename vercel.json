@@ -12,5 +12,8 @@
     { "source": "/products",    "destination": "/products.html" },
     { "source": "/pricing",     "destination": "/pricing.html" },
     { "source": "/how-it-works","destination": "/how-it-works.html" }
+    ,{ "source": "/terms",       "destination": "/terms.html" }
+    ,{ "source": "/privacy",     "destination": "/privacy.html" }
+    ,{ "source": "/refund-policy","destination": "/refund-policy.html" }
   ]
 }
