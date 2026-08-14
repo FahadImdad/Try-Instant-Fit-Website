@@ -644,13 +644,13 @@
     }
     .pl-drawer-grid {
       display: grid;
-      grid-template-columns: 130px 1fr;
-      gap: .85rem;
+      grid-template-columns: 156px minmax(0, 1fr);
+      gap: 1rem;
       align-items: start;
-      margin-bottom: .65rem;
+      margin-bottom: .85rem;
     }
     @media (max-width: 480px) {
-      .pl-drawer-grid { grid-template-columns: 100px 1fr; gap: .65rem; }
+      .pl-drawer-grid { grid-template-columns: 112px minmax(0, 1fr); gap: .75rem; }
     }
     .pl-drawer-qr {
       width: 100%;
@@ -659,6 +659,13 @@
       border-radius: 8px;
       background: white;
     }
+    .pl-qr-caption {
+      margin-top: .4rem;
+      color: var(--muted);
+      font-size: .7rem;
+      line-height: 1.3;
+      text-align: center;
+    }
     .pl-drawer-meta {
       display: grid;
       gap: .35rem;
@@ -666,20 +673,41 @@
     }
     .pl-drawer-meta > div {
       display: flex;
+      align-items: center;
       justify-content: space-between;
       gap: .5rem;
-      padding: .25rem 0;
+      min-height: 38px;
+      padding: .35rem 0;
       border-bottom: 1px dashed var(--border);
     }
     .pl-drawer-meta > div:last-child { border-bottom: 0; }
     .pl-drawer-meta span { color: var(--muted); }
     .pl-drawer-meta strong { color: var(--text); font-weight: 700; }
     .pl-drawer-actions {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
-      gap: .35rem;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: .5rem;
     }
-    .pl-drawer-actions .btn { font-size: .75rem; padding: .45rem .5rem; min-height: 36px; }
+    .pl-drawer-actions .btn { font-size: .78rem; padding: .5rem .7rem; min-height: 38px; }
+    .pl-more { position: relative; }
+    .pl-more > summary { list-style: none; cursor: pointer; }
+    .pl-more > summary::-webkit-details-marker { display: none; }
+    .pl-more-menu {
+      position: absolute;
+      z-index: 20;
+      right: 0;
+      bottom: calc(100% + .4rem);
+      display: grid;
+      width: min(220px, 78vw);
+      gap: .3rem;
+      padding: .5rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, .14);
+    }
+    .pl-more-menu .btn { width: 100%; justify-content: flex-start; }
     .pl-drawer-warn {
       padding: .65rem .85rem;
       background: #fef3c7;
@@ -1500,6 +1528,8 @@
       border-radius: var(--r-md);
     }
     .setting-toggle-copy { margin: 0; cursor: pointer; font-size: .9rem; font-weight: 600; line-height: 1.4; }
+    .setting-toggle-copy strong, .setting-toggle-copy small { display: block; }
+    .setting-toggle-copy small { margin-top: .15rem; color: var(--muted); font-size: .76rem; font-weight: 500; }
     .switch-toggle { position: relative; display: inline-flex; flex: 0 0 auto; }
     .switch-toggle input { position: absolute; opacity: 0; pointer-events: none; }
     .switch-toggle-track {
@@ -2095,7 +2125,7 @@
             <div style="font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:.75rem;">QR Settings</div>
 
             <div class="field setting-toggle-row" style="margin-bottom: .75rem; background:white;">
-              <label for="epcdQrPasscode" class="setting-toggle-copy">🔑 Require a passcode to use this QR</label>
+              <label for="epcdQrPasscode" class="setting-toggle-copy"><strong>Passcode protection</strong><small>On: customers must enter a passcode. Off: free tries use the limit below.</small></label>
               <label class="switch-toggle" for="epcdQrPasscode">
                 <input type="checkbox" id="epcdQrPasscode" onchange="syncQrCapRequirement('epcdQrPasscode','epcdQrLimit')">
                 <span class="switch-toggle-track" aria-hidden="true">Off</span>
@@ -2103,20 +2133,20 @@
             </div>
 
             <div class="field" style="margin-bottom: .75rem;">
-              <label for="epcdQrLimit" style="font-size:.85rem;">Free/open try-on cap</label>
+              <label for="epcdQrLimit" style="font-size:.85rem;">Free try-on limit</label>
               <input type="number" id="epcdQrLimit" min="1" step="1" placeholder="Required when passcode is off">
-              <div class="field-hint">At the cap, this QR automatically returns to passcode-required mode.</div>
+              <div class="field-hint">Required only when passcode protection is off. Protection turns on automatically when this limit is reached.</div>
             </div>
 
             <div class="field setting-toggle-row" style="padding:.65rem; background:white; margin:0;">
-              <label for="epcdQrActive" class="setting-toggle-copy">QR is active — customers can scan it</label>
-              <label class="switch-toggle" for="epcdQrActive"><input type="checkbox" id="epcdQrActive" onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">Off</span></label>
+              <label for="epcdQrActive" class="setting-toggle-copy"><strong>Allow QR scanning</strong><small>Turn off to block this QR without removing the product.</small></label>
+              <label class="switch-toggle" for="epcdQrActive"><input type="checkbox" id="epcdQrActive" onchange="syncProductQrAvailability('qr')"><span class="switch-toggle-track" aria-hidden="true">Off</span></label>
             </div>
           </div>
 
           <div class="field setting-toggle-row" style="margin-bottom: .75rem;">
-            <label for="epcdActive" class="setting-toggle-copy">Product is active — its direct QR and try-on remain available</label>
-            <label class="switch-toggle" for="epcdActive"><input type="checkbox" id="epcdActive" onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">Off</span></label>
+            <label for="epcdActive" class="setting-toggle-copy"><strong>Product available for try-on</strong><small>Turning this off also blocks QR scanning.</small></label>
+            <label class="switch-toggle" for="epcdActive"><input type="checkbox" id="epcdActive" onchange="syncProductQrAvailability('product')"><span class="switch-toggle-track" aria-hidden="true">Off</span></label>
           </div>
           <button type="submit" class="btn btn-primary" id="epcdSubmit" style="width:100%; padding:.9rem;">Save Changes →</button>
         </form>
@@ -3648,28 +3678,24 @@
           <div class="product-list-drawer"${isOpen ? '' : ' hidden'}>
             ${qr ? `
               <div class="pl-drawer-grid">
-                <div><img class="pl-drawer-qr" src="${qrImageUrl(qr.scan_url, 220)}" alt="QR for ${escapeHtml(p.name)}"><div style="text-align:center;font-weight:800;margin-top:.45rem;">${escapeHtml(p.name)}</div></div>
+                <div><img class="pl-drawer-qr" src="${qrImageUrl(qr.scan_url, 220)}" alt="QR for ${escapeHtml(p.name)}"><div class="pl-qr-caption">QR for this product</div></div>
                 <div class="pl-drawer-meta">
                   <div><span>Try-Ons</span><strong>${fmt(qr.total_used || 0)}${qr.total_limit !== null ? ' / ' + fmt(qr.total_limit) : ''}</strong></div>
-                  <div><span>Customer access</span><strong>${qr.requires_passcode ? 'Passcode needed' : `Free tries · ${Math.max(0, (qr.total_limit || 0) - (qr.total_used || 0))} left`}</strong><button class="btn btn-secondary btn-sm" style="margin-top:.4rem;" onclick="toggleQrPasscode('${qr.id}', ${qr.requires_passcode}, ${qr.total_used || 0})">Passcode ${qr.requires_passcode ? 'On' : 'Off'}</button></div>
-                  <div><span>QR Status</span>${qr.active ? '<span class="status-badge pill-active">Active</span>' : '<span class="status-badge pill-inactive">Disabled</span>'}</div>
+                  <div><span>Passcode protection</span><label class="switch-toggle"><input type="checkbox" ${qr.requires_passcode ? 'checked' : ''} onchange="toggleQrPasscode('${qr.id}', ${qr.requires_passcode}, ${qr.total_used || 0}, this)"><span class="switch-toggle-track" aria-hidden="true">${qr.requires_passcode ? 'On' : 'Off'}</span></label></div>
+                  <div><span>QR scanning</span>${qr.active && p.active !== false ? '<span class="status-badge pill-active">Allowed</span>' : '<span class="status-badge pill-inactive">Blocked</span>'}</div>
                 </div>
               </div>
               <div class="pl-drawer-actions">
-                <button class="btn btn-primary btn-sm" onclick="viewQrImage(${qScanEsc}, ${qNameEsc})">📱 View QR &amp; Link</button>
-                <button class="btn btn-secondary btn-sm" onclick="copyScanUrl(${qScanEsc}, this)">🔗 URL</button>
-                <button class="btn btn-secondary btn-sm" onclick="downloadQr(${qScanEsc}, ${qNameEsc}, this)">⬇ Download QR</button>
-                ${(p.image_url || p.isolated_garment_url)
-                  ? `<button class="btn btn-secondary btn-sm" onclick="viewProductImages(${qNameEsc}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')}, '${p.id}')">Images</button>`
-                  : ''}
-                ${p.isolated_garment_url
-                  ? `<button class="btn btn-secondary btn-sm" style="color:#92400e; border-color:#fcd34d;" onclick="reportProductImage(${qNameEsc}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')}, '${p.id}')">⚠️ Report</button>`
-                  : ''}
-                <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">✏️ Edit</button>
-                ${qr.active
-                  ? `<button class="btn btn-secondary btn-sm" style="color:#92400e; border-color:#fcd34d;" onclick="toggleQrActive('${qr.id}', false, ${qNameEsc})">Disable</button>`
-                  : `<button class="btn btn-primary btn-sm" onclick="toggleQrActive('${qr.id}', true, ${qNameEsc})">Enable</button>`}
-                <button class="btn btn-secondary btn-sm" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteProduct('${p.id}', ${qNameEsc}, '${qr.id}')">🗑 Delete</button>
+                <button class="btn btn-primary btn-sm" onclick="downloadQr(${qScanEsc}, ${qNameEsc}, this)">⬇ Download QR</button>
+                <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">✏️ Edit product</button>
+                <details class="pl-more"><summary class="btn btn-secondary btn-sm">More actions ⋯</summary><div class="pl-more-menu">
+                  <button class="btn btn-secondary btn-sm" onclick="viewQrImage(${qScanEsc}, ${qNameEsc})">View QR &amp; link</button>
+                  <button class="btn btn-secondary btn-sm" onclick="copyScanUrl(${qScanEsc}, this)">Copy try-on link</button>
+                  ${(p.image_url || p.isolated_garment_url) ? `<button class="btn btn-secondary btn-sm" onclick="viewProductImages(${qNameEsc}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')}, '${p.id}')">View images</button>` : ''}
+                  ${p.isolated_garment_url ? `<button class="btn btn-secondary btn-sm" onclick="reportProductImage(${qNameEsc}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')}, '${p.id}')">Report image issue</button>` : ''}
+                  ${qr.active ? `<button class="btn btn-secondary btn-sm" onclick="toggleQrActive('${qr.id}', false, ${qNameEsc})">Block QR scanning</button>` : `<button class="btn btn-secondary btn-sm" onclick="toggleQrActive('${qr.id}', true, ${qNameEsc})">Allow QR scanning</button>`}
+                  <button class="btn btn-secondary btn-sm" style="color:#991b1b;" onclick="deleteProduct('${p.id}', ${qNameEsc}, '${qr.id}')">Delete product</button>
+                </div></details>
               </div>
             ` : `
               <div class="pl-drawer-warn">
@@ -3879,6 +3905,16 @@
     const state = toggle.parentElement?.querySelector('.switch-toggle-track');
     if (state) state.textContent = toggle.checked ? 'On' : 'Off';
     toggle.setAttribute('aria-checked', String(toggle.checked));
+  }
+
+  function syncProductQrAvailability(changed) {
+    const product = document.getElementById('epcdActive');
+    const qr = document.getElementById('epcdQrActive');
+    if (!product || !qr) return;
+    if (changed === 'product' && !product.checked) qr.checked = false;
+    if (changed === 'qr' && qr.checked) product.checked = true;
+    syncSettingToggle(product);
+    syncSettingToggle(qr);
   }
 
   function syncToggleGroup(root = document) {
@@ -4158,6 +4194,7 @@
       document.getElementById('epcdQrLimit').value = qr.total_limit ?? '';
       syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
       document.getElementById('epcdQrActive').checked = qr.active !== false;
+      syncProductQrAvailability('open');
     } else {
       qrSection.style.display = 'none';
     }
@@ -4268,7 +4305,7 @@
           body: JSON.stringify({
             requires_passcode: editQrSettings.requiresPasscode,
             total_limit: editQrSettings.totalLimit,
-            active: document.getElementById('epcdQrActive').checked,
+            active: document.getElementById('epcdActive').checked && document.getElementById('epcdQrActive').checked,
           }),
         });
         const qrData = await safeJson(qrRes);
@@ -4484,13 +4521,18 @@
     }
   }
 
-  async function toggleQrPasscode(qrId, currentlyRequired, totalUsed) {
+  async function toggleQrPasscode(qrId, currentlyRequired, totalUsed, control) {
+    const restoreControl = () => {
+      if (!control) return;
+      control.checked = currentlyRequired;
+      syncSettingToggle(control);
+    };
     const payload = { requires_passcode: !currentlyRequired };
     if (currentlyRequired) {
       const raw = prompt('How many free/open try-ons should be allowed before passcode protection turns on automatically?');
-      if (raw === null) return;
+      if (raw === null) { restoreControl(); return; }
       const additional = parseInt(raw, 10);
-      if (!Number.isInteger(additional) || additional < 1) { alert('Enter a positive whole number.'); return; }
+      if (!Number.isInteger(additional) || additional < 1) { restoreControl(); alert('Enter a positive whole number.'); return; }
       payload.total_limit = totalUsed + additional;
     }
     try {
@@ -4500,7 +4542,8 @@
       const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Could not update passcode access');
       await loadQrCodes();
-    } catch (err) { alert(humanError(err)); }
+      await loadProducts();
+    } catch (err) { restoreControl(); alert(humanError(err)); }
   }
 
   async function deleteQr(qrId, productName) {
