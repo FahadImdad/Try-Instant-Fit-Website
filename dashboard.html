@@ -708,6 +708,39 @@
       box-shadow: 0 12px 30px rgba(15, 23, 42, .14);
     }
     .pl-more-menu .btn { width: 100%; justify-content: flex-start; }
+    .pl-summary-badges { display: contents; }
+    @media (max-width: 600px) {
+      .product-list-summary {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+        gap: .35rem .6rem;
+        padding: .65rem;
+      }
+      .pl-thumb { grid-row: 1; grid-column: 1; }
+      .pl-info { grid-row: 1; grid-column: 2; }
+      .pl-chevron { grid-row: 1; grid-column: 3; }
+      .pl-summary-badges {
+        grid-row: 2;
+        grid-column: 2 / 4;
+        display: flex;
+        flex-wrap: wrap;
+        gap: .35rem;
+      }
+      .pl-drawer-grid { grid-template-columns: 96px minmax(0, 1fr); }
+      .pl-drawer-meta > div { min-height: 42px; }
+      .pl-drawer-actions { display: grid; grid-template-columns: 1fr 1fr; }
+      .pl-drawer-actions > .btn { width: 100%; }
+      .pl-more { grid-column: 1 / -1; width: 100%; }
+      .pl-more > summary { width: 100%; justify-content: center; }
+      .pl-more-menu {
+        position: static;
+        width: 100%;
+        margin-top: .5rem;
+        box-sizing: border-box;
+        box-shadow: none;
+        border-color: #cbd5e1;
+      }
+    }
     .pl-drawer-warn {
       padding: .65rem .85rem;
       background: #fef3c7;
@@ -3671,8 +3704,7 @@
               <div class="pl-name">${escapeHtml(p.name)}</div>
               <div class="pl-meta">${escapeHtml(p.sku)} · ${escapeHtml(priceTxt)} · ${tryonsTxt} try-on${tryonsTxt === '1' ? '' : 's'} · ${escapeHtml(sizeTxt)}${p.custom_size_available ? ' · Custom size' : ''}</div>
             </div>
-            ${visibilityBadge}
-            ${statusBadge}
+            <span class="pl-summary-badges">${visibilityBadge}${statusBadge}</span>
             <span class="pl-chevron">${isOpen ? '⌃' : '›'}</span>
           </div>
           <div class="product-list-drawer"${isOpen ? '' : ' hidden'}>
