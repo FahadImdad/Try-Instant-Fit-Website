@@ -170,6 +170,13 @@
       box-sizing: border-box;
     }
     .source-btn:hover, .source-btn:focus { border-color: var(--cyan); background: rgba(0,200,232,.05); outline: none; }
+    .source-btn:disabled {
+      cursor: not-allowed;
+      opacity: .45;
+      filter: grayscale(.35);
+      border-color: var(--border);
+      background: var(--surface);
+    }
     .source-btn .src-icon { font-size: 1.6rem; line-height: 1; }
     .source-btn .src-label { font-size: .85rem; font-weight: 700; }
     .source-btn .src-sub { font-size: .7rem; color: var(--muted); }
@@ -458,7 +465,7 @@
     </details>
     <div class="field" style="margin-bottom:1rem;">
       <label for="customerEmail" id="customerEmailLabel" style="font-weight:700;">Email address</label>
-      <input type="email" id="customerEmail" autocomplete="email" inputmode="email" placeholder="you@gmail.com" style="width:100%; box-sizing:border-box;">
+      <input type="email" id="customerEmail" autocomplete="email" inputmode="email" placeholder="you@gmail.com" style="width:100%; box-sizing:border-box;" oninput="updateTryOnAvailability()">
       <div id="customerEmailHint" style="font-size:.74rem; color:var(--muted); margin-top:.35rem; line-height:1.4;">Required for free try-ons. The store can use it to follow up about this product.</div>
     </div>
     <h3 class="step-title"><span class="step-num" id="uploadStepNum">1</span> Add Your Photo</h3>
@@ -468,12 +475,12 @@
 
     <!-- Source picker: camera vs gallery -->
     <div class="source-picker" id="sourcePicker">
-      <button type="button" class="source-btn" id="cameraBtn" onclick="document.getElementById('cameraInput').click()">
+      <button type="button" class="source-btn" id="cameraBtn" onclick="document.getElementById('cameraInput').click()" disabled>
         <span class="src-icon">📷</span>
         <span class="src-label">Take Photo</span>
         <span class="src-sub">Use camera</span>
       </button>
-      <button type="button" class="source-btn" id="galleryBtn" onclick="document.getElementById('galleryInput').click()">
+      <button type="button" class="source-btn" id="galleryBtn" onclick="document.getElementById('galleryInput').click()" disabled>
         <span class="src-icon">🖼️</span>
         <span class="src-label">Upload</span>
         <span class="src-sub">From gallery</span>
@@ -851,6 +858,19 @@
     hint.textContent = required
       ? 'Required for free try-ons. The store can use it to follow up about this product.'
       : 'Optional when you use a passcode. Share it only if you want the store to follow up.';
+    updateTryOnAvailability();
+  }
+
+  function updateTryOnAvailability() {
+    const email = document.getElementById('customerEmail').value.trim();
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const customerDataReady = !!validatedPasscode || validEmail;
+    ['cameraBtn', 'galleryBtn', 'cameraInput', 'galleryInput'].forEach(id => {
+      const control = document.getElementById(id);
+      if (control) control.disabled = !customerDataReady;
+    });
+    const tryButton = document.getElementById('tryOnBtn');
+    tryButton.disabled = !customerDataReady || !userPhoto;
   }
 
   const cameraInput  = document.getElementById('cameraInput');
@@ -870,7 +890,7 @@
       uploadPreview.src = ev.target.result;
       sourcePicker.style.display = 'none';
       previewWrap.style.display = 'block';
-      document.getElementById('tryOnBtn').disabled = false;
+      updateTryOnAvailability();
     };
     reader.readAsDataURL(file);
   }
@@ -885,7 +905,7 @@
     uploadPreview.src = '';
     previewWrap.style.display = 'none';
     sourcePicker.style.display = 'grid';
-    document.getElementById('tryOnBtn').disabled = true;
+    updateTryOnAvailability();
     document.getElementById('uploadError').className = 'alert';
   }
 
