@@ -3332,8 +3332,9 @@
       list.innerHTML = leads.map(lead => `
         <div class="passcode-row">
           <div style="min-width:0; flex:1;">
-            <div style="font-weight:800; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(lead.customer_email)}</div>
-            <div style="font-size:.75rem; color:var(--muted); margin-top:.2rem;">${lead.access_mode === 'free' ? 'Free try-on' : 'Passcode try-on'}${lead.product_id ? ' · ' + escapeHtml(lead.product_id) : ''}</div>
+            <div style="font-weight:800; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(lead.customer_name || 'Customer')}</div>
+            <div style="font-size:.78rem; color:var(--text); margin-top:.15rem; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(lead.customer_email)}</div>
+            <div style="font-size:.75rem; color:var(--muted); margin-top:.2rem;">${lead.customer_phone ? escapeHtml(lead.customer_phone) + ' · ' : ''}${lead.access_mode === 'free' ? 'Free try-on' : 'Passcode try-on'}${lead.product_id ? ' · ' + escapeHtml(lead.product_id) : ''}</div>
           </div>
           <time style="font-size:.72rem; color:var(--muted); white-space:nowrap;">${new Date(lead.created_at).toLocaleString()}</time>
         </div>`).join('');

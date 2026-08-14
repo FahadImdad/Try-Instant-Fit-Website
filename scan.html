@@ -445,6 +445,18 @@
     <button class="btn-block primary" id="passcodeBtn" style="margin-top: 1rem;" onclick="validatePasscode()">Continue →</button>
   </div>
 
+  <!-- Step 1: Customer details for free/open try-ons -->
+  <div id="detailsView" class="scan-card" style="display:none;">
+    <h3 class="step-title"><span class="step-num">1</span> Your Details</h3>
+    <p style="color:var(--muted); font-size:.86rem; margin:0 0 1rem; line-height:1.5;">Share your details so the shop can help with size availability, custom orders, and questions about this design.</p>
+    <div class="alert" id="detailsError"></div>
+    <div class="field"><label for="freeCustomerName">Full name *</label><input id="freeCustomerName" type="text" autocomplete="name" maxlength="100" placeholder="Your full name"></div>
+    <div class="field"><label for="freeCustomerEmail">Email address *</label><input id="freeCustomerEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@gmail.com"></div>
+    <div class="field"><label for="freeCustomerPhone">WhatsApp / phone (optional)</label><input id="freeCustomerPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="e.g. +92 300 1234567"><div class="field-hint">Add this only if you prefer the shop to contact you by phone or WhatsApp.</div></div>
+    <label style="display:flex; gap:.65rem; align-items:flex-start; font-size:.78rem; color:var(--muted); line-height:1.45; margin:1rem 0; cursor:pointer;"><input id="freeFollowupConsent" type="checkbox" style="margin-top:.2rem; flex:0 0 auto;"> <span>I agree that this shop may use these details to follow up about this product, sizing, availability, or custom-order support. *</span></label>
+    <button class="btn-block primary" type="button" onclick="continueFreeDetails()">Continue to Photo →</button>
+  </div>
+
   <!-- Step 2: Product + Upload -->
   <div id="uploadView" class="scan-card" style="display:none;">
     <div class="product-head">
@@ -463,10 +475,12 @@
       <summary>Product details</summary>
       <p id="productDescription" class="pd-body"></p>
     </details>
-    <div class="field" style="margin-bottom:1rem;">
-      <label for="customerEmail" id="customerEmailLabel" style="font-weight:700;">Email address</label>
-      <input type="email" id="customerEmail" autocomplete="email" inputmode="email" placeholder="you@gmail.com" style="width:100%; box-sizing:border-box;" oninput="updateTryOnAvailability()">
-      <div id="customerEmailHint" style="font-size:.74rem; color:var(--muted); margin-top:.35rem; line-height:1.4;">Required for free try-ons. The store can use it to follow up about this product.</div>
+    <div id="passcodeContactBlock" style="display:none; padding:.75rem; margin-bottom:1rem; border:1px solid var(--border); border-radius:10px; background:var(--surface);">
+      <div style="font-size:.78rem; font-weight:800; margin-bottom:.5rem;">Contact details (optional)</div>
+      <input type="text" id="customerName" autocomplete="name" placeholder="Name" style="width:100%; box-sizing:border-box; margin-bottom:.5rem;">
+      <input type="email" id="customerEmail" autocomplete="email" inputmode="email" placeholder="Email" style="width:100%; box-sizing:border-box; margin-bottom:.5rem;">
+      <input type="tel" id="customerPhone" autocomplete="tel" inputmode="tel" placeholder="WhatsApp / phone" style="width:100%; box-sizing:border-box;">
+      <div style="font-size:.7rem; color:var(--muted); margin-top:.4rem;">Optional with a passcode. These details are shared with the shop only if entered.</div>
     </div>
     <h3 class="step-title"><span class="step-num" id="uploadStepNum">1</span> Add Your Photo</h3>
     <p style="color:var(--muted); font-size:.88rem; margin: 0 0 .6rem;">Stand against a plain background, full body, facing forward — best results.</p>
@@ -610,6 +624,8 @@
   let validatedPasscode = null;  // { code, passcode_id, remaining }
   let userPhoto = null;    // File
   let resultUrl = null;    // URL of the try-on result image (used by downloadResult/shareResult)
+  let freeDetailsComplete = false;
+  let capturedCustomer = { name: '', email: '', phone: '', consent: false };
 
   // ── Init: read token from URL, lookup QR ──
   (async function init() {
@@ -634,14 +650,14 @@
         return showError('🔍', 'QR Not Found', data.error || "We couldn't find this QR code.");
       }
       qrInfo = data;
-      syncCustomerEmailRequirement();
       hide('loadingView');
       renderProductHeader();
       if (qrInfo.requires_passcode) {
         show('passcodeView');
         document.getElementById('passcodeInput').focus();
       } else {
-        show('uploadView');
+        show('detailsView');
+        document.getElementById('freeCustomerName').focus();
       }
       // Load the brand's browsable catalogue in the background — non-blocking,
       // so a catalogue failure never holds up the primary try-on flow.
@@ -849,22 +865,30 @@
 
   // ── Photo upload (camera + gallery, two separate inputs) ──
   function syncCustomerEmailRequirement() {
-    const input = document.getElementById('customerEmail');
-    const label = document.getElementById('customerEmailLabel');
-    const hint = document.getElementById('customerEmailHint');
-    const required = !validatedPasscode;
-    input.required = required;
-    label.textContent = required ? 'Email address (required)' : 'Email address (optional)';
-    hint.textContent = required
-      ? 'Required for free try-ons. The store can use it to follow up about this product.'
-      : 'Optional when you use a passcode. Share it only if you want the store to follow up.';
+    document.getElementById('passcodeContactBlock').style.display = validatedPasscode ? 'block' : 'none';
     updateTryOnAvailability();
   }
 
+  function continueFreeDetails() {
+    const name = document.getElementById('freeCustomerName').value.trim();
+    const email = document.getElementById('freeCustomerEmail').value.trim().toLowerCase();
+    const phone = document.getElementById('freeCustomerPhone').value.trim();
+    const consent = document.getElementById('freeFollowupConsent').checked;
+    const error = document.getElementById('detailsError');
+    error.className = 'alert';
+    if (name.length < 2) { error.textContent = 'Enter your full name.'; error.className = 'alert error'; return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { error.textContent = 'Enter a valid email address.'; error.className = 'alert error'; return; }
+    if (!consent) { error.textContent = 'Please confirm that the shop may follow up about this product.'; error.className = 'alert error'; return; }
+    capturedCustomer = { name, email, phone, consent: true };
+    freeDetailsComplete = true;
+    hide('detailsView');
+    document.getElementById('uploadStepNum').textContent = '2';
+    updateTryOnAvailability();
+    show('uploadView');
+  }
+
   function updateTryOnAvailability() {
-    const email = document.getElementById('customerEmail').value.trim();
-    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    const customerDataReady = !!validatedPasscode || validEmail;
+    const customerDataReady = !!validatedPasscode || freeDetailsComplete;
     ['cameraBtn', 'galleryBtn', 'cameraInput', 'galleryInput'].forEach(id => {
       const control = document.getElementById(id);
       if (control) control.disabled = !customerDataReady;
@@ -920,17 +944,12 @@
     if (!userPhoto || !qrInfo) return;
     const errEl = document.getElementById('uploadError');
     errEl.className = 'alert';
-    const emailInput = document.getElementById('customerEmail');
-    const customerEmail = emailInput.value.trim().toLowerCase();
-    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail);
-    if (!validatedPasscode && !emailValid) {
-      showUploadError('Enter a valid email address to use a free try-on.');
-      emailInput.focus();
-      return;
-    }
-    if (customerEmail && !emailValid) {
+    const customerName = validatedPasscode ? document.getElementById('customerName').value.trim() : capturedCustomer.name;
+    const customerEmail = validatedPasscode ? document.getElementById('customerEmail').value.trim().toLowerCase() : capturedCustomer.email;
+    const customerPhone = validatedPasscode ? document.getElementById('customerPhone').value.trim() : capturedCustomer.phone;
+    if (customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
       showUploadError('Enter a valid email address, or leave it blank when using a passcode.');
-      emailInput.focus();
+      document.getElementById('customerEmail').focus();
       return;
     }
 
@@ -954,6 +973,9 @@
         fd.append('passcode_id', validatedPasscode.passcode_id);
       }
       if (customerEmail) fd.append('customer_email', customerEmail);
+      if (customerName) fd.append('customer_name', customerName);
+      if (customerPhone) fd.append('customer_phone', customerPhone);
+      fd.append('followup_consent', String(validatedPasscode ? false : capturedCustomer.consent));
       // Garment is pre-isolated at QR creation, so each try-on is a single AI call.
       // Model + output resolution are locked server-side; nothing about the AI
       // engine is sent from or exposed to the client.
