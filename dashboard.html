@@ -1527,7 +1527,7 @@
       box-shadow: 0 1px 4px rgba(15,23,42,.25);
       transition: transform .2s ease;
     }
-    .switch-toggle input:checked + .switch-toggle-track { background: var(--indigo); color: white; justify-content: flex-start; }
+    .switch-toggle input:checked + .switch-toggle-track { background: #1677ff; color: white; justify-content: flex-start; box-shadow: 0 0 0 3px rgba(22,119,255,.12); }
     .switch-toggle input:checked + .switch-toggle-track::before { transform: translateX(1.55rem); }
     .switch-toggle input:focus-visible + .switch-toggle-track { outline: 3px solid rgba(79,70,229,.25); outline-offset: 2px; }
 
@@ -3648,10 +3648,10 @@
           <div class="product-list-drawer"${isOpen ? '' : ' hidden'}>
             ${qr ? `
               <div class="pl-drawer-grid">
-                <img class="pl-drawer-qr" src="${qrImageUrl(qr.scan_url, 220)}" alt="QR for ${escapeHtml(p.name)}">
+                <div><img class="pl-drawer-qr" src="${qrImageUrl(qr.scan_url, 220)}" alt="QR for ${escapeHtml(p.name)}"><div style="text-align:center;font-weight:800;margin-top:.45rem;">${escapeHtml(p.name)}</div></div>
                 <div class="pl-drawer-meta">
                   <div><span>Try-Ons</span><strong>${fmt(qr.total_used || 0)}${qr.total_limit !== null ? ' / ' + fmt(qr.total_limit) : ''}</strong></div>
-                  <div><span>Access</span><strong>${qr.requires_passcode ? '🔑 Passcode' : `Free/open · ${Math.max(0, (qr.total_limit || 0) - (qr.total_used || 0))} left`}</strong></div>
+                  <div><span>Customer access</span><strong>${qr.requires_passcode ? 'Passcode needed' : `Free tries · ${Math.max(0, (qr.total_limit || 0) - (qr.total_used || 0))} left`}</strong><button class="btn btn-secondary btn-sm" style="margin-top:.4rem;" onclick="toggleQrPasscode('${qr.id}', ${qr.requires_passcode}, ${qr.total_used || 0})">Passcode ${qr.requires_passcode ? 'On' : 'Off'}</button></div>
                   <div><span>QR Status</span>${qr.active ? '<span class="status-badge pill-active">Active</span>' : '<span class="status-badge pill-inactive">Disabled</span>'}</div>
                 </div>
               </div>
@@ -3666,7 +3666,6 @@
                   ? `<button class="btn btn-secondary btn-sm" style="color:#92400e; border-color:#fcd34d;" onclick="reportProductImage(${qNameEsc}, ${JSON.stringify(p.image_url || '').replace(/"/g, '&quot;')}, ${JSON.stringify(p.isolated_garment_url || '').replace(/"/g, '&quot;')}, '${p.id}')">⚠️ Report</button>`
                   : ''}
                 <button class="btn btn-secondary btn-sm" onclick="editProduct('${p.id}')">✏️ Edit</button>
-                <button class="btn btn-secondary btn-sm" onclick="toggleQrPasscode('${qr.id}', ${qr.requires_passcode}, ${qr.total_used || 0})">🔑 Passcode: ${qr.requires_passcode ? 'On' : 'Off'}</button>
                 ${qr.active
                   ? `<button class="btn btn-secondary btn-sm" style="color:#92400e; border-color:#fcd34d;" onclick="toggleQrActive('${qr.id}', false, ${qNameEsc})">Disable</button>`
                   : `<button class="btn btn-primary btn-sm" onclick="toggleQrActive('${qr.id}', true, ${qNameEsc})">Enable</button>`}
