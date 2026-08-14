@@ -1732,6 +1732,7 @@
           <button class="tab-btn active" role="tab" data-tab="analytics" onclick="switchTab('analytics')">📊 <span class="tab-label">Analytics</span></button>
           <button class="tab-btn" role="tab" data-tab="products" onclick="switchTab('products')">👕 <span class="tab-label">Products</span></button>
           <button class="tab-btn" role="tab" data-tab="code"     onclick="switchTab('code')">🔑 <span class="tab-label">Codes</span></button>
+          <button class="tab-btn" role="tab" data-tab="leads"    onclick="switchTab('leads')">✉ <span class="tab-label">Leads</span></button>
           <button class="tab-btn" role="tab" data-tab="refunds"  onclick="switchTab('refunds')">↩ <span class="tab-label">Refunds</span></button>
           <button class="tab-btn" role="tab" data-tab="profile"  onclick="switchTab('profile')">👤 <span class="tab-label">Profile</span></button>
         </nav>
@@ -1844,6 +1845,13 @@
           <div class="sw-section">
             <div class="sw-section-head"><div><h3>↩ Credit Refunds</h3><p>See when a try-on credit was returned after a report review.</p></div></div>
             <div id="refundHistoryList" class="passcodes-list"><div class="empty-state-mini">Loading refund history…</div></div>
+          </div>
+        </div>
+
+        <div id="tab-leads" class="tab-content" role="tabpanel">
+          <div class="sw-section">
+            <div class="sw-section-head"><div><h3>✉ Customer Leads</h3><p>Emails collected from completed free try-ons and optionally from passcode try-ons.</p></div></div>
+            <div id="customerLeadsList" class="passcodes-list"><div class="empty-state-mini">Loading customer leads…</div></div>
           </div>
         </div>
 
@@ -2160,7 +2168,7 @@
             <div class="field setting-toggle-row" style="margin-bottom: .75rem; background:white;">
               <label for="epcdQrPasscode" class="setting-toggle-copy"><strong>Passcode protection</strong><small>On: customers must enter a passcode. Off: free tries use the limit below.</small></label>
               <label class="switch-toggle" for="epcdQrPasscode">
-                <input type="checkbox" id="epcdQrPasscode" onchange="syncQrCapRequirement('epcdQrPasscode','epcdQrLimit')">
+                <input type="checkbox" id="epcdQrPasscode" onchange="onEditQrPasscodeChange(this)">
                 <span class="switch-toggle-track" aria-hidden="true">Off</span>
               </label>
             </div>
@@ -3294,6 +3302,7 @@
     if (!activeBrandId) return;
     if (tabName === 'products') { loadProducts(); loadQrCodes(); }
     else if (tabName === 'code') { loadBrandPasscodes(); }
+    else if (tabName === 'leads') { loadCustomerLeads(); }
     else if (tabName === 'refunds') { loadRefundHistory(); }
     if (!options.fromHistory) {
       const next = new URL(window.location.href);
@@ -3306,6 +3315,32 @@
     const tab = event.state?.dashboardTab || new URL(window.location.href).searchParams.get('tab') || 'analytics';
     if (document.getElementById('tab-' + tab)) switchTab(tab, { fromHistory: true });
   });
+
+  async function loadCustomerLeads() {
+    const list = document.getElementById('customerLeadsList');
+    if (!activeBrandId || !list) return;
+    list.innerHTML = '<div class="empty-state-mini">Loading customer leads…</div>';
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/leads?limit=500`);
+      const data = await safeJson(res);
+      if (!res.ok) throw new Error(data.error || 'Could not load customer leads.');
+      const leads = Array.isArray(data.leads) ? data.leads : [];
+      if (!leads.length) {
+        list.innerHTML = '<div class="empty-state-mini">No customer emails collected yet. Emails appear here after completed try-ons.</div>';
+        return;
+      }
+      list.innerHTML = leads.map(lead => `
+        <div class="passcode-row">
+          <div style="min-width:0; flex:1;">
+            <div style="font-weight:800; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(lead.customer_email)}</div>
+            <div style="font-size:.75rem; color:var(--muted); margin-top:.2rem;">${lead.access_mode === 'free' ? 'Free try-on' : 'Passcode try-on'}${lead.product_id ? ' · ' + escapeHtml(lead.product_id) : ''}</div>
+          </div>
+          <time style="font-size:.72rem; color:var(--muted); white-space:nowrap;">${new Date(lead.created_at).toLocaleString()}</time>
+        </div>`).join('');
+    } catch (err) {
+      list.innerHTML = `<div class="empty-state-mini">${escapeHtml(humanError(err))}</div>`;
+    }
+  }
 
   async function loadRefundHistory() {
     const list = document.getElementById('refundHistoryList');
@@ -3932,6 +3967,26 @@
     syncSettingToggle(toggle);
   }
 
+  function onEditQrPasscodeChange(toggle) {
+    if (!toggle.checked) {
+      const raw = prompt('How many additional free try-ons should customers receive before passcode protection turns on again?');
+      if (raw === null) {
+        toggle.checked = true;
+        syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
+        return;
+      }
+      const additional = parseInt(raw, 10);
+      if (!Number.isInteger(additional) || additional < 1) {
+        toggle.checked = true;
+        syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
+        alert('Enter a positive whole number of additional free try-ons.');
+        return;
+      }
+      document.getElementById('epcdQrLimit').value = editingQrUsed + additional;
+    }
+    syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
+  }
+
   function syncSettingToggle(toggle) {
     if (!toggle) return;
     const state = toggle.parentElement?.querySelector('.switch-toggle-track');
@@ -4162,6 +4217,7 @@
   let replacementImageFile = null;
 
   let editingQrId = null;
+  let editingQrUsed = 0;
 
   // Show a live preview when the vendor picks a replacement photo, and
   // stash the file for submitEditProduct to upload on save.
@@ -4219,6 +4275,7 @@
     // Pre-fill QR settings if this product has a QR
     const qr = allQrs.find(q => q.product_uuid === id);
     editingQrId = qr ? qr.id : null;
+    editingQrUsed = qr ? Number(qr.total_used || 0) : 0;
     const qrSection = document.getElementById('epcdQrSection');
     if (qr) {
       qrSection.style.display = 'block';
