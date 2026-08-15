@@ -129,6 +129,26 @@
       align-items: center;
     }
 
+    .details-intro { color: var(--muted); font-size: .86rem; margin: 0 0 1.25rem; line-height: 1.55; }
+    .details-form { display: grid; gap: 1rem; }
+    .details-field { display: grid; gap: .4rem; }
+    .details-field label { font-size: .78rem; font-weight: 800; color: #334155; letter-spacing: .01em; }
+    .details-field label span { color: #ef4444; }
+    .input-shell { position: relative; }
+    .input-icon { position: absolute; left: .9rem; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none; }
+    .details-input { width: 100%; box-sizing: border-box; min-height: 50px; padding: .8rem .9rem .8rem 2.65rem; border: 1.5px solid #d7deea; border-radius: 12px; background: #f8fafc; color: var(--text); font: inherit; font-size: .9rem; outline: none; transition: border-color .18s, box-shadow .18s, background .18s; }
+    .details-input::placeholder { color: #94a3b8; }
+    .details-input:hover { border-color: #b6c2d3; background: #fff; }
+    .details-input:focus { border-color: #1677ff; background: #fff; box-shadow: 0 0 0 4px rgba(22,119,255,.1); }
+    .details-input.valid { border-color: #10b981; background: #f0fdf4; }
+    .details-input.invalid:not(:focus) { border-color: #f87171; background: #fff7f7; }
+    .details-help { margin: 0; color: var(--muted); font-size: .7rem; line-height: 1.4; }
+    .consent-card { display: flex; align-items: flex-start; gap: .7rem; padding: .85rem; border: 1.5px solid #d7deea; border-radius: 12px; background: #f8fafc; color: #475569; font-size: .76rem; line-height: 1.45; cursor: pointer; transition: border-color .18s, background .18s, box-shadow .18s; }
+    .consent-card:hover { border-color: #a9b8cc; background: #fff; }
+    .consent-card:has(input:checked) { border-color: #1677ff; background: #eff6ff; box-shadow: 0 0 0 3px rgba(22,119,255,.08); }
+    .consent-card input { width: 19px; height: 19px; margin: .05rem 0 0; flex: 0 0 auto; accent-color: #1677ff; }
+    .details-submit:disabled { cursor: not-allowed; opacity: .48; filter: grayscale(.2); }
+
     /* Passcode */
     .passcode-input {
       width: 100%;
@@ -448,13 +468,15 @@
   <!-- Step 1: Customer details for free/open try-ons -->
   <div id="detailsView" class="scan-card" style="display:none;">
     <h3 class="step-title"><span class="step-num">1</span> Your Details</h3>
-    <p style="color:var(--muted); font-size:.86rem; margin:0 0 1rem; line-height:1.5;">Share your details so the shop can help with size availability, custom orders, and questions about this design.</p>
+    <p class="details-intro">Get personalised help with size availability, custom orders, and questions about this design.</p>
     <div class="alert" id="detailsError"></div>
-    <div class="field"><label for="freeCustomerName">Full name *</label><input id="freeCustomerName" type="text" autocomplete="name" maxlength="100" placeholder="Your full name"></div>
-    <div class="field"><label for="freeCustomerEmail">Email address *</label><input id="freeCustomerEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@gmail.com"></div>
-    <div class="field"><label for="freeCustomerPhone">WhatsApp / phone (optional)</label><input id="freeCustomerPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="e.g. +92 300 1234567"><div class="field-hint">Add this only if you prefer the shop to contact you by phone or WhatsApp.</div></div>
-    <label style="display:flex; gap:.65rem; align-items:flex-start; font-size:.78rem; color:var(--muted); line-height:1.45; margin:1rem 0; cursor:pointer;"><input id="freeFollowupConsent" type="checkbox" style="margin-top:.2rem; flex:0 0 auto;"> <span>I agree that this shop may use these details to follow up about this product, sizing, availability, or custom-order support. *</span></label>
-    <button class="btn-block primary" type="button" onclick="continueFreeDetails()">Continue to Photo →</button>
+    <div class="details-form">
+      <div class="details-field"><label for="freeCustomerName">Full name <span>*</span></label><div class="input-shell"><span class="input-icon">👤</span><input class="details-input" id="freeCustomerName" type="text" autocomplete="name" maxlength="100" placeholder="Enter your full name" oninput="updateDetailsForm()" required></div></div>
+      <div class="details-field"><label for="freeCustomerEmail">Email address <span>*</span></label><div class="input-shell"><span class="input-icon">✉️</span><input class="details-input" id="freeCustomerEmail" type="email" autocomplete="email" inputmode="email" placeholder="name@example.com" oninput="updateDetailsForm()" required></div></div>
+      <div class="details-field"><label for="freeCustomerPhone">WhatsApp / phone <span>*</span></label><div class="input-shell"><span class="input-icon">📱</span><input class="details-input" id="freeCustomerPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="+92 300 1234567" oninput="updateDetailsForm()" required></div><p class="details-help">Used only for product, sizing, availability, or custom-order support.</p></div>
+      <label class="consent-card"><input id="freeFollowupConsent" type="checkbox" onchange="updateDetailsForm()"> <span>I agree that this shop may contact me about this product, sizing, availability, or custom-order support.</span></label>
+      <button class="btn-block primary details-submit" id="detailsContinueBtn" type="button" onclick="continueFreeDetails()" disabled>Continue to Photo →</button>
+    </div>
   </div>
 
   <!-- Step 2: Product + Upload -->
@@ -878,6 +900,7 @@
     error.className = 'alert';
     if (name.length < 2) { error.textContent = 'Enter your full name.'; error.className = 'alert error'; return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { error.textContent = 'Enter a valid email address.'; error.className = 'alert error'; return; }
+    if (phone.replace(/\D/g, '').length < 7) { error.textContent = 'Enter a valid WhatsApp or phone number.'; error.className = 'alert error'; return; }
     if (!consent) { error.textContent = 'Please confirm that the shop may follow up about this product.'; error.className = 'alert error'; return; }
     capturedCustomer = { name, email, phone, consent: true };
     freeDetailsComplete = true;
@@ -885,6 +908,22 @@
     document.getElementById('uploadStepNum').textContent = '2';
     updateTryOnAvailability();
     show('uploadView');
+  }
+
+  function updateDetailsForm() {
+    const nameInput = document.getElementById('freeCustomerName');
+    const emailInput = document.getElementById('freeCustomerEmail');
+    const phoneInput = document.getElementById('freeCustomerPhone');
+    const nameValid = nameInput.value.trim().length >= 2;
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim());
+    const phoneValid = phoneInput.value.replace(/\D/g, '').length >= 7;
+    [[nameInput, nameValid], [emailInput, emailValid], [phoneInput, phoneValid]].forEach(([input, valid]) => {
+      input.classList.toggle('valid', valid);
+      input.classList.toggle('invalid', input.value.length > 0 && !valid);
+    });
+    const ready = nameValid && emailValid && phoneValid && document.getElementById('freeFollowupConsent').checked;
+    document.getElementById('detailsContinueBtn').disabled = !ready;
+    document.getElementById('detailsError').className = 'alert';
   }
 
   function updateTryOnAvailability() {
