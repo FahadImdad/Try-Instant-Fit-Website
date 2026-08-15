@@ -3067,11 +3067,11 @@
   }
 
   // ── Live (auto) refresh ──
-  // Polls /overview every 30s while the dashboard tab is visible. Quietly
-  // re-renders without flashing the loading view.
+  // Polls the overview every two minutes while visible and renders only when
+  // its data changed. Lists remain stable until the vendor refreshes them.
   let livePollInterval = null;
   let lastLiveRefreshAt = 0;
-  const LIVE_REFRESH_MS = 30000;
+  const LIVE_REFRESH_MS = 120000;
 
   async function refreshDashboardLive() {
     if (!activeBrandId || document.hidden) return;
@@ -3079,16 +3079,10 @@
       const res = await fetch(`${API}/api/brands/${activeBrandId}/overview`);
       if (!res.ok) return;
       const data = await res.json();
-      renderDashboard(data);
-      // Refresh per-section data so passcodes/products/QR usage stay live.
-      // Skip the products re-render while the user has any drawer expanded
-      // — even with state preservation, an innerHTML rebuild causes a brief
-      // visual flicker that feels like the drawer closed. Counts catch up
-      // on the next poll once the user closes the drawer, or instantly
-      // when they hit the Refresh button.
-      if (typeof loadBrandPasscodes === 'function') loadBrandPasscodes();
-      if (typeof loadProducts === 'function' && openProductIds.size === 0) loadProducts();
-      if (typeof loadQrCodes === 'function')         loadQrCodes();
+      const changed = !lastDashboardData || JSON.stringify(data) !== JSON.stringify(lastDashboardData);
+      if (changed) renderDashboard(data);
+      // Keep product, QR and passcode DOM stable during background refresh.
+      // Their data updates on manual refresh or the next full page visit.
       lastLiveRefreshAt = Date.now();
     } catch (err) {
       // Background refresh — never surface errors to the UI.
