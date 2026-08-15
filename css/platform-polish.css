@@ -85,6 +85,10 @@ label { color: #334155; }
 .setting-toggle-row { border: 1px solid #e5eaf2; background: #f8fafc; }
 .switch-toggle-track { cursor: pointer; }
 
+/* Scan details fields have leading icons; preserve their text clearance. */
+.input-shell .details-input { padding-left: 2.75rem !important; }
+.input-shell .input-icon { left: .95rem; z-index: 1; }
+
 /* Dialogs */
 .modal-backdrop { background: rgba(15, 23, 42, .58); backdrop-filter: blur(5px); }
 .modal {
@@ -122,7 +126,9 @@ label { color: #334155; }
   .pl-status { grid-column: 3; grid-row: 1; align-self: start; }
   .pl-chevron { grid-column: 3; grid-row: 2; justify-self: end; }
   .product-list-drawer { padding: .85rem; overflow: hidden; }
-  .pl-drawer-grid { grid-template-columns: 1fr !important; }
+  .pl-drawer-grid { grid-template-columns: 112px minmax(0, 1fr) !important; align-items: start; }
+  .pl-drawer-grid > div:first-child { width: 112px; max-width: 112px; }
+  .pl-drawer-qr { width: 112px !important; height: 112px !important; object-fit: contain; }
   .pl-actions, .qr-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: .5rem !important; }
   .pl-actions .btn, .qr-actions .btn { width: 100%; min-width: 0; margin: 0 !important; }
 
