@@ -15,6 +15,13 @@
 body { color: var(--ui-ink); }
 ::selection { background: rgba(37, 99, 235, .16); }
 
+/* Calm, deliberate motion. Continuous animations should never feel frantic. */
+.spinner-lg { animation-duration: 1.45s !important; }
+.animate-up { animation-duration: .8s !important; }
+.float { animation-duration: 7s !important; }
+.badge-dot.green { animation-duration: 3.2s !important; }
+#liveIndicator span { animation-duration: 3.2s !important; }
+
 /* Controls */
 input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 select,
