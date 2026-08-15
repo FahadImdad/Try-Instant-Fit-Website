@@ -1,0 +1,139 @@
+/* Try Instant Fit — platform UI consistency layer */
+:root {
+  --ui-brand: #2563eb;
+  --ui-brand-strong: #4f46e5;
+  --ui-accent: #06b6d4;
+  --ui-ink: #0f172a;
+  --ui-muted: #64748b;
+  --ui-line: #dbe3ee;
+  --ui-canvas: #f6f8fc;
+  --ui-radius: 14px;
+  --ui-shadow: 0 18px 45px rgba(15, 23, 42, .10);
+  --ui-focus: 0 0 0 4px rgba(37, 99, 235, .12);
+}
+
+body { color: var(--ui-ink); }
+::selection { background: rgba(37, 99, 235, .16); }
+
+/* Controls */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+select,
+textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: .78rem .9rem;
+  border: 1.5px solid var(--ui-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ui-ink);
+  font: inherit;
+  line-height: 1.4;
+  outline: none;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+textarea { min-height: 104px; resize: vertical; }
+select { appearance: auto; cursor: pointer; }
+input::placeholder, textarea::placeholder { color: #94a3b8; }
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):hover,
+select:hover,
+textarea:hover { border-color: #b6c2d2; }
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+select:focus,
+textarea:focus { border-color: var(--ui-brand); box-shadow: var(--ui-focus); background: #fff; }
+label { color: #334155; }
+.field { margin-bottom: 1rem; }
+.field > label { display: block; margin-bottom: .42rem; font-size: .82rem; font-weight: 750; letter-spacing: .005em; }
+.field-hint { margin-top: .38rem; color: var(--ui-muted); font-size: .74rem; line-height: 1.45; }
+
+/* Buttons */
+.btn, .btn-block, button[type="submit"] {
+  min-height: 44px;
+  border-radius: 12px;
+  font-weight: 750;
+  letter-spacing: -.01em;
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+}
+.btn-primary, .btn-block.primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--ui-brand-strong), var(--ui-accent));
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, .22);
+}
+.btn-primary:hover, .btn-block.primary:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(37, 99, 235, .28); }
+.btn-secondary { border-color: var(--ui-line); background: #fff; box-shadow: 0 1px 2px rgba(15, 23, 42, .04); }
+.btn:disabled, .btn-block:disabled, button:disabled { cursor: not-allowed; opacity: .5; transform: none !important; box-shadow: none !important; }
+
+/* Surfaces and feedback */
+.card, .sw-section, .product-list-row, .qr-card, .credits-widget, .topup-history {
+  border-color: var(--ui-line);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+}
+.sw-section { border-radius: 18px; }
+.alert { border-radius: 12px; line-height: 1.45; }
+.alert.error { background: #fff5f5; border-color: #fecaca; color: #b42318; }
+.alert.success { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+.status-badge, .pl-status, .pill { letter-spacing: .035em; }
+
+/* Dashboard navigation and product rows */
+.dash-tab-nav { gap: .25rem; overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap !important; }
+.dash-tab-nav::-webkit-scrollbar { display: none; }
+.dash-tab-nav .tab-btn { border-radius: 10px 10px 0 0; white-space: nowrap; }
+.dash-tab-nav .tab-btn:hover { background: #f8fafc; }
+.product-list-summary { min-height: 62px; }
+.product-list-row.open { border-color: rgba(37, 99, 235, .55); box-shadow: 0 8px 24px rgba(15, 23, 42, .07); }
+.product-list-drawer { background: #f8fafc; }
+.setting-toggle-row { border: 1px solid #e5eaf2; background: #f8fafc; }
+.switch-toggle-track { cursor: pointer; }
+
+/* Dialogs */
+.modal-backdrop { background: rgba(15, 23, 42, .58); backdrop-filter: blur(5px); }
+.modal {
+  border: 1px solid rgba(255, 255, 255, .7);
+  border-radius: 22px;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, .24);
+}
+.modal h3 { letter-spacing: -.025em; }
+.modal-close { background: #f8fafc; }
+
+/* Legal pages */
+.legal { margin: 48px auto !important; padding: clamp(1.4rem, 4vw, 3.25rem) !important; background: #fff; border: 1px solid var(--ui-line); border-radius: 22px; box-shadow: var(--ui-shadow); }
+.legal h1 { margin: 1.6rem 0 .35rem; font-size: clamp(2rem, 5vw, 3rem); }
+.legal h2 { margin: 2rem 0 .65rem; font-size: clamp(1.15rem, 2.5vw, 1.45rem); }
+.legal p { line-height: 1.75; }
+.legal .notice { border-radius: 12px; }
+
+@media (max-width: 720px) {
+  .container, .container-sm { padding-left: 1rem; padding-right: 1rem; }
+  .section { padding-top: 3.75rem; padding-bottom: 3.75rem; }
+  .card { padding: 1.25rem; border-radius: 16px; }
+  .nav-container { height: 62px; }
+
+  .dash-wrap { padding-left: 0 !important; padding-right: 0 !important; }
+  .dash-header { align-items: center !important; gap: .55rem !important; }
+  .dash-tab-nav { margin-inline: -1rem; padding-inline: .75rem; }
+  .dash-tab-nav .tab-btn { flex: 0 0 auto !important; min-width: 72px; padding: .6rem .65rem !important; }
+  .sw-section { padding: 1rem !important; border-radius: 16px !important; }
+  .sw-section-head { align-items: stretch; }
+  .sw-section-head > .btn, .sw-section-head > button { width: 100%; }
+
+  .product-list-summary { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: .65rem; padding: .7rem; }
+  .pl-thumb { grid-row: 1 / span 2; width: 42px; height: 50px; }
+  .pl-info { grid-column: 2; }
+  .pl-status { grid-column: 3; grid-row: 1; align-self: start; }
+  .pl-chevron { grid-column: 3; grid-row: 2; justify-self: end; }
+  .product-list-drawer { padding: .85rem; overflow: hidden; }
+  .pl-drawer-grid { grid-template-columns: 1fr !important; }
+  .pl-actions, .qr-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: .5rem !important; }
+  .pl-actions .btn, .qr-actions .btn { width: 100%; min-width: 0; margin: 0 !important; }
+
+  .modal-backdrop { align-items: flex-end !important; padding: 0 !important; }
+  .modal { width: 100% !important; max-width: none !important; max-height: 92dvh !important; margin: 0 !important; padding: 1.25rem 1rem calc(1.2rem + env(safe-area-inset-bottom)) !important; border-radius: 22px 22px 0 0 !important; overflow-y: auto; }
+  .modal form > [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+
+  .legal { width: calc(100% - 1rem); margin: .5rem auto !important; padding: 1.25rem !important; border-radius: 16px; box-shadow: none; }
+}
+
+@media (max-width: 420px) {
+  .pl-actions, .qr-actions { grid-template-columns: 1fr; }
+  .btn, .btn-block { white-space: normal; text-align: center; }
+}
