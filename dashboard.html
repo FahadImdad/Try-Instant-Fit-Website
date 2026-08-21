@@ -4600,11 +4600,11 @@
       ctx.fillStyle = '#64748b'; ctx.font = '500 29px system-ui';
       ctx.fillText('Point your phone camera at the QR code', 540, 738);
       ctx.drawImage(qr, 230, 800, 620, 620);
-      ctx.fillStyle = '#1677ff'; ctx.beginPath(); ctx.roundRect(180, 1450, 720, 130, 22); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = '700 31px system-ui'; ctx.fillText('Can’t scan? Visit this link:', 540, 1502);
-      ctx.font = '500 21px ui-monospace, SFMono-Regular, monospace';
+      ctx.fillStyle = '#1677ff'; ctx.beginPath(); ctx.roundRect(140, 1440, 800, 150, 24); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = '700 36px system-ui'; ctx.fillText('Can’t scan? Visit this link:', 540, 1500);
+      ctx.font = '500 25px ui-monospace, SFMono-Regular, monospace';
       const link = String(scanUrl || '');
-      ctx.fillText(link.slice(0, 72), 540, 1550);
+      ctx.fillText(link.slice(0, 68), 540, 1560);
       const brandedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       const objectUrl = URL.createObjectURL(brandedBlob || blob);
       const a = document.createElement('a');
