@@ -2192,9 +2192,9 @@
             </div>
 
             <div class="field" style="margin-bottom: .75rem;">
-              <label for="epcdQrLimit" style="font-size:.85rem;">Free try-on limit</label>
+              <label for="epcdQrLimit" style="font-size:.85rem;">Free try-ons remaining</label>
               <input type="number" id="epcdQrLimit" min="1" step="1" placeholder="Required when passcode is off">
-              <div class="field-hint">Required only when passcode protection is off. Protection turns on automatically when this limit is reached.</div>
+              <div class="field-hint">Enter the number of additional open try-ons. Already used try-ons are kept separate and are not counted again.</div>
             </div>
 
             <div class="field setting-toggle-row" style="padding:.65rem; background:white; margin:0;">
@@ -4310,7 +4310,7 @@
     if (qr) {
       qrSection.style.display = 'block';
       document.getElementById('epcdQrPasscode').checked = !!qr.requires_passcode;
-      document.getElementById('epcdQrLimit').value = qr.total_limit ?? '';
+      document.getElementById('epcdQrLimit').value = qr.total_limit === null ? '' : Math.max(0, Number(qr.total_limit || 0) - editingQrUsed);
       syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
       document.getElementById('epcdQrActive').checked = qr.active !== false;
       syncProductQrAvailability('open');
@@ -4357,21 +4357,21 @@
     let editQrSettings = null;
     if (editingQrId) {
       const limitRaw = document.getElementById('epcdQrLimit').value;
-      const totalLimit = limitRaw === '' ? null : parseInt(limitRaw, 10);
+      const additionalLimit = limitRaw === '' ? null : parseInt(limitRaw, 10);
       const requiresPasscode = document.getElementById('epcdQrPasscode').checked;
-      if (!requiresPasscode && (totalLimit === null || !Number.isFinite(totalLimit) || totalLimit < 1)) {
-        errEl.textContent = 'A positive free/open try-on cap is required when passcode protection is off.';
+      if (!requiresPasscode && (additionalLimit === null || !Number.isFinite(additionalLimit) || additionalLimit < 1)) {
+        errEl.textContent = 'Enter at least 1 additional free try-on when passcode protection is off.';
         errEl.className = 'alert error';
         document.getElementById('epcdQrLimit').focus();
         return false;
       }
-      if (totalLimit !== null && (!Number.isFinite(totalLimit) || totalLimit < 1)) {
+      if (additionalLimit !== null && (!Number.isFinite(additionalLimit) || additionalLimit < 1)) {
         errEl.textContent = 'Try-on cap must be 1 or more.';
         errEl.className = 'alert error';
         document.getElementById('epcdQrLimit').focus();
         return false;
       }
-      editQrSettings = { requiresPasscode, totalLimit };
+      editQrSettings = { requiresPasscode, totalLimit: additionalLimit === null ? null : editingQrUsed + additionalLimit };
     }
 
     btn.disabled = true; btn.textContent = 'Saving…';
