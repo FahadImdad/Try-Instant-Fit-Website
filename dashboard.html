@@ -4504,11 +4504,11 @@
       const blob = await res.blob();
       const qr = await createImageBitmap(blob);
       const canvas = document.createElement('canvas');
-      canvas.width = 1080; canvas.height = 1350;
+      canvas.width = 1080; canvas.height = 1700;
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#f3f7ff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = '#fff';
-      ctx.beginPath(); ctx.roundRect(54, 54, 972, 1242, 36); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(54, 54, 972, 1592, 36); ctx.fill();
       const loadLogo = src => new Promise(resolve => {
         if (!src) return resolve(null);
         const img = new Image(); img.crossOrigin = 'anonymous';
@@ -4523,24 +4523,48 @@
         const dw = img.width * scale, dh = img.height * scale;
         ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
       };
-      drawContained(tifLogo, 130, 92, 330, 105);
+      drawContained(tifLogo, 120, 82, 250, 82);
       if (vendorLogo) {
-        ctx.fillStyle = '#dbe4f0'; ctx.fillRect(535, 110, 2, 68);
-        drawContained(vendorLogo, 610, 92, 300, 105);
+        ctx.fillStyle = '#dbe4f0'; ctx.fillRect(470, 92, 2, 62);
+        drawContained(vendorLogo, 540, 78, 390, 90);
       }
-      ctx.fillStyle = '#1677ff'; ctx.fillRect(130, 226, 820, 5);
-      ctx.fillStyle = '#0f172a'; ctx.font = '800 42px system-ui'; ctx.textAlign = 'center';
-      ctx.fillText('SCAN TO TRY IT ON', 540, 292);
-      ctx.fillStyle = '#64748b'; ctx.font = '500 25px system-ui';
-      ctx.fillText('Point your phone camera at the QR code', 540, 334);
+      ctx.fillStyle = '#64748b'; ctx.font = '600 18px system-ui'; ctx.textAlign = 'left';
+      ctx.fillText('POWERED BY TRY INSTANT FIT', 120, 192);
+      ctx.fillStyle = '#1677ff'; ctx.fillRect(120, 220, 840, 5);
+      ctx.fillStyle = '#0f172a'; ctx.font = '800 40px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText('SCAN TO TRY IT ON', 540, 286);
+      ctx.fillStyle = '#64748b'; ctx.font = '500 24px system-ui';
+      ctx.fillText('Point your phone camera at the QR code', 540, 326);
       ctx.fillStyle = '#fff'; ctx.strokeStyle = '#dbe4f0'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.roundRect(120, 374, 840, 840, 28); ctx.fill(); ctx.stroke();
-      ctx.drawImage(qr, 160, 414, 760, 760);
+      ctx.beginPath(); ctx.roundRect(150, 366, 780, 780, 28); ctx.fill(); ctx.stroke();
+      ctx.drawImage(qr, 210, 426, 660, 660);
+      const product = allProducts.find(p => p.name === productName) || {};
+      const brandName = lastDashboardData?.brand?.name || 'Your fashion store';
       const title = (productName || 'Virtual Try-On').trim();
-      let fontSize = 34;
-      do { ctx.font = `800 ${fontSize}px system-ui`; fontSize -= 2; } while (ctx.measureText(title).width > 820 && fontSize > 22);
-      ctx.fillStyle = '#0f172a'; ctx.textAlign = 'center';
-      ctx.fillText(title.length > 70 ? title.slice(0, 67) + '…' : title, 540, 1262);
+      const sizes = Array.isArray(product.available_sizes) && product.available_sizes.length
+        ? product.available_sizes.join(', ') : 'Contact shop for available sizes';
+      const price = product.price != null ? `${product.currency || 'PKR'} ${Number(product.price).toLocaleString()}` : '';
+      ctx.fillStyle = '#f8fafc'; ctx.strokeStyle = '#e2e8f0';
+      ctx.beginPath(); ctx.roundRect(120, 1190, 840, 270, 24); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#0f172a'; ctx.textAlign = 'left'; ctx.font = '800 28px system-ui';
+      const titleLine = title.length > 66 ? title.slice(0, 63) + '…' : title;
+      ctx.fillText(titleLine, 155, 1242);
+      ctx.fillStyle = '#64748b'; ctx.font = '600 21px system-ui';
+      ctx.fillText(brandName, 155, 1280);
+      ctx.font = '500 20px system-ui';
+      ctx.fillText(`SKU: ${product.sku || '—'}`, 155, 1322);
+      ctx.fillText(price ? `Price: ${price}` : 'Price: Contact shop', 500, 1322);
+      ctx.fillText(`Sizes: ${sizes.length > 48 ? sizes.slice(0, 45) + '…' : sizes}`, 155, 1362);
+      if (product.custom_size_available) {
+        ctx.fillStyle = '#1677ff'; ctx.font = '700 19px system-ui'; ctx.fillText('Custom sizing available', 155, 1402);
+      }
+      ctx.fillStyle = '#1677ff'; ctx.beginPath(); ctx.roundRect(120, 1490, 840, 112, 20); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '700 20px system-ui'; ctx.fillText('Can’t scan? Open this link:', 155, 1527);
+      ctx.font = '500 17px ui-monospace, SFMono-Regular, monospace';
+      const link = String(scanUrl || '');
+      ctx.fillText(link.length > 90 ? link.slice(0, 87) + '…' : link, 155, 1568);
+      ctx.fillStyle = '#64748b'; ctx.textAlign = 'center'; ctx.font = '500 18px system-ui';
+      ctx.fillText('Scan or open the link to see this look on you', 540, 1640);
       const brandedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       const objectUrl = URL.createObjectURL(brandedBlob || blob);
       const a = document.createElement('a');
