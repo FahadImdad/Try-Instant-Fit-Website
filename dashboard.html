@@ -4334,13 +4334,14 @@
     // Pre-fill QR settings if this product has a QR
     const qr = allQrs.find(q => q.product_uuid === id);
     editingQrId = qr ? qr.id : null;
-    editingQrUsed = qr ? Number(qr.total_used || 0) : 0;
+    editingQrUsed = qr ? Number(qr.total_used ?? qr.used ?? qr.tryons_used ?? 0) : 0;
     const qrSection = document.getElementById('epcdQrSection');
     if (qr) {
       qrSection.style.display = 'block';
       document.getElementById('epcdQrPasscode').checked = !!qr.requires_passcode;
       // The API stores the overall cap; the vendor edits only the additional allowance.
-      document.getElementById('epcdQrLimit').value = qr.total_limit === null ? '' : Math.max(0, Number(qr.total_limit || 0) - editingQrUsed);
+      const storedCap = qr.total_limit === null ? null : Number(qr.total_limit || 0);
+      document.getElementById('epcdQrLimit').value = storedCap === null ? '' : Math.max(0, storedCap - editingQrUsed);
       syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
       document.getElementById('epcdQrActive').checked = qr.active !== false;
       syncProductQrAvailability('open');
