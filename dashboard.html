@@ -4571,7 +4571,7 @@
       if (options.brand !== false && vendorLogo) drawContained(vendorLogo, 70, 72, 150, 120);
       ctx.fillStyle = '#0f172a'; ctx.textAlign = 'left'; ctx.font = '800 42px system-ui';
       if (options.brand !== false) ctx.fillText(brandName.length > 22 ? brandName.slice(0, 19) + '…' : brandName, 250, 140);
-      if (tifLogo) { ctx.fillStyle = '#64748b'; ctx.font = '600 23px system-ui'; ctx.fillText('Powered by', 600, 115); drawContained(tifLogo, 770, 52, 250, 100); }
+      if (tifLogo) { ctx.fillStyle = '#64748b'; ctx.font = '600 23px system-ui'; ctx.fillText('Powered by', 620, 115); drawContained(tifLogo, 755, 52, 250, 100); }
       ctx.fillStyle = '#1677ff'; ctx.fillRect(120, 220, 840, 5);
       const title = options.name === false ? '' : (productName || 'Virtual Try-On').trim();
       const sizes = Array.isArray(product.available_sizes) && product.available_sizes.length
@@ -4600,11 +4600,11 @@
       ctx.fillStyle = '#64748b'; ctx.font = '500 29px system-ui';
       ctx.fillText('Point your phone camera at the QR code', 540, 738);
       ctx.drawImage(qr, 230, 800, 620, 620);
-      ctx.fillStyle = '#1677ff'; ctx.beginPath(); ctx.roundRect(80, 1480, 920, 110, 22); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = '700 30px system-ui'; ctx.fillText('Can’t scan? Visit this link:', 540, 1525);
-      ctx.font = '500 24px ui-monospace, SFMono-Regular, monospace';
+      ctx.fillStyle = '#1677ff'; ctx.beginPath(); ctx.roundRect(230, 1460, 620, 100, 20); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = '700 23px system-ui'; ctx.fillText('Can’t scan? Visit this link:', 540, 1500);
+      ctx.font = '500 16px ui-monospace, SFMono-Regular, monospace';
       const link = String(scanUrl || '');
-      ctx.fillText(link.length > 82 ? link.slice(0, 79) + '…' : link, 540, 1570);
+      ctx.fillText(link.length > 66 ? link.slice(0, 63) + '…' : link, 540, 1540);
       const brandedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       const objectUrl = URL.createObjectURL(brandedBlob || blob);
       const a = document.createElement('a');
