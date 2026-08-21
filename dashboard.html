@@ -4589,10 +4589,11 @@
       ctx.fillText(titleA || title.slice(0, 30), 370, 382);
       if (titleB) ctx.fillText(titleB.length > 29 ? titleB.slice(0, 26) + '…' : titleB, 370, 425);
       const drawInfo = (label, value, y) => { ctx.fillStyle = '#1677ff'; ctx.font = '800 32px system-ui'; ctx.textAlign = 'left'; ctx.fillText(label, 405, y); ctx.fillStyle = '#334155'; ctx.font = '500 31px system-ui'; ctx.fillText(value, 585, y); };
-      if (options.sizes !== false) drawInfo('Sizes:', sizes.length > 17 ? sizes.slice(0, 14) + '…' : sizes, 490);
-      if (price) drawInfo('Price:', price, 550);
-      if (options.details !== false && product.description) drawInfo('Details:', product.description.slice(0, 18) + (product.description.length > 18 ? '…' : ''), 610);
-      if (product.custom_size_available) { ctx.fillStyle = '#1677ff'; ctx.font = '700 20px system-ui'; ctx.textAlign = 'left'; ctx.fillText('Custom sizing available', 370, 605); }
+      let infoY = 490;
+      if (options.sizes !== false) { drawInfo('Sizes:', sizes.length > 17 ? sizes.slice(0, 14) + '…' : sizes, infoY); infoY += 60; }
+      if (price) { drawInfo('Price:', price, infoY); infoY += 60; }
+      if (options.details !== false && product.description) { drawInfo('Details:', product.description.slice(0, 18) + (product.description.length > 18 ? '…' : ''), infoY); infoY += 60; }
+      if (product.custom_size_available) { ctx.fillStyle = '#1677ff'; ctx.font = '700 20px system-ui'; ctx.textAlign = 'left'; ctx.fillText('Custom sizing available', 370, infoY); }
       ctx.fillStyle = '#1677ff'; ctx.fillRect(120, 640, 840, 5);
       ctx.fillStyle = '#0f172a'; ctx.font = '800 48px system-ui'; ctx.textAlign = 'center';
       ctx.fillText('SCAN TO TRY IT ON', 540, 700);
