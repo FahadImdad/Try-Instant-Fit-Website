@@ -4339,7 +4339,9 @@
     if (qr) {
       qrSection.style.display = 'block';
       document.getElementById('epcdQrPasscode').checked = !!qr.requires_passcode;
-      document.getElementById('epcdQrLimit').value = qr.total_limit === null ? '' : Math.max(0, Number(qr.total_limit || 0) - editingQrUsed);
+      // The vendor-entered value is the additional free-try allowance.
+      // Previously we subtracted historical usage here, making an entered 1 appear as 0/3.
+      document.getElementById('epcdQrLimit').value = qr.total_limit === null ? '' : Number(qr.total_limit || 0);
       syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
       document.getElementById('epcdQrActive').checked = qr.active !== false;
       syncProductQrAvailability('open');
@@ -4400,7 +4402,8 @@
         document.getElementById('epcdQrLimit').focus();
         return false;
       }
-      editQrSettings = { requiresPasscode, totalLimit: additionalLimit === null ? null : editingQrUsed + additionalLimit };
+      // total_limit stores only the new free/open allowance; historical usage is tracked separately.
+      editQrSettings = { requiresPasscode, totalLimit: additionalLimit };
     }
 
     btn.disabled = true; btn.textContent = 'Saving…';
