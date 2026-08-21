@@ -4084,6 +4084,15 @@
 
   initModalUx();
 
+  // More-actions popovers behave like a proper outside-click menu. Native
+  // <details> elements otherwise remain open until the same trigger is clicked.
+  document.addEventListener('click', event => {
+    const insideMoreActions = event.target.closest?.('.pl-more');
+    document.querySelectorAll('details.pl-more[open]').forEach(menu => {
+      if (!insideMoreActions || !menu.contains(insideMoreActions)) menu.removeAttribute('open');
+    });
+  });
+
   function openAddProduct() {
     // Gate: brands without credits should top up before adding products,
     // otherwise customers who scan the QR will hit "out of credits" anyway.
