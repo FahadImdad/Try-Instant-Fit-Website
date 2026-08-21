@@ -4571,7 +4571,7 @@
       if (options.brand !== false && vendorLogo) drawContained(vendorLogo, 70, 72, 150, 120);
       ctx.fillStyle = '#0f172a'; ctx.textAlign = 'left'; ctx.font = '800 42px system-ui';
       if (options.brand !== false) ctx.fillText(brandName.length > 22 ? brandName.slice(0, 19) + '…' : brandName, 250, 140);
-      if (tifLogo) { ctx.fillStyle = '#64748b'; ctx.font = '600 21px system-ui'; ctx.fillText('Powered by', 650, 112); drawContained(tifLogo, 790, 62, 220, 82); }
+      if (tifLogo) { ctx.fillStyle = '#64748b'; ctx.font = '600 23px system-ui'; ctx.fillText('Powered by', 600, 115); drawContained(tifLogo, 770, 52, 250, 100); }
       ctx.fillStyle = '#1677ff'; ctx.fillRect(120, 220, 840, 5);
       const title = options.name === false ? '' : (productName || 'Virtual Try-On').trim();
       const sizes = Array.isArray(product.available_sizes) && product.available_sizes.length
@@ -4582,13 +4582,13 @@
       ctx.fillStyle = '#64748b'; ctx.font = '600 24px system-ui';
       ctx.fillText('Try this design virtually before you buy', 540, 308);
       if (productImage) drawContained(productImage, 40, 335, 280, 270);
-      const detailX = productImage ? 370 : 120;
+      const detailX = productImage ? 340 : 120;
       ctx.fillStyle = '#0f172a'; ctx.textAlign = 'left'; ctx.font = '800 40px system-ui';
       const titleWords = title.split(' '); let titleA = '', titleB = '';
       titleWords.forEach(word => { if ((titleA + ' ' + word).trim().length < 29 && !titleB) titleA = (titleA + ' ' + word).trim(); else titleB = (titleB + ' ' + word).trim(); });
       ctx.fillText(titleA || title.slice(0, 30), detailX, 382);
       if (titleB) ctx.fillText(titleB.length > 29 ? titleB.slice(0, 26) + '…' : titleB, detailX, 425);
-      const drawInfo = (label, value, y) => { const labelX = detailX + 35; const valueX = detailX + 215; ctx.fillStyle = '#1677ff'; ctx.font = '800 32px system-ui'; ctx.textAlign = 'left'; ctx.fillText(label, labelX, y); ctx.fillStyle = '#334155'; ctx.font = '500 31px system-ui'; ctx.fillText(value, valueX, y); };
+      const drawInfo = (label, value, y) => { const labelX = detailX + 35; const valueX = detailX + 195; ctx.fillStyle = '#1677ff'; ctx.font = '800 32px system-ui'; ctx.textAlign = 'left'; ctx.fillText(label, labelX, y); ctx.fillStyle = '#334155'; ctx.font = '500 31px system-ui'; ctx.fillText(value, valueX, y); };
       let infoY = 490;
       if (options.sizes !== false) { drawInfo('Sizes:', sizes.length > 17 ? sizes.slice(0, 14) + '…' : sizes, infoY); infoY += 60; }
       if (price) { drawInfo('Price:', price, infoY); infoY += 60; }
@@ -4601,10 +4601,10 @@
       ctx.fillText('Point your phone camera at the QR code', 540, 738);
       ctx.drawImage(qr, 230, 800, 620, 620);
       ctx.fillStyle = '#1677ff'; ctx.beginPath(); ctx.roundRect(80, 1480, 920, 110, 22); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.font = '700 28px system-ui'; ctx.fillText('Can’t scan? Visit this link:', 125, 1525);
-      ctx.font = '500 23px ui-monospace, SFMono-Regular, monospace';
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = '700 30px system-ui'; ctx.fillText('Can’t scan? Visit this link:', 540, 1525);
+      ctx.font = '500 24px ui-monospace, SFMono-Regular, monospace';
       const link = String(scanUrl || '');
-      ctx.fillText(link.length > 96 ? link.slice(0, 93) + '…' : link, 125, 1570);
+      ctx.fillText(link.length > 82 ? link.slice(0, 79) + '…' : link, 540, 1570);
       const brandedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       const objectUrl = URL.createObjectURL(brandedBlob || blob);
       const a = document.createElement('a');
