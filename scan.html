@@ -476,13 +476,13 @@
   <!-- Step 1: Customer details for free/open try-ons -->
   <div id="detailsView" class="scan-card" style="display:none;">
     <h3 class="step-title"><span class="step-num">1</span> Your Details</h3>
-    <p class="details-intro">Get personalised help with size availability, custom orders, and questions about this design.</p>
+    <p class="details-intro">Enter your details to continue. We share them with this shop so it can respond about this design, sizing, availability, or a custom order.</p>
     <div class="alert" id="detailsError"></div>
     <div class="details-form">
       <div class="details-field"><label for="freeCustomerName">Full name <span>*</span></label><div class="input-shell"><span class="input-icon">👤</span><input class="details-input" id="freeCustomerName" type="text" autocomplete="name" maxlength="100" placeholder="Enter your full name" oninput="updateDetailsForm()" required></div></div>
       <div class="details-field"><label for="freeCustomerEmail">Email address <span>*</span></label><div class="input-shell"><span class="input-icon">✉️</span><input class="details-input" id="freeCustomerEmail" type="email" autocomplete="email" inputmode="email" placeholder="name@example.com" oninput="updateDetailsForm()" required></div></div>
-      <div class="details-field"><label for="freeCustomerPhone">WhatsApp / phone <span>*</span></label><div class="input-shell"><span class="input-icon">📱</span><input class="details-input" id="freeCustomerPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="+92 300 1234567" oninput="updateDetailsForm()" required></div><p class="details-help">Used only for product, sizing, availability, or custom-order support.</p></div>
-      <label class="consent-card"><input id="freeFollowupConsent" type="checkbox" onchange="updateDetailsForm()"> <span>I agree that this shop may contact me about this product, sizing, availability, or custom-order support.</span></label>
+      <div class="details-field"><label for="freeCustomerPhone">WhatsApp / phone <span>*</span></label><div class="input-shell"><span class="input-icon">📱</span><input class="details-input" id="freeCustomerPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="+92 300 1234567" oninput="updateDetailsForm()" required></div><p class="details-help">Required so the shop can contact you about this design. Your details are shared with the shop for this purpose.</p></div>
+      <label class="consent-card"><input id="freeFollowupConsent" type="checkbox" onchange="updateDetailsForm()"> <span>I understand that this shop will receive these details and may contact me about this design, sizing, availability, or a custom order.</span></label>
       <button class="btn-block primary details-submit" id="detailsContinueBtn" type="button" onclick="continueFreeDetails()" disabled>Continue to Photo →</button>
     </div>
   </div>
