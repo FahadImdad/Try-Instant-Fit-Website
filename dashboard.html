@@ -4340,8 +4340,7 @@
       qrSection.style.display = 'block';
       document.getElementById('epcdQrPasscode').checked = !!qr.requires_passcode;
       // The API stores the overall cap; the vendor edits only the additional allowance.
-      const storedCap = qr.total_limit === null ? null : Number(qr.total_limit || 0);
-      document.getElementById('epcdQrLimit').value = storedCap === null ? '' : Math.max(0, storedCap - editingQrUsed);
+      document.getElementById('epcdQrLimit').value = qr.total_limit === null ? '' : Number(qr.total_limit || 0);
       syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
       document.getElementById('epcdQrActive').checked = qr.active !== false;
       syncProductQrAvailability('open');
@@ -4402,8 +4401,8 @@
         document.getElementById('epcdQrLimit').focus();
         return false;
       }
-      // Convert the additional allowance back to the API's overall cap on save.
-      editQrSettings = { requiresPasscode, totalLimit: additionalLimit === null ? null : editingQrUsed + additionalLimit };
+      // Save exactly the allowance the vendor entered; usage is tracked separately.
+      editQrSettings = { requiresPasscode, totalLimit: additionalLimit };
     }
 
     btn.disabled = true; btn.textContent = 'Saving…';
