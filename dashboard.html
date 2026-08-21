@@ -4582,18 +4582,18 @@
       ctx.fillStyle = '#64748b'; ctx.font = '600 24px system-ui';
       ctx.fillText('Try this design virtually before you buy', 540, 308);
       if (productImage) drawContained(productImage, 40, 335, 280, 270);
-      else { ctx.fillStyle = '#94a3b8'; ctx.font = '600 22px system-ui'; ctx.textAlign = 'center'; ctx.fillText('Product image', 180, 475); }
+      const detailX = productImage ? 370 : 120;
       ctx.fillStyle = '#0f172a'; ctx.textAlign = 'left'; ctx.font = '800 40px system-ui';
       const titleWords = title.split(' '); let titleA = '', titleB = '';
       titleWords.forEach(word => { if ((titleA + ' ' + word).trim().length < 29 && !titleB) titleA = (titleA + ' ' + word).trim(); else titleB = (titleB + ' ' + word).trim(); });
-      ctx.fillText(titleA || title.slice(0, 30), 370, 382);
-      if (titleB) ctx.fillText(titleB.length > 29 ? titleB.slice(0, 26) + '…' : titleB, 370, 425);
-      const drawInfo = (label, value, y) => { ctx.fillStyle = '#1677ff'; ctx.font = '800 32px system-ui'; ctx.textAlign = 'left'; ctx.fillText(label, 405, y); ctx.fillStyle = '#334155'; ctx.font = '500 31px system-ui'; ctx.fillText(value, 585, y); };
+      ctx.fillText(titleA || title.slice(0, 30), detailX, 382);
+      if (titleB) ctx.fillText(titleB.length > 29 ? titleB.slice(0, 26) + '…' : titleB, detailX, 425);
+      const drawInfo = (label, value, y) => { const labelX = detailX + 35; const valueX = detailX + 215; ctx.fillStyle = '#1677ff'; ctx.font = '800 32px system-ui'; ctx.textAlign = 'left'; ctx.fillText(label, labelX, y); ctx.fillStyle = '#334155'; ctx.font = '500 31px system-ui'; ctx.fillText(value, valueX, y); };
       let infoY = 490;
       if (options.sizes !== false) { drawInfo('Sizes:', sizes.length > 17 ? sizes.slice(0, 14) + '…' : sizes, infoY); infoY += 60; }
       if (price) { drawInfo('Price:', price, infoY); infoY += 60; }
       if (options.details !== false && product.description) { drawInfo('Details:', product.description.slice(0, 18) + (product.description.length > 18 ? '…' : ''), infoY); infoY += 60; }
-      if (product.custom_size_available) { ctx.fillStyle = '#1677ff'; ctx.font = '700 20px system-ui'; ctx.textAlign = 'left'; ctx.fillText('Custom sizing available', 370, infoY); }
+      if (product.custom_size_available) { ctx.fillStyle = '#1677ff'; ctx.font = '700 20px system-ui'; ctx.textAlign = 'left'; ctx.fillText('Custom sizing available', detailX, infoY); }
       ctx.fillStyle = '#1677ff'; ctx.fillRect(120, 640, 840, 5);
       ctx.fillStyle = '#0f172a'; ctx.font = '800 48px system-ui'; ctx.textAlign = 'center';
       ctx.fillText('SCAN TO TRY IT ON', 540, 700);
