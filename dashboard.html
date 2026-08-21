@@ -4527,7 +4527,9 @@
       const product = allProducts.find(p => p.name === productName) || {};
       const vendorUrl = lastDashboardData?.brand?.logo_url;
       const proxiedVendor = vendorUrl ? `${API}/api/proxy-image?url=${encodeURIComponent(vendorUrl)}` : null;
-      const productImage = product.image_url ? await loadLogo(product.image_url) : null;
+      const productImageUrl = product.image_url
+        ? `${API}/api/proxy-image?url=${encodeURIComponent(product.image_url)}` : null;
+      const productImage = productImageUrl ? await loadLogo(productImageUrl) : null;
       const [vendorLogo, tifLogo] = await Promise.all([loadLogo(proxiedVendor), loadLogo('/assets/logo.png')]);
       const drawContained = (img, x, y, w, h) => {
         if (!img) return;
@@ -4550,14 +4552,13 @@
       ctx.fillText(brandName.length > 38 ? brandName.slice(0, 35) + '…' : brandName, 120, 270);
       ctx.fillStyle = '#64748b'; ctx.font = '500 20px system-ui';
       ctx.fillText('Scan to see this look on you', 120, 302);
-      if (productImage) {
-        ctx.fillStyle = '#f8fafc'; ctx.strokeStyle = '#dbe4f0'; ctx.beginPath(); ctx.roundRect(120, 335, 220, 270, 20); ctx.fill(); ctx.stroke();
-        drawContained(productImage, 135, 350, 190, 240);
-      }
+      ctx.fillStyle = '#f8fafc'; ctx.strokeStyle = '#dbe4f0'; ctx.beginPath(); ctx.roundRect(120, 335, 220, 270, 20); ctx.fill(); ctx.stroke();
+      if (productImage) drawContained(productImage, 135, 350, 190, 240);
+      else { ctx.fillStyle = '#94a3b8'; ctx.font = '600 18px system-ui'; ctx.textAlign = 'center'; ctx.fillText('Product image', 230, 475); }
       ctx.fillStyle = '#0f172a'; ctx.font = '800 28px system-ui';
-      ctx.fillText(title.length > 42 ? title.slice(0, 39) + '…' : title, productImage ? 380 : 120, 390);
+      ctx.fillText(title.length > 42 ? title.slice(0, 39) + '…' : title, 380, 390);
       ctx.fillStyle = '#64748b'; ctx.font = '500 20px system-ui';
-      const detailX = productImage ? 380 : 120;
+      const detailX = 380;
       ctx.fillText(`SKU: ${product.sku || '—'}`, detailX, 432);
       ctx.fillText(`Sizes: ${sizes.length > 34 ? sizes.slice(0, 31) + '…' : sizes}`, detailX, 470);
       if (price) ctx.fillText(`Price: ${price}`, detailX, 508);
