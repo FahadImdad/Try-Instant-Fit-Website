@@ -2042,6 +2042,9 @@
               </select>
             </div>
           </div>
+          <div class="field" style="padding:.75rem; background:var(--surface); border-radius:var(--r-md);">
+            <div class="setting-toggle-row" style="padding:0;"><label for="apShowPriceQr" class="setting-toggle-copy">Show price on downloaded QR</label><label class="switch-toggle" for="apShowPriceQr"><input type="checkbox" id="apShowPriceQr" checked onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">On</span></label></div>
+          </div>
           <div class="field">
             <label for="apDesc">Description (optional)</label>
             <textarea id="apDesc" rows="2" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
@@ -2147,6 +2150,9 @@
           <div class="field">
             <label for="epcdSizes">Available sizes</label>
             <input type="text" id="epcdSizes" placeholder="e.g. XS, S, M, L, XL">
+          </div>
+          <div class="field" style="padding:.75rem; background:var(--surface); border-radius:var(--r-md);">
+            <div class="setting-toggle-row" style="padding:0;"><label for="epcdShowPriceQr" class="setting-toggle-copy">Show price on downloaded QR</label><label class="switch-toggle" for="epcdShowPriceQr"><input type="checkbox" id="epcdShowPriceQr" checked onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">On</span></label></div>
           </div>
           <div class="field" style="padding:.75rem; background:var(--surface); border-radius:var(--r-md);">
             <div class="setting-toggle-row" style="padding:0;"><label for="epcdCustomSize" class="setting-toggle-copy">Custom size / made-to-measure available</label><label class="switch-toggle" for="epcdCustomSize"><input type="checkbox" id="epcdCustomSize" onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">Off</span></label></div>
@@ -4106,6 +4112,7 @@
     }
     document.getElementById('apError').className = 'alert';
     ['apName','apPrice','apDesc','apQrLimit','apBuyUrl','apSizes','apCustomSizeNote'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('apShowPriceQr').checked = true;
     document.getElementById('apCurrency').value = 'PKR';
     populateTaxonomy('ap', '', '', '');
     document.getElementById('apShowInCatalog').checked = false;
@@ -4174,6 +4181,7 @@
     if (apAudience) fd.append('audience', apAudience);
     fd.append('available_sizes', document.getElementById('apSizes').value.trim());
     fd.append('custom_size_available', document.getElementById('apCustomSize').checked ? 'true' : 'false');
+    fd.append('show_price_in_qr', document.getElementById('apShowPriceQr').checked ? 'true' : 'false');
     if (document.getElementById('apCustomSizeNote').value.trim()) fd.append('custom_size_note', document.getElementById('apCustomSizeNote').value.trim());
     fd.append('show_in_catalog', document.getElementById('apShowInCatalog').checked ? 'true' : 'false');
     const apBuyUrl = document.getElementById('apBuyUrl').value.trim();
@@ -4304,6 +4312,7 @@
     document.getElementById('epcdDesc').value = p.description || '';
     document.getElementById('epcdSizes').value = (p.available_sizes || []).join(', ');
     document.getElementById('epcdCustomSize').checked = p.custom_size_available === true;
+    document.getElementById('epcdShowPriceQr').checked = p.show_price_in_qr !== false;
     document.getElementById('epcdCustomSizeNote').value = p.custom_size_note || '';
     populateTaxonomy('epcd', p.audience || '', p.category_group || '', p.category || '');
     document.getElementById('epcdBuyUrl').value = p.buy_url || '';
@@ -4400,6 +4409,7 @@
           audience: readAudienceValue('epcd') || null,
           available_sizes: document.getElementById('epcdSizes').value,
           custom_size_available: document.getElementById('epcdCustomSize').checked,
+          show_price_in_qr: document.getElementById('epcdShowPriceQr').checked,
           custom_size_note: document.getElementById('epcdCustomSizeNote').value.trim() || null,
           show_in_catalog: document.getElementById('epcdShowInCatalog').checked,
           buy_url: document.getElementById('epcdBuyUrl').value.trim(),
@@ -4508,14 +4518,16 @@
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#f3f7ff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = '#fff';
-      ctx.beginPath(); ctx.roundRect(54, 54, 972, 1592, 36); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(54, 54, 972, 1636, 36); ctx.fill();
       const loadLogo = src => new Promise(resolve => {
         if (!src) return resolve(null);
         const img = new Image(); img.crossOrigin = 'anonymous';
         img.onload = () => resolve(img); img.onerror = () => resolve(null); img.src = src;
       });
+      const product = allProducts.find(p => p.name === productName) || {};
       const vendorUrl = lastDashboardData?.brand?.logo_url;
       const proxiedVendor = vendorUrl ? `${API}/api/proxy-image?url=${encodeURIComponent(vendorUrl)}` : null;
+      const productImage = product.image_url ? await loadLogo(product.image_url) : null;
       const [vendorLogo, tifLogo] = await Promise.all([loadLogo(proxiedVendor), loadLogo('/assets/logo.png')]);
       const drawContained = (img, x, y, w, h) => {
         if (!img) return;
@@ -4528,43 +4540,43 @@
         ctx.fillStyle = '#dbe4f0'; ctx.fillRect(470, 92, 2, 62);
         drawContained(vendorLogo, 540, 78, 390, 90);
       }
-      ctx.fillStyle = '#64748b'; ctx.font = '600 18px system-ui'; ctx.textAlign = 'left';
-      ctx.fillText('POWERED BY TRY INSTANT FIT', 120, 192);
       ctx.fillStyle = '#1677ff'; ctx.fillRect(120, 220, 840, 5);
-      ctx.fillStyle = '#0f172a'; ctx.font = '800 40px system-ui'; ctx.textAlign = 'center';
-      ctx.fillText('SCAN TO TRY IT ON', 540, 286);
-      ctx.fillStyle = '#64748b'; ctx.font = '500 24px system-ui';
-      ctx.fillText('Point your phone camera at the QR code', 540, 326);
-      ctx.fillStyle = '#fff'; ctx.strokeStyle = '#dbe4f0'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.roundRect(150, 366, 780, 780, 28); ctx.fill(); ctx.stroke();
-      ctx.drawImage(qr, 210, 426, 660, 660);
-      const product = allProducts.find(p => p.name === productName) || {};
       const brandName = lastDashboardData?.brand?.name || 'Your fashion store';
       const title = (productName || 'Virtual Try-On').trim();
       const sizes = Array.isArray(product.available_sizes) && product.available_sizes.length
         ? product.available_sizes.join(', ') : 'Contact shop for available sizes';
-      const price = product.price != null ? `${product.currency || 'PKR'} ${Number(product.price).toLocaleString()}` : '';
-      ctx.fillStyle = '#f8fafc'; ctx.strokeStyle = '#e2e8f0';
-      ctx.beginPath(); ctx.roundRect(120, 1190, 840, 270, 24); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#0f172a'; ctx.textAlign = 'left'; ctx.font = '800 28px system-ui';
-      const titleLine = title.length > 66 ? title.slice(0, 63) + '…' : title;
-      ctx.fillText(titleLine, 155, 1242);
-      ctx.fillStyle = '#64748b'; ctx.font = '600 21px system-ui';
-      ctx.fillText(brandName, 155, 1280);
-      ctx.font = '500 20px system-ui';
-      ctx.fillText(`SKU: ${product.sku || '—'}`, 155, 1322);
-      ctx.fillText(price ? `Price: ${price}` : 'Price: Contact shop', 500, 1322);
-      ctx.fillText(`Sizes: ${sizes.length > 48 ? sizes.slice(0, 45) + '…' : sizes}`, 155, 1362);
-      if (product.custom_size_available) {
-        ctx.fillStyle = '#1677ff'; ctx.font = '700 19px system-ui'; ctx.fillText('Custom sizing available', 155, 1402);
+      const price = product.show_price_in_qr === false || product.price == null ? '' : `${product.currency || 'PKR'} ${Number(product.price).toLocaleString()}`;
+      ctx.fillStyle = '#0f172a'; ctx.textAlign = 'left'; ctx.font = '800 26px system-ui';
+      ctx.fillText(brandName.length > 38 ? brandName.slice(0, 35) + '…' : brandName, 120, 270);
+      ctx.fillStyle = '#64748b'; ctx.font = '500 20px system-ui';
+      ctx.fillText('Scan to see this look on you', 120, 302);
+      if (productImage) {
+        ctx.fillStyle = '#f8fafc'; ctx.strokeStyle = '#dbe4f0'; ctx.beginPath(); ctx.roundRect(120, 335, 220, 270, 20); ctx.fill(); ctx.stroke();
+        drawContained(productImage, 135, 350, 190, 240);
       }
-      ctx.fillStyle = '#1677ff'; ctx.beginPath(); ctx.roundRect(120, 1490, 840, 112, 20); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.font = '700 20px system-ui'; ctx.fillText('Can’t scan? Open this link:', 155, 1527);
+      ctx.fillStyle = '#0f172a'; ctx.font = '800 28px system-ui';
+      ctx.fillText(title.length > 42 ? title.slice(0, 39) + '…' : title, productImage ? 380 : 120, 390);
+      ctx.fillStyle = '#64748b'; ctx.font = '500 20px system-ui';
+      const detailX = productImage ? 380 : 120;
+      ctx.fillText(`SKU: ${product.sku || '—'}`, detailX, 432);
+      ctx.fillText(`Sizes: ${sizes.length > 34 ? sizes.slice(0, 31) + '…' : sizes}`, detailX, 470);
+      if (price) ctx.fillText(`Price: ${price}`, detailX, 508);
+      if (product.custom_size_available) { ctx.fillStyle = '#1677ff'; ctx.font = '700 19px system-ui'; ctx.fillText('Custom sizing available', detailX, price ? 548 : 510); }
+      ctx.fillStyle = '#1677ff'; ctx.fillRect(120, 640, 840, 5);
+      ctx.fillStyle = '#0f172a'; ctx.font = '800 40px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText('SCAN TO TRY IT ON', 540, 700);
+      ctx.fillStyle = '#64748b'; ctx.font = '500 24px system-ui';
+      ctx.fillText('Point your phone camera at the QR code', 540, 738);
+      ctx.fillStyle = '#fff'; ctx.strokeStyle = '#dbe4f0'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(150, 770, 780, 780, 28); ctx.fill(); ctx.stroke();
+      ctx.drawImage(qr, 210, 830, 660, 660);
+      ctx.fillStyle = '#1677ff'; ctx.beginPath(); ctx.roundRect(120, 1580, 840, 78, 20); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.font = '700 19px system-ui'; ctx.fillText('Can’t scan? Open this link:', 155, 1612);
       ctx.font = '500 17px ui-monospace, SFMono-Regular, monospace';
       const link = String(scanUrl || '');
-      ctx.fillText(link.length > 90 ? link.slice(0, 87) + '…' : link, 155, 1568);
-      ctx.fillStyle = '#64748b'; ctx.textAlign = 'center'; ctx.font = '500 18px system-ui';
-      ctx.fillText('Scan or open the link to see this look on you', 540, 1640);
+      ctx.fillText(link.length > 90 ? link.slice(0, 87) + '…' : link, 155, 1642);
+      ctx.fillStyle = '#64748b'; ctx.textAlign = 'right'; ctx.font = '600 18px system-ui';
+      ctx.fillText('Powered by Try Instant Fit', 960, 1680);
       const brandedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       const objectUrl = URL.createObjectURL(brandedBlob || blob);
       const a = document.createElement('a');
