@@ -1568,6 +1568,12 @@
       background: var(--surface);
       border-radius: var(--r-md);
     }
+    .modal-eyebrow { color: var(--indigo); font-size: .7rem; font-weight: 800; letter-spacing: .1em; margin-bottom: .45rem; }
+    .modal-description { color: var(--muted); font-size: .88rem; line-height: 1.55; margin: 0 0 1rem; }
+    .qr-access-summary { display: flex; justify-content: space-between; gap: .75rem; padding: .8rem 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--muted); font-size: .82rem; }
+    .qr-access-summary strong { color: var(--text); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1.25rem; }
+    .pl-free-count { display: inline-flex; align-items: center; margin-left: .45rem; color: var(--muted); font-size: .72rem; font-weight: 600; white-space: nowrap; }
     .setting-toggle-copy { margin: 0; cursor: pointer; font-size: .9rem; font-weight: 600; line-height: 1.4; }
     .setting-toggle-copy strong, .setting-toggle-copy small { display: block; }
     .setting-toggle-copy small { margin-top: .15rem; color: var(--muted); font-size: .76rem; font-weight: 500; }
@@ -2338,6 +2344,27 @@
         <p style="color:var(--muted); font-size:.9rem; margin:0 0 1rem;" id="ptcSubtitle">Mark which products this customer actually bought.</p>
         <div id="ptcSummary" class="ptc-summary"></div>
         <div id="ptcList" class="ptc-list"></div>
+      </div>
+    </div>
+
+    <!-- Branded QR access modal. Keeps passcode changes inside the dashboard UI. -->
+    <div class="modal-backdrop" id="qrAccessModal" onclick="if(event.target===this)closeQrAccessModal()">
+      <div class="modal qr-access-modal" style="max-width: 500px;">
+        <button class="modal-close" type="button" onclick="closeQrAccessModal()">&times;</button>
+        <div class="modal-eyebrow">QR ACCESS</div>
+        <h3 id="qrAccessTitle">Update customer access</h3>
+        <p id="qrAccessSubtitle" class="modal-description"></p>
+        <div id="qrAccessSummary" class="qr-access-summary"></div>
+        <div id="qrAccessLimitField" class="field" style="margin-top:1rem;">
+          <label for="qrAccessLimit">Free try-ons before passcode protection returns</label>
+          <input type="number" id="qrAccessLimit" min="1" step="1" inputmode="numeric" placeholder="e.g. 5">
+          <div class="field-hint">Customers can use this many more open try-ons. The QR will then require a passcode again.</div>
+        </div>
+        <div id="qrAccessError" class="alert" role="alert"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeQrAccessModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" id="qrAccessSubmit" onclick="submitQrAccessChange()">Save access</button>
+        </div>
       </div>
     </div>
 
@@ -3751,7 +3778,7 @@
                 <div><img class="pl-drawer-qr" src="${qrImageUrl(qr.scan_url, 220)}" alt="QR for ${escapeHtml(p.name)}"><div class="pl-qr-caption">QR for this product</div></div>
                 <div class="pl-drawer-meta">
                   <div><span>Try-Ons</span><strong>${fmt(qr.total_used || 0)}${qr.total_limit !== null ? ' / ' + fmt(qr.total_limit) : ''}</strong></div>
-                  <div><span>Passcode protection</span><label class="switch-toggle"><input type="checkbox" ${qr.requires_passcode ? 'checked' : ''} onchange="toggleQrPasscode('${qr.id}', ${qr.requires_passcode}, ${qr.total_used || 0}, this)"><span class="switch-toggle-track" aria-hidden="true">${qr.requires_passcode ? 'On' : 'Off'}</span></label></div>
+                  <div><span>Passcode protection</span><span style="display:inline-flex; align-items:center;"><label class="switch-toggle"><input type="checkbox" ${qr.requires_passcode ? 'checked' : ''} onchange="toggleQrPasscode('${qr.id}', ${qr.requires_passcode}, ${qr.total_used || 0}, this)"><span class="switch-toggle-track" aria-hidden="true">${qr.requires_passcode ? 'On' : 'Off'}</span></label>${!qr.requires_passcode && qr.total_limit !== null ? `<span class="pl-free-count">${Math.max(0, (qr.total_limit || 0) - (qr.total_used || 0))} free left</span>` : ''}</span></div>
                   <div><span>QR scanning</span>${qr.active && p.active !== false ? '<span class="status-badge pill-active">Allowed</span>' : '<span class="status-badge pill-inactive">Blocked</span>'}</div>
                 </div>
               </div>
@@ -3972,20 +3999,16 @@
 
   function onEditQrPasscodeChange(toggle) {
     if (!toggle.checked) {
-      const raw = prompt('How many additional free try-ons should customers receive before passcode protection turns on again?');
-      if (raw === null) {
-        toggle.checked = true;
-        syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
-        return;
-      }
-      const additional = parseInt(raw, 10);
-      if (!Number.isInteger(additional) || additional < 1) {
-        toggle.checked = true;
-        syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
-        alert('Enter a positive whole number of additional free try-ons.');
-        return;
-      }
-      document.getElementById('epcdQrLimit').value = editingQrUsed + additional;
+      qrAccessModalState = { edit: true, currentlyRequired: true, totalUsed: Number(editingQrUsed) || 0, control: toggle };
+      document.getElementById('qrAccessTitle').textContent = 'Open this QR for customers';
+      document.getElementById('qrAccessSubtitle').textContent = 'Choose how many additional open try-ons customers can use before passcode protection returns.';
+      document.getElementById('qrAccessSummary').innerHTML = `<span>Already used</span><strong>${fmt(Number(editingQrUsed) || 0)} try-ons</strong>`;
+      document.getElementById('qrAccessLimitField').style.display = '';
+      document.getElementById('qrAccessLimit').value = '';
+      document.getElementById('qrAccessError').className = 'alert';
+      document.getElementById('qrAccessSubmit').textContent = 'Open QR access';
+      document.getElementById('qrAccessModal').classList.add('open');
+      return;
     }
     syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
   }
@@ -4613,29 +4636,82 @@
     }
   }
 
-  async function toggleQrPasscode(qrId, currentlyRequired, totalUsed, control) {
-    const restoreControl = () => {
-      if (!control) return;
-      control.checked = currentlyRequired;
-      syncSettingToggle(control);
-    };
-    const payload = { requires_passcode: !currentlyRequired };
-    if (currentlyRequired) {
-      const raw = prompt('How many free/open try-ons should be allowed before passcode protection turns on automatically?');
-      if (raw === null) { restoreControl(); return; }
-      const additional = parseInt(raw, 10);
-      if (!Number.isInteger(additional) || additional < 1) { restoreControl(); alert('Enter a positive whole number.'); return; }
-      payload.total_limit = totalUsed + additional;
+  let qrAccessModalState = null;
+
+  function openQrAccessModal(qrId, currentlyRequired, totalUsed, control) {
+    qrAccessModalState = { qrId, currentlyRequired, totalUsed: Number(totalUsed) || 0, control };
+    const turningOff = currentlyRequired;
+    document.getElementById('qrAccessTitle').textContent = turningOff ? 'Open this QR for customers' : 'Require a passcode again';
+    document.getElementById('qrAccessSubtitle').textContent = turningOff
+      ? 'Choose how many open try-ons customers can use before this QR protects itself again.'
+      : 'Customers will need a valid passcode before using this QR.';
+    document.getElementById('qrAccessSummary').innerHTML = turningOff
+      ? `<span>Already used</span><strong>${fmt(Number(totalUsed) || 0)} try-ons</strong>`
+      : '<span>Customer access</span><strong>Passcode required</strong>';
+    document.getElementById('qrAccessLimitField').style.display = turningOff ? '' : 'none';
+    document.getElementById('qrAccessLimit').value = '';
+    document.getElementById('qrAccessError').className = 'alert';
+    document.getElementById('qrAccessSubmit').textContent = turningOff ? 'Open QR access' : 'Require passcode';
+    document.getElementById('qrAccessModal').classList.add('open');
+  }
+
+  function closeQrAccessModal() {
+    if (qrAccessModalState?.control) {
+      qrAccessModalState.control.checked = qrAccessModalState.currentlyRequired;
+      syncSettingToggle(qrAccessModalState.control);
+    }
+    qrAccessModalState = null;
+    document.getElementById('qrAccessModal')?.classList.remove('open');
+  }
+
+  async function submitQrAccessChange() {
+    const state = qrAccessModalState;
+    if (!state) return;
+    const error = document.getElementById('qrAccessError');
+    const turningOff = state.currentlyRequired;
+    const payload = { requires_passcode: !state.currentlyRequired };
+    if (turningOff) {
+      const additional = parseInt(document.getElementById('qrAccessLimit').value, 10);
+      if (!Number.isInteger(additional) || additional < 1) {
+        error.textContent = 'Enter at least 1 free try-on.';
+        error.className = 'alert error';
+        return;
+      }
+      payload.total_limit = state.totalUsed + additional;
+    }
+    if (state.edit) {
+      const additional = parseInt(document.getElementById('qrAccessLimit').value, 10);
+      if (!Number.isInteger(additional) || additional < 1) {
+        error.textContent = 'Enter at least 1 free try-on.';
+        error.className = 'alert error';
+        return;
+      }
+      document.getElementById('epcdQrLimit').value = state.totalUsed + additional;
+      document.getElementById('epcdQrPasscode').checked = false;
+      syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
+      qrAccessModalState = null;
+      document.getElementById('qrAccessModal').classList.remove('open');
+      return;
     }
     try {
-      const res = await fetch(`${API}/api/qr/${qrId}`, {
+      const res = await fetch(`${API}/api/qr/${state.qrId}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
       });
       const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Could not update passcode access');
+      document.getElementById('qrAccessModal').classList.remove('open');
+      qrAccessModalState = null;
       await loadQrCodes();
       await loadProducts();
-    } catch (err) { restoreControl(); alert(humanError(err)); }
+    } catch (err) {
+      error.textContent = humanError(err);
+      error.className = 'alert error';
+      if (state.control) { state.control.checked = state.currentlyRequired; syncSettingToggle(state.control); }
+    }
+  }
+
+  function toggleQrPasscode(qrId, currentlyRequired, totalUsed, control) {
+    openQrAccessModal(qrId, currentlyRequired, totalUsed, control);
   }
 
   async function deleteQr(qrId, productName) {
