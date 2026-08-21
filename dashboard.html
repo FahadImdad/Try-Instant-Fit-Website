@@ -705,9 +705,12 @@
       position: absolute;
       z-index: 20;
       right: 0;
-      bottom: calc(100% + .4rem);
+      top: calc(100% + .45rem);
+      bottom: auto;
       display: grid;
       width: min(220px, 78vw);
+      max-height: min(360px, 55vh);
+      overflow-y: auto;
       gap: .3rem;
       padding: .5rem;
       border: 1px solid var(--border);
