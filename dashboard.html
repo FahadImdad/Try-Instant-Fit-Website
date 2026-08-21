@@ -4557,13 +4557,15 @@
       if (productImage) drawContained(productImage, 85, 350, 230, 240);
       else { ctx.fillStyle = '#94a3b8'; ctx.font = '600 18px system-ui'; ctx.textAlign = 'center'; ctx.fillText('Product image', 200, 475); }
       ctx.fillStyle = '#0f172a'; ctx.textAlign = 'left'; ctx.font = '800 30px system-ui';
-      ctx.fillText(title.length > 38 ? title.slice(0, 35) + '…' : title, 370, 390);
-      ctx.fillStyle = '#64748b'; ctx.font = '600 23px system-ui';
-      const detailX = 370;
-      ctx.fillText(`Sizes: ${sizes.length > 30 ? sizes.slice(0, 27) + '…' : sizes}`, detailX, 440);
-      if (price) ctx.fillText(`Price: ${price}`, detailX, 480);
-      if (product.description) { ctx.font = '500 20px system-ui'; ctx.fillText(`Details: ${product.description.slice(0, 32)}${product.description.length > 32 ? '…' : ''}`, detailX, 520); }
-      if (product.custom_size_available) { ctx.fillStyle = '#1677ff'; ctx.font = '700 21px system-ui'; ctx.fillText('Custom sizing available', detailX, 558); }
+      const titleWords = title.split(' '); let titleA = '', titleB = '';
+      titleWords.forEach(word => { if ((titleA + ' ' + word).trim().length < 29 && !titleB) titleA = (titleA + ' ' + word).trim(); else titleB = (titleB + ' ' + word).trim(); });
+      ctx.fillText(titleA || title.slice(0, 30), 370, 382);
+      if (titleB) ctx.fillText(titleB.length > 29 ? titleB.slice(0, 26) + '…' : titleB, 370, 420);
+      const drawInfo = (icon, label, value, y) => { ctx.fillStyle = '#e7f0ff'; ctx.beginPath(); ctx.arc(395, y - 8, 25, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#1677ff'; ctx.font = '700 24px system-ui'; ctx.textAlign = 'center'; ctx.fillText(icon, 395, y); ctx.textAlign = 'left'; ctx.font = '800 21px system-ui'; ctx.fillText(label, 435, y); ctx.fillStyle = '#334155'; ctx.font = '500 21px system-ui'; ctx.fillText(value, 535, y); };
+      drawInfo('⌂', 'Sizes:', sizes.length > 20 ? sizes.slice(0, 17) + '…' : sizes, 470);
+      if (price) drawInfo('◆', 'Price:', price, 520);
+      if (product.description) drawInfo('✦', 'Details:', product.description.slice(0, 22) + (product.description.length > 22 ? '…' : ''), 570);
+      if (product.custom_size_available) { ctx.fillStyle = '#1677ff'; ctx.font = '700 20px system-ui'; ctx.textAlign = 'left'; ctx.fillText('Custom sizing available', 370, 605); }
       ctx.fillStyle = '#1677ff'; ctx.fillRect(120, 640, 840, 5);
       ctx.fillStyle = '#0f172a'; ctx.font = '800 40px system-ui'; ctx.textAlign = 'center';
       ctx.fillText('SCAN TO TRY IT ON', 540, 700);
