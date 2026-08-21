@@ -2048,11 +2048,11 @@
           </div>
           <div class="field">
             <label for="apDesc">Description (optional)</label>
-            <textarea id="apDesc" rows="2" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
+            <textarea id="apDesc" rows="2" maxlength="240" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
           </div>
           <div class="field">
             <label for="apSizes">Available sizes</label>
-            <input type="text" id="apSizes" placeholder="e.g. XS, S, M, L, XL">
+            <input type="text" id="apSizes" maxlength="120" placeholder="e.g. XS, S, M, L, XL">
             <div class="field-hint">Separate sizes with commas. Customers will see these before contacting you.</div>
           </div>
           <div class="field" style="padding:.75rem; background:var(--surface); border-radius:var(--r-md);">
@@ -2147,11 +2147,11 @@
           </div>
           <div class="field">
             <label for="epcdDesc">Description (optional)</label>
-            <textarea id="epcdDesc" rows="2" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
+            <textarea id="epcdDesc" rows="2" maxlength="240" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
           </div>
           <div class="field">
             <label for="epcdSizes">Available sizes</label>
-            <input type="text" id="epcdSizes" placeholder="e.g. XS, S, M, L, XL">
+            <input type="text" id="epcdSizes" maxlength="120" placeholder="e.g. XS, S, M, L, XL">
           </div>
           <div class="field" style="padding:.75rem; background:var(--surface); border-radius:var(--r-md);">
             <div class="setting-toggle-row" style="padding:0;"><label for="epcdShowPriceQr" class="setting-toggle-copy">Show price on downloaded QR</label><label class="switch-toggle" for="epcdShowPriceQr"><input type="checkbox" id="epcdShowPriceQr" checked onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">On</span></label></div>
