@@ -4492,7 +4492,12 @@
   async function downloadQr(scanUrl, productName, btn) {
     const url = qrImageUrl(scanUrl, 800);
     const original = btn ? btn.textContent : null;
-    if (btn) { btn.disabled = true; btn.textContent = '⬇ …'; }
+    const originalMinWidth = btn ? btn.style.minWidth : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.style.minWidth = `${Math.max(btn.offsetWidth, 145)}px`;
+      btn.textContent = 'Preparing QR…';
+    }
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error('QR fetch failed');
@@ -4548,7 +4553,7 @@
     } catch (err) {
       window.location.href = url;
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = original; }
+      if (btn) { btn.disabled = false; btn.textContent = original; btn.style.minWidth = originalMinWidth; }
     }
   }
 
