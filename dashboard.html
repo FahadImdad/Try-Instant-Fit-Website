@@ -4575,7 +4575,7 @@
       ctx.fillStyle = '#1677ff'; ctx.fillRect(70, 220, 940, 5);
       const title = options.name === false ? '' : (productName || 'Virtual Try-On').trim();
       const sizes = Array.isArray(product.available_sizes) && product.available_sizes.length
-        ? product.available_sizes.join(', ') : 'Contact shop for available sizes';
+        ? product.available_sizes.join(', ') : 'Contact shop';
       const price = options.price === false || product.show_price_in_qr === false || product.price == null ? '' : `${product.currency || 'PKR'} ${Number(product.price).toLocaleString()}`;
       ctx.fillStyle = '#0f172a'; ctx.textAlign = 'center'; ctx.font = '800 34px system-ui';
       ctx.fillText('YOUR NEXT LOOK IS ONE SCAN AWAY', 540, 270);
