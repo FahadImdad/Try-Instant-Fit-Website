@@ -4543,7 +4543,7 @@
       if (vendorLogo) drawContained(vendorLogo, 70, 72, 150, 120);
       ctx.fillStyle = '#0f172a'; ctx.textAlign = 'left'; ctx.font = '800 42px system-ui';
       ctx.fillText(brandName.length > 22 ? brandName.slice(0, 19) + '…' : brandName, 250, 140);
-      if (tifLogo) { ctx.fillStyle = '#64748b'; ctx.font = '600 19px system-ui'; ctx.fillText('Powered by', 700, 108); drawContained(tifLogo, 820, 72, 170, 65); }
+      if (tifLogo) { ctx.fillStyle = '#64748b'; ctx.font = '600 21px system-ui'; ctx.fillText('Powered by', 650, 112); drawContained(tifLogo, 790, 62, 220, 82); }
       ctx.fillStyle = '#1677ff'; ctx.fillRect(120, 220, 840, 5);
       const title = (productName || 'Virtual Try-On').trim();
       const sizes = Array.isArray(product.available_sizes) && product.available_sizes.length
@@ -4553,14 +4553,14 @@
       ctx.fillText('YOUR NEXT LOOK IS ONE SCAN AWAY', 540, 270);
       ctx.fillStyle = '#64748b'; ctx.font = '600 24px system-ui';
       ctx.fillText('Try this design virtually before you buy', 540, 308);
-      if (productImage) drawContained(productImage, 70, 335, 260, 270);
-      else { ctx.fillStyle = '#94a3b8'; ctx.font = '600 22px system-ui'; ctx.textAlign = 'center'; ctx.fillText('Product image', 200, 475); }
+      if (productImage) drawContained(productImage, 40, 335, 280, 270);
+      else { ctx.fillStyle = '#94a3b8'; ctx.font = '600 22px system-ui'; ctx.textAlign = 'center'; ctx.fillText('Product image', 180, 475); }
       ctx.fillStyle = '#0f172a'; ctx.textAlign = 'left'; ctx.font = '800 30px system-ui';
       const titleWords = title.split(' '); let titleA = '', titleB = '';
       titleWords.forEach(word => { if ((titleA + ' ' + word).trim().length < 29 && !titleB) titleA = (titleA + ' ' + word).trim(); else titleB = (titleB + ' ' + word).trim(); });
       ctx.fillText(titleA || title.slice(0, 30), 370, 382);
       if (titleB) ctx.fillText(titleB.length > 29 ? titleB.slice(0, 26) + '…' : titleB, 370, 420);
-      const drawInfo = (label, value, y) => { ctx.fillStyle = '#1677ff'; ctx.font = '800 25px system-ui'; ctx.textAlign = 'left'; ctx.fillText(label, 370, y); ctx.fillStyle = '#334155'; ctx.font = '500 25px system-ui'; ctx.fillText(value, 535, y); };
+      const drawInfo = (label, value, y) => { ctx.fillStyle = '#1677ff'; ctx.font = '800 25px system-ui'; ctx.textAlign = 'left'; ctx.fillText(label, 405, y); ctx.fillStyle = '#334155'; ctx.font = '500 25px system-ui'; ctx.fillText(value, 585, y); };
       drawInfo('Sizes:', sizes.length > 20 ? sizes.slice(0, 17) + '…' : sizes, 475);
       if (price) drawInfo('Price:', price, 530);
       if (product.description) drawInfo('Details:', product.description.slice(0, 22) + (product.description.length > 22 ? '…' : ''), 585);
@@ -4571,13 +4571,11 @@
       ctx.fillStyle = '#64748b'; ctx.font = '500 24px system-ui';
       ctx.fillText('Point your phone camera at the QR code', 540, 738);
       ctx.drawImage(qr, 180, 780, 720, 720);
-      ctx.fillStyle = '#1677ff'; ctx.beginPath(); ctx.roundRect(120, 1580, 840, 78, 20); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.font = '700 19px system-ui'; ctx.fillText('Can’t scan? Visit this link:', 155, 1612);
-      ctx.font = '500 17px ui-monospace, SFMono-Regular, monospace';
+      ctx.fillStyle = '#1677ff'; ctx.beginPath(); ctx.roundRect(80, 1570, 920, 100, 22); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.font = '700 22px system-ui'; ctx.fillText('Can’t scan? Visit this link:', 125, 1610);
+      ctx.font = '500 19px ui-monospace, SFMono-Regular, monospace';
       const link = String(scanUrl || '');
-      ctx.fillText(link.length > 90 ? link.slice(0, 87) + '…' : link, 155, 1642);
-      ctx.fillStyle = '#64748b'; ctx.textAlign = 'right'; ctx.font = '600 18px system-ui';
-      ctx.fillText('Powered by Try Instant Fit', 960, 1680);
+      ctx.fillText(link.length > 96 ? link.slice(0, 93) + '…' : link, 125, 1650);
       const brandedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       const objectUrl = URL.createObjectURL(brandedBlob || blob);
       const a = document.createElement('a');
