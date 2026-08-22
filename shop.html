@@ -29,7 +29,7 @@
       --page-bg-b: #1a2f5a;
     }
     * { -webkit-tap-highlight-color: transparent; }
-    body { background: #f7f8fc; color: #172033; min-height: 100vh; }
+    body { background: var(--page-bg-a); color: #fff; min-height: 100vh; }
     .shop-wrap { max-width: 1120px; margin: 0 auto; padding: 0 1rem 3rem; }
 
     /* App-style slim top bar — sticky, compact. Brand logo + name in a row. */
@@ -37,9 +37,9 @@
       position: sticky; top: 0; z-index: 20;
       display: flex; align-items: center; gap: .6rem;
       padding: .6rem .3rem; margin-bottom: .5rem;
-      background: rgba(255,255,255,.92);
+      background: color-mix(in srgb, var(--page-bg-a) 88%, transparent);
       backdrop-filter: blur(10px);
-      border-bottom: 1px solid #e7eaf2;
+      border-bottom: 1px solid rgba(255,255,255,.08);
     }
     .shop-back {
       flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
@@ -49,7 +49,7 @@
     }
     .shop-back:hover { background: rgba(255,255,255,.2); }
     .shop-brand-logo { height: 52px; width: 52px; object-fit: contain; border-radius: 14px; background: #fff; flex: 0 0 auto; display: none; }
-    .shop-brand { color: #172033; font-size: 1.45rem; font-weight: 850; margin: 0; line-height: 1.1; letter-spacing: -.02em; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .shop-brand { color: #fff; font-size: 1.45rem; font-weight: 850; margin: 0; line-height: 1.1; letter-spacing: -.02em; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .shop-visit {
       flex: 0 0 auto; padding: .38rem .7rem; border-radius: var(--r-full);
       font-size: .72rem; font-weight: 700; text-decoration: none;
@@ -74,13 +74,13 @@
     .chip {
       flex: 0 0 auto; padding: .38rem .8rem; border: 1px solid rgba(255,255,255,.18);
       border-radius: var(--r-full); background: rgba(255,255,255,.08); font-size: .78rem; font-weight: 600;
-      color: #475569; cursor: pointer; white-space: nowrap; font-family: inherit; transition: all .15s;
+      color: rgba(255,255,255,.88); cursor: pointer; white-space: nowrap; font-family: inherit; transition: all .15s;
     }
     .chip:hover { border-color: rgba(255,255,255,.4); }
     .chip.active { background: var(--brand); border-color: var(--brand); color: var(--brand-contrast); }
 
     .shop-toolbar { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-top: .4rem; }
-    .shop-count { font-size: .85rem; color: #64748b; }
+    .shop-count { font-size: .85rem; color: rgba(255,255,255,.72); }
     .shop-sort { padding: .55rem .7rem; border: 1px solid #dfe4ef; border-radius: 10px; font-size: .85rem; font-family: inherit; background: #fff; color: #172033; }
     .shop-sort option { color: #111; }
 
