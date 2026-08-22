@@ -637,7 +637,10 @@
        only when the brand has catalogue browsing enabled and has items.
        Replaces the old cramped inline grid. -->
   <div id="catalogSection" class="scan-card" style="display:none; text-align:center;">
-    <div style="font-size:1.8rem; margin-bottom:.35rem;">🛍️</div>
+    <div id="catalogBrandIdentity" style="display:flex; align-items:center; justify-content:center; gap:.7rem; margin-bottom:1rem;">
+      <img id="catalogBrandLogo" src="" alt="" style="display:none; width:54px; height:54px; object-fit:contain; border-radius:12px;">
+      <strong id="catalogBrandHeading" style="font-size:1.2rem; color:var(--text);">this brand</strong>
+    </div>
     <h3 style="font-size:1.05rem; margin:0 0 .3rem;">Explore the full collection</h3>
     <p style="color:var(--muted); font-size:.85rem; margin:0 0 1rem;">Browse everything from <span id="catalogBrandName">this brand</span> and try on any item with your photo.</p>
     <a id="viewCatalogBtn" class="btn-block primary" href="#" style="display:block; text-decoration:none; text-align:center;">View Full Catalogue →</a>
@@ -711,6 +714,10 @@
     if (!brandId) return;
     // Prepare + show immediately so there's no visible delay.
     document.getElementById('catalogBrandName').textContent = qrInfo?.brand?.name || 'this brand';
+    document.getElementById('catalogBrandHeading').textContent = qrInfo?.brand?.name || 'this brand';
+    const catalogLogo = document.getElementById('catalogBrandLogo');
+    const logoUrl = qrInfo?.brand?.logo_url || qrInfo?.brand_logo_url;
+    if (logoUrl) { catalogLogo.src = logoUrl; catalogLogo.style.display = 'block'; }
     document.getElementById('viewCatalogBtn').href = `/shop/${encodeURIComponent(brandId)}`;
     show('catalogSection');
     try {
