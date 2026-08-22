@@ -131,6 +131,10 @@
     }
     .field input:focus { border-color: var(--cyan); }
     .field-hint { font-size: .78rem; color: var(--muted); margin-top: .3rem; }
+    .size-picker { display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.35rem; }
+    .size-picker button { min-width:3.25rem; padding:.55rem .7rem; border:1px solid var(--border); border-radius:999px; background:#fff; color:var(--text); font:700 .85rem inherit; cursor:pointer; transition:.15s ease; }
+    .size-picker button:hover { border-color:var(--indigo); color:var(--indigo); }
+    .size-picker button.selected { background:var(--indigo); border-color:var(--indigo); color:#fff; box-shadow:0 0 0 3px rgba(90,103,242,.14); }
 
     /* ── Alert ── */
     .alert { padding: .9rem 1.1rem; border-radius: var(--r-md); font-size: .88rem; margin-bottom: 1.25rem; display: none; }
@@ -2052,8 +2056,9 @@
           </div>
           <div class="field">
             <label for="apSizes">Available sizes</label>
-            <input type="text" id="apSizes" maxlength="120" placeholder="e.g. XS, S, M, L, XL">
-            <div class="field-hint">Separate sizes with commas. Customers will see these before contacting you.</div>
+            <div class="size-picker" data-input="apSizes" aria-label="Select available sizes">
+              <button type="button" data-size="XS">XS</button><button type="button" data-size="S">S</button><button type="button" data-size="M">M</button><button type="button" data-size="L">L</button><button type="button" data-size="XL">XL</button><button type="button" data-size="XXL">XXL</button>
+            </div><input type="hidden" id="apSizes"><div class="field-hint">Select every size currently available. Customers will see these before contacting you.</div>
           </div>
           <div class="field" style="padding:.75rem; background:var(--surface); border-radius:var(--r-md);">
             <div class="setting-toggle-row" style="padding:0;"><label for="apCustomSize" class="setting-toggle-copy">Custom size / made-to-measure available</label><label class="switch-toggle" for="apCustomSize"><input type="checkbox" id="apCustomSize" onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">Off</span></label></div>
@@ -2151,7 +2156,9 @@
           </div>
           <div class="field">
             <label for="epcdSizes">Available sizes</label>
-            <input type="text" id="epcdSizes" maxlength="120" placeholder="e.g. XS, S, M, L, XL">
+            <div class="size-picker" data-input="epcdSizes" aria-label="Select available sizes">
+              <button type="button" data-size="XS">XS</button><button type="button" data-size="S">S</button><button type="button" data-size="M">M</button><button type="button" data-size="L">L</button><button type="button" data-size="XL">XL</button><button type="button" data-size="XXL">XXL</button>
+            </div><input type="hidden" id="epcdSizes">
           </div>
           <div class="field" style="padding:.75rem; background:var(--surface); border-radius:var(--r-md);">
             <div class="setting-toggle-row" style="padding:0;"><label for="epcdShowPriceQr" class="setting-toggle-copy">Show price on downloaded QR</label><label class="switch-toggle" for="epcdShowPriceQr"><input type="checkbox" id="epcdShowPriceQr" checked onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">On</span></label></div>
@@ -4055,6 +4062,26 @@
     root.querySelectorAll('.switch-toggle input[type="checkbox"]').forEach(syncSettingToggle);
   }
 
+  function setSizePicker(id, value) {
+    const input = document.getElementById(id);
+    if (!input) return;
+    const selected = String(value || '').split(',').map(v => v.trim()).filter(Boolean);
+    input.value = selected.join(', ');
+    const picker = document.querySelector(`.size-picker[data-input="${id}"]`);
+    picker?.querySelectorAll('[data-size]').forEach(btn => btn.classList.toggle('selected', selected.includes(btn.dataset.size)));
+  }
+
+  function initSizePickers() {
+    document.querySelectorAll('.size-picker').forEach(picker => {
+      const input = document.getElementById(picker.dataset.input);
+      picker.querySelectorAll('[data-size]').forEach(btn => btn.addEventListener('click', () => {
+        const values = String(input.value || '').split(',').map(v => v.trim()).filter(Boolean);
+        const next = values.includes(btn.dataset.size) ? values.filter(v => v !== btn.dataset.size) : values.concat(btn.dataset.size);
+        setSizePicker(input.id, next.join(', '));
+      }));
+    });
+  }
+
   function initModalUx() {
     let lastTrigger = null;
     const modals = document.querySelectorAll('.modal-backdrop');
@@ -4097,6 +4124,7 @@
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     });
     syncToggleGroup();
+    initSizePickers();
   }
 
   initModalUx();
@@ -4123,6 +4151,7 @@
     }
     document.getElementById('apError').className = 'alert';
     ['apName','apPrice','apDesc','apQrLimit','apBuyUrl','apSizes','apCustomSizeNote'].forEach(id => document.getElementById(id).value = '');
+    setSizePicker('apSizes', '');
     document.getElementById('apShowPriceQr').checked = true;
     document.getElementById('apCurrency').value = 'PKR';
     populateTaxonomy('ap', '', '', '');
@@ -4321,7 +4350,7 @@
     document.getElementById('epcdPrice').value = p.price ?? '';
     document.getElementById('epcdCurrency').value = p.currency || 'PKR';
     document.getElementById('epcdDesc').value = p.description || '';
-    document.getElementById('epcdSizes').value = (p.available_sizes || []).join(', ');
+    setSizePicker('epcdSizes', (p.available_sizes || []).join(', '));
     document.getElementById('epcdCustomSize').checked = p.custom_size_available === true;
     document.getElementById('epcdShowPriceQr').checked = p.show_price_in_qr !== false;
     document.getElementById('epcdCustomSizeNote').value = p.custom_size_note || '';
