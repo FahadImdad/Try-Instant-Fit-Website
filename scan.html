@@ -32,7 +32,7 @@
       margin-bottom: .5rem;
       text-decoration: none;
       display: inline-flex;
-      align-items: center;
+      align-items: flex-start;
       gap: .55rem;
     }
     .scan-logo img { height: 44px; width: 44px; border-radius: 11px; display: block; }
@@ -82,23 +82,23 @@
       border-bottom: 1px solid var(--border);
     }
     .product-image {
-      width: 80px;
-      height: 80px;
+      width: 150px;
+      height: 210px;
       border-radius: .75rem;
-      object-fit: contain;
+      object-fit: cover;
       background: #fff;
       border: 1px solid var(--border);
       flex-shrink: 0;
     }
     .product-image-placeholder {
-      width: 80px;
-      height: 80px;
+      width: 150px;
+      height: 210px;
       border-radius: .75rem;
       background: linear-gradient(135deg, #5a67f2, #00c8e8);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2rem;
+      font-size: 2.8rem;
       flex-shrink: 0;
     }
     .product-info h2 { font-size: 1.05rem; margin: 0 0 .15rem; }
@@ -303,7 +303,7 @@
     @media (max-width: 420px) {
       .scan-wrap { padding: 1rem .75rem; }
       .scan-card { padding: 1.25rem; }
-      .product-image, .product-image-placeholder { width: 64px; height: 64px; }
+      .product-image, .product-image-placeholder { width: 110px; height: 150px; }
       .product-info h2 { font-size: 1rem; }
       h3.step-title { font-size: .95rem; }
       .upload-zone { padding: 1.5rem .75rem; }
