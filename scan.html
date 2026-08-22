@@ -754,6 +754,10 @@
       [document.getElementById(baseId), document.getElementById(baseId + 'Result')]
         .filter(Boolean).forEach(el => { el.style.display = display; });
     };
+    const hideBoth = (baseId) => {
+      [document.getElementById(baseId), document.getElementById(baseId + 'Result')]
+        .filter(Boolean).forEach(el => { el.style.display = 'none'; });
+    };
 
     setBoth('productName', qrInfo.product_name);
     setBoth('brandName', qrInfo.brand?.name || '—');
