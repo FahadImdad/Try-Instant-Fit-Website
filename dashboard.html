@@ -2067,16 +2067,16 @@
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="field">
-              <label for="apAudience">For</label>
+              <label for="apAudience">For <span class="required-mark">*</span></label>
               <select id="apAudience"><!-- injected by populateAudienceSelect() --></select>
             </div>
             <div class="field">
-              <label for="apGroup">Style</label>
+              <label for="apGroup">Style <span class="required-mark">*</span></label>
               <select id="apGroup" onchange="onGroupSelectChange('ap')"><!-- injected by populateGroupSelect() --></select>
             </div>
           </div>
           <div class="field">
-            <label for="apCategory">Category</label>
+            <label for="apCategory">Category <span class="required-mark">*</span></label>
             <select id="apCategory" onchange="onCategorySelectChange('ap')">
               <!-- options injected by populateCategorySelect() -->
             </select>
@@ -2170,16 +2170,16 @@
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="field">
-              <label for="epcdAudience">For</label>
+              <label for="epcdAudience">For <span class="required-mark">*</span></label>
               <select id="epcdAudience"><!-- injected --></select>
             </div>
             <div class="field">
-              <label for="epcdGroup">Style</label>
+              <label for="epcdGroup">Style <span class="required-mark">*</span></label>
               <select id="epcdGroup" onchange="onGroupSelectChange('epcd')"><!-- injected --></select>
             </div>
           </div>
           <div class="field">
-            <label for="epcdCategory">Category</label>
+            <label for="epcdCategory">Category <span class="required-mark">*</span></label>
             <select id="epcdCategory" onchange="onCategorySelectChange('epcd')">
               <!-- options injected by populateCategorySelect() -->
             </select>
@@ -4516,11 +4516,12 @@
     const description = document.getElementById(`${prefix}Desc`)?.value.trim();
     const sizes = document.getElementById(`${prefix}Sizes`)?.value.trim();
     const custom = document.getElementById(`${prefix}CustomSize`)?.checked;
-    const missing = !audience ? 'audience' : !group ? 'style group' : !category ? 'category' : !description ? 'description' : (!sizes && !custom) ? 'at least one available size (or enable custom sizing)' : '';
+    const customNote = document.getElementById(`${prefix}CustomSizeNote`)?.value.trim();
+    const missing = !audience ? 'audience' : !group ? 'style group' : !category ? 'category' : !description ? 'description' : (!sizes && !custom) ? 'at least one available size (or enable custom sizing)' : (custom && !customNote) ? 'custom sizing details' : '';
     if (!missing) return true;
     errEl.textContent = `Please complete the ${missing} before saving this product.`;
     errEl.className = 'alert error';
-    const target = !sizes && !custom ? document.querySelector(`.size-picker[data-input="${prefix}Sizes"]`) : document.getElementById(`${prefix}Desc`);
+    const target = (!sizes && !custom) ? document.querySelector(`.size-picker[data-input="${prefix}Sizes"]`) : (custom && !customNote) ? document.getElementById(`${prefix}CustomSizeNote`) : document.getElementById(`${prefix}Desc`);
     target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return false;
   }
