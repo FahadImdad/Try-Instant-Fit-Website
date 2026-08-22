@@ -3857,6 +3857,17 @@
       if (chevron) chevron.textContent = '›';
       openProductIds.delete(productId);
     } else {
+      // Keep the product list focused: only one detail drawer may be open.
+      openProductIds.forEach(id => {
+        if (id === productId) return;
+        const other = document.getElementById('plrow-' + id);
+        const otherDrawer = other?.querySelector('.product-list-drawer');
+        const otherChevron = other?.querySelector('.pl-chevron');
+        otherDrawer?.setAttribute('hidden', '');
+        other?.classList.remove('open');
+        if (otherChevron) otherChevron.textContent = '›';
+      });
+      openProductIds.clear();
       drawer.removeAttribute('hidden');
       row.classList.add('open');
       if (chevron) chevron.textContent = '⌃';
