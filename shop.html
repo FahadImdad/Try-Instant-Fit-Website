@@ -29,7 +29,7 @@
       --page-bg-b: #1a2f5a;
     }
     * { -webkit-tap-highlight-color: transparent; }
-    body { background: var(--page-bg-a); min-height: 100vh; }
+    body { background: #f7f8fc; color: #172033; min-height: 100vh; }
     .shop-wrap { max-width: 1120px; margin: 0 auto; padding: 0 1rem 3rem; }
 
     /* App-style slim top bar — sticky, compact. Brand logo + name in a row. */
@@ -37,9 +37,9 @@
       position: sticky; top: 0; z-index: 20;
       display: flex; align-items: center; gap: .6rem;
       padding: .6rem .3rem; margin-bottom: .5rem;
-      background: color-mix(in srgb, var(--page-bg-a) 88%, transparent);
+      background: rgba(255,255,255,.92);
       backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255,255,255,.08);
+      border-bottom: 1px solid #e7eaf2;
     }
     .shop-back {
       flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
@@ -48,13 +48,13 @@
       font-size: 1.1rem; cursor: pointer; text-decoration: none; transition: background .15s;
     }
     .shop-back:hover { background: rgba(255,255,255,.2); }
-    .shop-brand-logo { height: 30px; width: 30px; object-fit: contain; border-radius: 8px; background: #fff; flex: 0 0 auto; display: none; }
-    .shop-brand { color: #fff; font-size: 1.05rem; font-weight: 800; margin: 0; line-height: 1.1; letter-spacing: -.01em; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .shop-brand-logo { height: 52px; width: 52px; object-fit: contain; border-radius: 14px; background: #fff; flex: 0 0 auto; display: none; }
+    .shop-brand { color: #172033; font-size: 1.45rem; font-weight: 850; margin: 0; line-height: 1.1; letter-spacing: -.02em; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .shop-visit {
       flex: 0 0 auto; padding: .38rem .7rem; border-radius: var(--r-full);
       font-size: .72rem; font-weight: 700; text-decoration: none;
       background: color-mix(in srgb, var(--brand) 26%, transparent);
-      color: #fff; border: 1px solid color-mix(in srgb, var(--brand) 45%, transparent);
+      color: var(--brand); border: 1px solid color-mix(in srgb, var(--brand) 45%, transparent);
     }
     .shop-sub { display: none; }  /* app bar stays compact — no subtitle line */
 
@@ -62,8 +62,8 @@
     .shop-controls { padding: .2rem .3rem .6rem; margin-bottom: .6rem; }
     .shop-search {
       width: 100%; box-sizing: border-box; padding: .7rem .9rem;
-      border: none; border-radius: 12px; font-size: .95rem; font-family: inherit; outline: none;
-      margin-bottom: .6rem; background: rgba(255,255,255,.94);
+      border: 1px solid #dfe4ef; border-radius: 14px; font-size: 1rem; font-family: inherit; outline: none;
+      margin-bottom: .8rem; background: #fff; box-shadow: 0 6px 18px rgba(22,31,55,.06);
     }
     .shop-search:focus { box-shadow: 0 0 0 2px var(--brand); }
 
@@ -74,14 +74,14 @@
     .chip {
       flex: 0 0 auto; padding: .38rem .8rem; border: 1px solid rgba(255,255,255,.18);
       border-radius: var(--r-full); background: rgba(255,255,255,.08); font-size: .78rem; font-weight: 600;
-      color: rgba(255,255,255,.85); cursor: pointer; white-space: nowrap; font-family: inherit; transition: all .15s;
+      color: #475569; cursor: pointer; white-space: nowrap; font-family: inherit; transition: all .15s;
     }
     .chip:hover { border-color: rgba(255,255,255,.4); }
     .chip.active { background: var(--brand); border-color: var(--brand); color: var(--brand-contrast); }
 
     .shop-toolbar { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-top: .4rem; }
-    .shop-count { font-size: .78rem; color: rgba(255,255,255,.55); }
-    .shop-sort { padding: .4rem .6rem; border: 1px solid rgba(255,255,255,.18); border-radius: 9px; font-size: .78rem; font-family: inherit; background: rgba(255,255,255,.08); color: #fff; }
+    .shop-count { font-size: .85rem; color: #64748b; }
+    .shop-sort { padding: .55rem .7rem; border: 1px solid #dfe4ef; border-radius: 10px; font-size: .85rem; font-family: inherit; background: #fff; color: #172033; }
     .shop-sort option { color: #111; }
 
     /* Grid — 2 up on phones (tight, app-like), scaling up on wider screens. */
@@ -90,8 +90,8 @@
     @media (min-width: 820px) { .shop-grid { grid-template-columns: repeat(4, 1fr); gap: 1.15rem; } }
 
     .card {
-      background: #fff; border-radius: 12px; overflow: hidden;
-      display: flex; flex-direction: column; box-shadow: 0 3px 12px rgba(0,0,0,.28);
+      background: #fff; border-radius: 18px; overflow: hidden;
+      display: flex; flex-direction: column; box-shadow: 0 10px 28px rgba(22,31,55,.10); border: 1px solid #e6eaf2;
       transition: transform .12s;
     }
     .card:active { transform: scale(.98); }
