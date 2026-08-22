@@ -131,6 +131,7 @@
     }
     .field input:focus { border-color: var(--cyan); }
     .field-hint { font-size: .78rem; color: var(--muted); margin-top: .3rem; }
+    .required-mark { color: #dc2626; font-weight: 800; }
     .size-picker { display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.35rem; }
     .size-picker button { min-width:3.25rem; padding:.55rem .7rem; border:1px solid var(--border); border-radius:999px; background:#fff; color:var(--text); font:700 .85rem inherit; cursor:pointer; transition:.15s ease; }
     .size-picker button:hover { border-color:var(--indigo); color:var(--indigo); }
@@ -2051,7 +2052,7 @@
             <div class="setting-toggle-row" style="padding:0;"><label for="apShowPriceQr" class="setting-toggle-copy">Show price on downloaded QR</label><label class="switch-toggle" for="apShowPriceQr"><input type="checkbox" id="apShowPriceQr" checked onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">On</span></label></div>
           </div>
           <div class="field">
-            <label for="apDesc">Description (optional)</label>
+            <label for="apDesc">Description <span class="required-mark">*</span></label>
             <textarea id="apDesc" rows="2" maxlength="240" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
           </div>
           <div class="field">
@@ -2151,7 +2152,7 @@
             </div>
           </div>
           <div class="field">
-            <label for="epcdDesc">Description (optional)</label>
+            <label for="epcdDesc">Description <span class="required-mark">*</span></label>
             <textarea id="epcdDesc" rows="2" maxlength="240" style="width:100%; padding:.65rem .8rem; border:1px solid var(--border); border-radius: var(--r-md); font-family: inherit;" placeholder="Material, fit, colour, sizes, anything else…"></textarea>
           </div>
           <div class="field">
@@ -3776,6 +3777,8 @@
       const priceTxt  = p.price ? formatPrice(p.price, p.currency) : '—';
       const tryonsTxt = qr ? `${fmt(qr.total_used || 0)}${qr.total_limit !== null ? '/' + fmt(qr.total_limit) : ''}` : '—';
       const sizeTxt = (p.available_sizes || []).length ? p.available_sizes.join(', ') : 'Sizes not listed';
+      const completenessWarning = !(p.available_sizes || []).length && !p.custom_size_available
+        ? '<span class="pl-status pl-status-warn">Add sizes</span>' : '';
       const visibilityBadge = p.show_in_catalog
         ? '<span class="pl-status pl-status-on">Catalogue</span>'
         : '<span class="pl-status pl-status-off">Private</span>';
@@ -3797,7 +3800,7 @@
               <div class="pl-name">${escapeHtml(p.name)}</div>
               <div class="pl-meta">${escapeHtml(p.sku)} · ${escapeHtml(priceTxt)} · ${tryonsTxt} try-on${tryonsTxt === '1' ? '' : 's'} · ${escapeHtml(sizeTxt)}${p.custom_size_available ? ' · Custom size' : ''}</div>
             </div>
-            <span class="pl-summary-badges">${visibilityBadge}${statusBadge}</span>
+            <span class="pl-summary-badges">${completenessWarning}${visibilityBadge}${statusBadge}</span>
             <span class="pl-chevron">${isOpen ? '⌃' : '›'}</span>
           </div>
           <div class="product-list-drawer"${isOpen ? '' : ' hidden'}>
