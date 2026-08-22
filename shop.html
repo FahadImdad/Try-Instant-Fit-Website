@@ -33,6 +33,7 @@
     .shop-wrap { max-width: 1160px; margin: 0 auto; padding: 0 1rem 3rem; }
 
     .shop-hero {
+      display:none;
       position: relative; overflow: hidden; text-align: center; padding: 1.6rem 1.5rem 1.45rem;
       margin: 0 -.3rem .9rem; border-radius: 0 0 18px 18px;
       background: radial-gradient(circle at 50% -20%, color-mix(in srgb, var(--brand) 34%, transparent), transparent 62%);
@@ -101,7 +102,7 @@
       .shop-search { grid-column:1 / -1; }
       .filter-row { grid-column:auto; }
       .shop-toolbar { margin-top:0; }
-      .shop-hero { padding: .95rem 1.5rem 1rem; margin-bottom: .7rem; }
+      .shop-hero { display:none !important; }
       .shop-hero-logo, .shop-hero-brand, .shop-hero-kicker, .shop-hero-copy, .shop-hero-rule { display:none !important; }
       .shop-hero-title { font-size: 2rem; margin: 0; }
       .shop-hero::after { width:120px; height:120px; top:-25px; right:-45px; }
@@ -126,7 +127,7 @@
     .card-media { display: block; position:relative; overflow:hidden; background: #eef1f7; padding: 0; margin: 0; line-height: 0; }
     .card-media.has-image::before { content:''; position:absolute; inset:-18px; background-image:var(--card-image); background-size:cover; background-position:center; filter:blur(18px); opacity:.3; transform:scale(1.08); }
     .card-img, .card-img-ph { width: 100%; aspect-ratio: 4/5; display: block; }
-    .card-img { position:relative; z-index:1; object-fit: contain; background: transparent; }
+    .card-img { position:relative; z-index:1; object-fit: cover; object-position: center; background: transparent; }
     .card-img-ph { background: linear-gradient(135deg,#5a67f2,#00c8e8); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
 
     .card-body { padding: .7rem .72rem .75rem; display: flex; flex-direction: column; }
