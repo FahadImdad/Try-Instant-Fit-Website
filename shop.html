@@ -38,6 +38,8 @@
       background: radial-gradient(circle at 50% -20%, color-mix(in srgb, var(--brand) 34%, transparent), transparent 62%);
     }
     .shop-hero::after { content: ''; position: absolute; width: 180px; height: 180px; right: -80px; top: 20px; border-radius: 50%; background: color-mix(in srgb, var(--brand) 14%, transparent); filter: blur(2px); }
+    .shop-hero-logo { position:relative; z-index:1; width:68px; height:68px; object-fit:contain; border-radius:18px; background:#fff; margin:0 auto .65rem; box-shadow:0 8px 20px rgba(0,0,0,.22); }
+    .shop-hero-brand { position:relative; z-index:1; margin:0 0 .35rem; color:#fff; font-size:1.35rem; font-weight:850; letter-spacing:-.02em; }
     .shop-hero-kicker { margin: 0 0 .65rem; color: color-mix(in srgb, var(--brand) 70%, white); font-size: .75rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
     .shop-hero-title { position: relative; z-index: 1; margin: 0 auto .45rem; max-width: 760px; color: #fff; font-size: clamp(1.65rem, 3.2vw, 2.45rem); line-height: 1.06; letter-spacing: -.04em; font-weight: 900; }
     .shop-hero-copy { position: relative; z-index: 1; margin: 0 auto; max-width: 560px; color: rgba(255,255,255,.7); font-size: .96rem; line-height: 1.45; }
@@ -111,12 +113,12 @@
 
     .card {
       background: #fff; border-radius: 12px; overflow: hidden;
-      display: flex; flex-direction: column; box-shadow: 0 8px 20px rgba(0,0,0,.16); border: 1px solid rgba(255,255,255,.55);
+      display: flex; flex-direction: column; padding: 0; box-shadow: 0 8px 20px rgba(0,0,0,.16); border: 1px solid rgba(255,255,255,.55);
       transition: transform .12s;
     }
     .card:active { transform: scale(.98); }
 
-    .card-media { display: block; background: #f0f1f4; }
+    .card-media { display: block; background: #f0f1f4; padding: 0; margin: 0; }
     .card-img, .card-img-ph { width: 100%; aspect-ratio: 4/5; display: block; }
     .card-img { object-fit: cover; }
     .card-img-ph { background: linear-gradient(135deg,#5a67f2,#00c8e8); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
@@ -183,6 +185,8 @@
   <!-- Main -->
   <div id="mainView" style="display:none;">
     <section class="shop-hero" aria-label="Brand introduction">
+      <img id="heroLogo" class="shop-hero-logo" src="" alt="" style="display:none;">
+      <p class="shop-hero-brand" id="heroBrand"></p>
       <p class="shop-hero-kicker">The latest collection</p>
       <h2 class="shop-hero-title" id="heroTitle">Discover your next look</h2>
       <p class="shop-hero-copy">Explore the collection, then try your favourites on virtually before you buy.</p>
@@ -320,11 +324,16 @@
     document.title = `${name} — Try Instant Fit`;
     $('brandName').textContent = name;
     $('heroTitle').textContent = `${name}'s signature collection`;
+    $('heroBrand').textContent = name;
     if (brand?.logo_url) {
       const l = $('brandLogo');
       l.src = brand.logo_url;
       l.style.display = 'block';
       l.onerror = () => { l.style.display = 'none'; };
+      const heroLogo = $('heroLogo');
+      heroLogo.src = brand.logo_url;
+      heroLogo.style.display = 'block';
+      heroLogo.onerror = () => { heroLogo.style.display = 'none'; };
     }
     // "Visit store" link to the brand's own website, if they set one.
     if (brand?.website_url) {
@@ -340,7 +349,7 @@
     // Audience chips
     const auds = Array.from(new Set(allItems.map(p => (p.audience||'').trim()).filter(Boolean)))
       .sort((a,b) => AUD_ORDER.indexOf(a) - AUD_ORDER.indexOf(b));
-    if (auds.length > 1) {
+    if (auds.length) {
       $('audienceChips').innerHTML = [{k:'all',l:'Everyone'}].concat(auds.map(a=>({k:a,l:a})))
         .map(c => `<button type="button" class="chip${state.audience===c.k?' active':''}" data-aud="${escAttr(c.k)}">${esc(c.l)}</button>`).join('');
       show('audienceRow');
@@ -360,7 +369,7 @@
       const ra = GROUP_ORDER.indexOf(groupOf[a]); const rb = GROUP_ORDER.indexOf(groupOf[b]);
       return (ra===-1?9:ra) - (rb===-1?9:rb) || a.localeCompare(b);
     });
-    if (cats.length > 1) {
+    if (cats.length) {
       $('categoryChips').innerHTML = [{k:'all',l:'All'}].concat(cats.map(c=>({k:c,l:c})))
         .map(c => `<button type="button" class="chip${state.category===c.k?' active':''}" data-cat="${escAttr(c.k)}">${esc(c.l)}</button>`).join('');
       show('categoryRow');
