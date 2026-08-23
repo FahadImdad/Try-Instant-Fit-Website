@@ -2277,7 +2277,15 @@
                 <div style="font-size:.75rem; color:var(--muted); margin-top:.15rem;">PNG · JPG · WebP · SVG · up to 5MB</div>
               </div>
             </label>
-            <div class="field-hint">Used in widget, scan page, and receipts.</div>
+          <div class="field-hint">Used in widget, scan page, and receipts.</div>
+          </div>
+          <div class="field">
+            <label for="epBrandColor">Brand colour</label>
+            <div style="display:flex; gap:.6rem; align-items:center;"><input type="color" id="epBrandColor" value="#5a67f2" style="width:3.2rem; height:3rem; padding:.15rem; cursor:pointer;"><input type="text" id="epBrandColorHex" value="#5a67f2" maxlength="7" pattern="^#[0-9a-fA-F]{6}$" aria-label="Brand colour hex code" style="flex:1; text-transform:uppercase;"></div>
+            <div id="epColorPalette" style="display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.55rem;">
+              ${['#5A67F2','#2563EB','#0891B2','#059669','#D97706','#DC2626','#DB2777','#7C3AED','#111827','#475569'].map(c=>`<button type="button" data-color="${c}" aria-label="Use ${c}" style="width:1.8rem;height:1.8rem;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--border);background:${c};cursor:pointer;"></button>`).join('')}
+            </div>
+            <div class="field-hint">Choose a preset, use the colour picker, or enter a six-digit hex code.</div>
           </div>
           <div class="field setting-toggle-row">
             <label for="epCatalogEnabled" class="setting-toggle-copy">🛍️ <strong>Catalogue browsing</strong> — let shoppers browse your range and try items marked “Show in catalogue”.</label>
@@ -5337,6 +5345,15 @@
   // EDIT PROFILE
   // ════════════════════════════════════════════════════════════════
   let epPickedLogoFile = null;
+  function syncBrandColor(value) {
+    const color = String(value || '').trim().toUpperCase();
+    if (!/^#[0-9A-F]{6}$/.test(color)) return;
+    document.getElementById('epBrandColor').value = color;
+    document.getElementById('epBrandColorHex').value = color;
+  }
+  document.getElementById('epBrandColor')?.addEventListener('input', e => syncBrandColor(e.target.value));
+  document.getElementById('epBrandColorHex')?.addEventListener('input', e => syncBrandColor(e.target.value));
+  document.querySelectorAll('#epColorPalette [data-color]').forEach(btn => btn.addEventListener('click', () => syncBrandColor(btn.dataset.color)));
   function openEditProfile() {
     const b = lastDashboardData?.brand || {};
     document.getElementById('epError').className = 'alert';
@@ -5346,6 +5363,9 @@
     document.getElementById('epContactPosition').value = b.contact_position || '';
     document.getElementById('epContactPhone').value    = b.contact_phone    || '';
     document.getElementById('epCountry').value         = b.country          || '';
+    const brandColor = /^#[0-9a-f]{6}$/i.test(b.primary_color || '') ? b.primary_color : '#5a67f2';
+    document.getElementById('epBrandColor').value = brandColor;
+    document.getElementById('epBrandColorHex').value = brandColor.toUpperCase();
     // Catalogue browsing master switch — default on for brands created before
     // the column existed (undefined → checked).
     document.getElementById('epCatalogEnabled').checked = b.catalog_enabled !== false;
@@ -5411,8 +5431,10 @@
       contact_position: document.getElementById('epContactPosition').value.trim(),
       contact_phone:    document.getElementById('epContactPhone').value.trim(),
       country:          document.getElementById('epCountry').value.trim().toUpperCase(),
+      primary_color:    document.getElementById('epBrandColorHex').value.trim().toUpperCase(),
     };
     if (!fields.name) { errEl.textContent = 'Brand name is required.'; errEl.className = 'alert error'; return false; }
+    if (!/^#[0-9A-F]{6}$/.test(fields.primary_color)) { errEl.textContent = 'Enter a valid hex colour, for example #5A67F2.'; errEl.className = 'alert error'; return false; }
 
     // Boolean — sent alongside the string fields (multipart as 'true'/'false',
     // JSON as a real boolean the backend coerces).
