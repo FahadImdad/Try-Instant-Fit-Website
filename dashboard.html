@@ -5653,9 +5653,7 @@
   });
 
   // ── Account dropdown ──
-  // Stays open until an explicit action (refresh, tab switch, menu item
-  // click, sign out, etc). Outside-click no longer auto-closes it — too
-  // easy to dismiss accidentally on touch devices.
+  // Close transient panels when the user clicks anywhere outside them.
   function toggleAccountMenu(e) {
     if (e) e.stopPropagation();
     const panel = document.getElementById('accountMenuPanel');
@@ -5665,6 +5663,16 @@
     const panel = document.getElementById('accountMenuPanel');
     if (panel) panel.style.display = 'none';
   }
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('accountMenuPanel');
+    const btn = document.getElementById('accountMenuBtn');
+    if (panel?.style.display === 'block' && !panel.contains(e.target) && !btn?.contains(e.target)) {
+      closeAccountMenu();
+    }
+    document.querySelectorAll('#topupHistory details[open]').forEach(details => {
+      if (!details.contains(e.target)) details.removeAttribute('open');
+    });
+  });
 
   // ── Profile details collapse/expand ──
   function toggleProfileDetails() {
