@@ -113,13 +113,13 @@
     .shop-results-subtitle { margin:.2rem 0 0; color:rgba(255,255,255,.58); font-size:.86rem; }
 
     /* Grid — 2 up on phones (tight, app-like), scaling up on wider screens. */
-    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; align-items: stretch; }
+    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; align-items: stretch; grid-auto-rows: 1fr; }
     @media (min-width: 560px) { .shop-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; } }
     @media (min-width: 980px) { .shop-grid { grid-template-columns: repeat(4, 1fr); gap: 1.15rem; } }
 
     .card {
       background: #fff; border-radius: 12px; overflow: hidden;
-      display: flex; flex-direction: column; height:100%; padding: 0; box-shadow: 0 8px 20px rgba(0,0,0,.16); border: 1px solid rgba(255,255,255,.55);
+      display: flex; flex-direction: column; height:100%; min-height:500px; padding: 0; box-shadow: 0 8px 20px rgba(0,0,0,.16); border: 1px solid rgba(255,255,255,.55);
       transition: transform .12s;
     }
     .card:active { transform: scale(.98); }
@@ -141,12 +141,12 @@
     .card-price.empty { display: none; }   /* no filler row when there's no price */
     /* No margin-top:auto — cards size to content (see .shop-grid align-items:start),
        so short cards don't stretch tall with wasted white space. */
-    .card-actions { display: flex; flex-direction: column; gap: .35rem; margin-top:auto; }
+    .card-actions { display: flex; flex-direction: row; gap: .45rem; margin-top:auto; min-height:2.7rem; }
     .card-btn {
       width: 100%; box-sizing: border-box; padding: .48rem .3rem; border-radius: 7px;
       font-size: .84rem; font-weight: 750; cursor: pointer; font-family: inherit;
       text-decoration: none; display: flex; align-items: center; justify-content: center; gap: .25rem;
-      border: none; transition: all .15s; white-space: nowrap;
+      border: none; transition: all .15s; white-space: nowrap; flex:1;
     }
     .card-btn.try { background: var(--brand); color: var(--brand-contrast); }
     .card-btn.try:active { background: var(--brand-dark); }
