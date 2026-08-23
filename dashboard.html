@@ -1997,6 +1997,11 @@
             <input type="number" id="epcLimit" min="1" placeholder="e.g. 5">
             <div class="field-hint" id="epcLimitHint">Enter only the extra try-ons you want to add. Leave blank to keep the current allowance.</div>
           </div>
+          <div class="field">
+            <label for="epcRemoveUnused">Remove unused tries</label>
+            <input type="number" id="epcRemoveUnused" min="0" value="0" placeholder="0">
+            <div class="field-hint" id="epcRemoveHint">Remove unused allowance only. Already-used tries cannot be removed.</div>
+          </div>
           <div class="field setting-toggle-row">
             <div><label for="epcActive" class="setting-toggle-copy">Passcode active</label><div class="field-hint">Turn off to stop the customer using this passcode.</div></div>
             <label class="switch-toggle" for="epcActive"><input type="checkbox" id="epcActive" onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">Off</span></label>
@@ -3531,9 +3536,12 @@
     document.getElementById('epcCode').value = p.code || '';
     document.getElementById('epcLabel').value = p.customer_label || '';
     document.getElementById('epcLimit').value = '';
-    document.getElementById('epcLimit').min = 1;
+    document.getElementById('epcRemoveUnused').value = '0';
+    document.getElementById('epcRemoveUnused').max = Math.max(0, p.use_limit - p.used_count);
     document.getElementById('epcLimitHint').textContent =
       `${p.used_count} used · ${Math.max(0, p.use_limit - p.used_count)} remaining. Enter only extra try-ons to add.`;
+    document.getElementById('epcRemoveHint').textContent =
+      `${Math.max(0, p.use_limit - p.used_count)} unused tries available to remove. Used tries stay protected.`;
     document.getElementById('epcActive').checked = !!p.active;
     document.getElementById('editPasscodeModal').classList.add('open');
   }
@@ -3563,6 +3571,19 @@
       errEl.className = 'alert error';
       return false;
     }
+    const removeUnused = parseInt(document.getElementById('epcRemoveUnused').value || '0', 10);
+    const removeMax = parseInt(document.getElementById('epcRemoveUnused').max || '0', 10);
+    if (!Number.isInteger(removeUnused) || removeUnused < 0 || removeUnused > removeMax) {
+      errEl.textContent = `Remove between 0 and ${removeMax} unused tries.`;
+      errEl.className = 'alert error';
+      return false;
+    }
+    if (additionalUses !== undefined && removeUnused > 0) {
+      errEl.textContent = 'Add or remove tries in one save, not both.';
+      errEl.className = 'alert error';
+      return false;
+    }
+    const allowanceChange = additionalUses === undefined ? (removeUnused ? -removeUnused : undefined) : additionalUses;
 
     btn.disabled = true; btn.textContent = 'Saving…';
     try {
@@ -3572,7 +3593,7 @@
         body: JSON.stringify({
           code: codeClean,
           customer_label: document.getElementById('epcLabel').value.trim() || null,
-          additional_uses: additionalUses,
+          additional_uses: allowanceChange,
           active: document.getElementById('epcActive').checked,
         }),
       });
