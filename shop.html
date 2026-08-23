@@ -153,6 +153,7 @@
     /* Restore the original Buy Now button treatment. */
     .card-btn.buy { background: #fff; color: #15803d; border: 1.5px solid #16a34a; padding: .45rem .3rem; font-size: .92rem; }
     .card-btn.buy:hover { background: #f0fdf4; }
+    .card-btn-placeholder { visibility:hidden; pointer-events:none; }
 
     /* States */
     .shop-state { text-align: center; color: #fff; padding: 3rem 1rem; }
@@ -458,7 +459,7 @@
           ${p.custom_size_available ? `<p class="card-cat"><strong>Custom size available</strong>${p.custom_size_note ? ' · ' + esc(p.custom_size_note) : ''}</p>` : ''}
           <div class="card-actions">
             <a class="card-btn try" href="${href}">✨ Try On</a>
-            ${buy}
+            ${buy || '<span class="card-btn buy card-btn-placeholder" aria-hidden="true"></span>'}
           </div>
         </div>
       </div>`;
