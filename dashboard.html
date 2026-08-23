@@ -673,12 +673,15 @@
     .pl-preview-placeholder { display: grid; place-items: center; font-size: 3rem; color: var(--muted); }
     .pl-preview-title { margin: .6rem 0 .35rem; font-size: 1rem; line-height: 1.25; color: var(--ink); }
     .pl-preview-line { margin: .2rem 0; color: var(--muted); font-size: .88rem; line-height: 1.35; }
+    .pl-preview-line:not(.pl-preview-link) { overflow-wrap: anywhere; }
+    .pl-preview-description { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+    .pl-preview-link { max-height: 3.8em; overflow: hidden; }
     .pl-preview-line strong { color: var(--ink); }
     .pl-preview-link { word-break: break-word; }
     .pl-preview-heading { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; margin-bottom: .45rem; }
     @media (max-width: 480px) {
-      .pl-drawer-grid { grid-template-columns: 1fr 1fr; gap: .75rem; }
-      .pl-product-preview { grid-column: 1 / -1; }
+      .pl-drawer-grid { grid-template-columns: 1fr; gap: .75rem; }
+      .pl-product-preview { grid-column: auto; }
       .pl-preview-image { height: 240px; }
     }
     .pl-drawer-qr {
@@ -743,6 +746,10 @@
     .pl-more-menu .btn { width: 100%; justify-content: flex-start; }
     .pl-summary-badges { display: contents; }
     @media (max-width: 600px) {
+      .pl-drawer-grid { grid-template-columns: 1fr; gap: .75rem; }
+      .pl-product-preview { grid-column: auto; }
+      .pl-preview-image { height: 220px; }
+      .pl-drawer-qr { width: min(220px, 100%); justify-self: center; }
       .product-list-summary {
         display: grid;
         grid-template-columns: 40px minmax(0, 1fr) auto;
@@ -3877,7 +3884,7 @@
                   <h3 class="pl-preview-title">${escapeHtml(p.name)}</h3>
                   <div class="pl-preview-line"><strong>${escapeHtml(priceTxt)}</strong></div>
                   <div class="pl-preview-line"><strong>Sizes:</strong> ${escapeHtml(sizeTxt)}</div>
-                  ${p.description ? `<div class="pl-preview-line"><strong>Details:</strong> ${escapeHtml(p.description)}</div>` : ''}
+                  ${p.description ? `<div class="pl-preview-line pl-preview-description"><strong>Details:</strong> ${escapeHtml(p.description)}</div>` : ''}
                   ${p.custom_size_available ? `<div class="pl-preview-line"><strong>Custom sizing:</strong> Available${p.custom_size_note ? ` — ${escapeHtml(p.custom_size_note)}` : ''}</div>` : ''}
                   ${(p.audience || p.category_group || p.category) ? `<div class="pl-preview-line"><strong>Category:</strong> ${escapeHtml([p.audience, p.category_group, p.category].filter(Boolean).join(' · '))}</div>` : ''}
                   ${p.buy_url ? `<div class="pl-preview-line pl-preview-link"><strong>Buy link:</strong> ${escapeHtml(p.buy_url)}</div>` : ''}
