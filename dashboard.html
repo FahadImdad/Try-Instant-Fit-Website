@@ -2008,14 +2008,15 @@
           </div>
           <div class="field">
             <label for="epcLimit">Add Try-Ons</label>
-            <input type="number" id="epcLimit" min="1" placeholder="e.g. 5">
+            <div style="display:flex;align-items:center;gap:.45rem;"><button type="button" class="btn btn-secondary btn-sm" onclick="adjustPasscodeCount('epcLimit',-1)">−</button><input type="number" id="epcLimit" min="1" placeholder="e.g. 5" style="text-align:center;flex:1;"><button type="button" class="btn btn-secondary btn-sm" onclick="adjustPasscodeCount('epcLimit',1)">+</button></div>
             <div class="field-hint" id="epcLimitHint">Enter only the extra try-ons you want to add. Leave blank to keep the current allowance.</div>
           </div>
           <div class="field">
             <label for="epcRemoveUnused">Remove unused tries</label>
-            <input type="number" id="epcRemoveUnused" min="0" value="0" placeholder="0">
+            <div style="display:flex;align-items:center;gap:.45rem;"><button type="button" class="btn btn-secondary btn-sm" onclick="adjustPasscodeCount('epcRemoveUnused',-1)">−</button><input type="number" id="epcRemoveUnused" min="0" value="0" placeholder="0" style="text-align:center;flex:1;"><button type="button" class="btn btn-secondary btn-sm" onclick="adjustPasscodeCount('epcRemoveUnused',1)">+</button></div>
             <div class="field-hint" id="epcRemoveHint">Remove unused allowance only. Already-used tries cannot be removed.</div>
           </div>
+          <div class="field" style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);"><strong>Already used</strong><span id="epcUsedLocked" style="font-weight:800;color:var(--muted);">🔒 0 try-ons (locked)</span></div>
           <div class="field setting-toggle-row">
             <div><label for="epcActive" class="setting-toggle-copy">Passcode active</label><div class="field-hint">Turn off to stop the customer using this passcode.</div></div>
             <label class="switch-toggle" for="epcActive"><input type="checkbox" id="epcActive" onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">Off</span></label>
@@ -3549,6 +3550,14 @@
   }
 
   let editingPasscodeId = null;
+  function adjustPasscodeCount(id, delta) {
+    const input = document.getElementById(id); if (!input) return;
+    const min = parseInt(input.min || '0', 10); const max = input.max ? parseInt(input.max, 10) : Infinity;
+    const current = input.value === '' ? 0 : parseInt(input.value, 10);
+    const next = Math.max(min, Math.min(max, (Number.isFinite(current) ? current : 0) + delta));
+    input.value = next;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
 
   function editPasscode(id) {
     const p = allBrandPasscodes.find(x => x.id === id);
@@ -3560,6 +3569,7 @@
     document.getElementById('epcLimit').value = '';
     document.getElementById('epcRemoveUnused').value = '0';
     document.getElementById('epcRemoveUnused').max = Math.max(0, p.use_limit - p.used_count);
+    document.getElementById('epcUsedLocked').textContent = `🔒 ${p.used_count || 0} try-ons (locked)`;
     document.getElementById('epcLimitHint').textContent =
       `${p.used_count} used · ${Math.max(0, p.use_limit - p.used_count)} remaining. Enter only extra try-ons to add.`;
     document.getElementById('epcRemoveHint').textContent =
