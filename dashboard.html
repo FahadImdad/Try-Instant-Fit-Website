@@ -5672,6 +5672,17 @@
     document.querySelectorAll('#topupHistory details[open]').forEach(details => {
       if (!details.contains(e.target)) details.removeAttribute('open');
     });
+    // Product drawers behave like a single contextual panel: clicking
+    // elsewhere on the page closes any expanded card.
+    if (!e.target.closest('.product-list-row')) {
+      openProductIds.clear();
+      document.querySelectorAll('.product-list-row.open').forEach(row => {
+        row.classList.remove('open');
+        row.querySelector('.product-list-drawer')?.setAttribute('hidden', '');
+        const chevron = row.querySelector('.pl-chevron');
+        if (chevron) chevron.textContent = '›';
+      });
+    }
   });
 
   // ── Profile details collapse/expand ──
