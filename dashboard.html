@@ -777,7 +777,8 @@
       .pl-product-preview .pl-preview-link { -webkit-line-clamp: unset; max-height: none; overflow: visible; white-space: normal; word-break: break-word; }
       .pl-preview-image { height: 110px; }
       .pl-drawer-qr { width: min(220px, 100%); justify-self: center; }
-      .pl-drawer-meta { grid-column: 1 / -1; }
+      .pl-drawer-meta { grid-column: 1 / -1 !important; grid-row: auto !important; }
+      .pl-drawer-grid > div:nth-child(2) { grid-column: 1 !important; grid-row: auto !important; }
       .pl-drawer-grid > div:nth-child(2), .pl-drawer-grid > .pl-drawer-meta { grid-row: auto; }
       .pl-product-preview .pl-preview-description,
       .pl-product-preview .pl-preview-link,
