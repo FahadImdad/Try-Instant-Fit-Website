@@ -687,17 +687,19 @@
     .pl-preview-heading { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; margin-bottom: .45rem; }
     @media (max-width: 480px) {
       .pl-drawer-grid { grid-template-columns: minmax(0, 1fr); gap: .55rem; }
-      .pl-product-preview { grid-column: 1; width: 100%; display: block; position: relative; }
-      .pl-product-preview .pl-preview-image { position: absolute; top: 1.7rem; right: 0; width: 130px !important; height: 145px; margin: 0; border: 0; border-radius: 0; background: transparent; }
+      .pl-product-preview { grid-column: 1 / -1 !important; width: 100%; min-width: 0; display: block; position: relative; }
+      .pl-product-preview .pl-preview-image { position: absolute; top: 1.7rem; left: 0 !important; right: auto !important; width: 130px !important; height: 145px; margin: 0; border: 0; border-radius: 0; background: transparent; object-fit: contain; }
       .pl-product-preview .pl-preview-title,
-      .pl-product-preview .pl-preview-line { display: block !important; width: calc(100% - 140px); clear: none; }
+      .pl-product-preview .pl-preview-title,
+      .pl-product-preview .pl-preview-line { display: block !important; margin-left: 140px; width: calc(100% - 140px); clear: none; }
       .pl-product-preview .pl-preview-heading { white-space: nowrap; }
       .pl-drawer-grid > div:nth-child(2) .pl-preview-heading { white-space: nowrap; width: max-content; }
       .pl-product-preview .pl-preview-title,
       .pl-product-preview .pl-preview-description,
       .pl-product-preview .pl-preview-link { -webkit-line-clamp: unset; max-height: none; overflow: visible; white-space: normal; word-break: break-word; }
       .pl-product-preview .pl-preview-description,
-      .pl-product-preview .pl-preview-link { grid-column: 1 / -1 !important; width: 100%; }
+      .pl-product-preview .pl-preview-link { grid-column: 1 / -1 !important; width: 100%; margin-left: 0; }
+      .pl-product-preview .pl-preview-description { margin-left: 0; }
       .pl-preview-image { height: 105px; }
     }
     .pl-drawer-qr {
@@ -768,17 +770,19 @@
     @media (max-width: 600px) {
       .product-list-drawer { padding: .55rem; }
       .pl-drawer-grid { grid-template-columns: minmax(0, 1fr); gap: .65rem; }
-      .pl-product-preview { grid-column: 1; width: 100%; min-width: 0; display: block; position: relative; }
-      .pl-product-preview .pl-preview-image { position: absolute; top: 1.7rem; right: 0 !important; left: auto !important; inset-inline-end: 0; width: 145px !important; height: 165px; margin: 0; border: 0; border-radius: 0; background: transparent; object-fit: contain; object-position: center; }
+      .pl-product-preview { grid-column: 1 / -1 !important; width: 100%; min-width: 0; display: block; position: relative; }
+      .pl-product-preview .pl-preview-image { position: absolute; top: 1.7rem; left: 0 !important; right: auto !important; width: 145px !important; height: 165px; margin: 0; border: 0; border-radius: 0; background: transparent; object-fit: contain; object-position: center; }
       .pl-product-preview .pl-preview-title,
-      .pl-product-preview .pl-preview-line { display: block !important; width: calc(100% - 155px); clear: none; }
+      .pl-product-preview .pl-preview-title,
+      .pl-product-preview .pl-preview-line { display: block !important; margin-left: 155px; width: calc(100% - 155px); clear: none; }
       .pl-product-preview .pl-preview-heading { white-space: nowrap; }
       .pl-drawer-grid > div:nth-child(2) .pl-preview-heading { white-space: nowrap; width: max-content; }
       .pl-product-preview .pl-preview-title,
       .pl-product-preview .pl-preview-description,
       .pl-product-preview .pl-preview-link { -webkit-line-clamp: unset; max-height: none; overflow: visible; white-space: normal; word-break: break-word; }
       .pl-product-preview .pl-preview-description,
-      .pl-product-preview .pl-preview-link { grid-column: 1 / -1 !important; width: 100%; }
+      .pl-product-preview .pl-preview-link { grid-column: 1 / -1 !important; width: 100%; margin-left: 0; }
+      .pl-product-preview .pl-preview-description { margin-left: 0; }
       .pl-preview-image { height: 110px; }
       .pl-drawer-qr { width: min(220px, 100%); justify-self: center; }
       .pl-drawer-meta { grid-column: 1 / -1 !important; grid-row: auto !important; }
