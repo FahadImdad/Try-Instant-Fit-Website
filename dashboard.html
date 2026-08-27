@@ -687,11 +687,11 @@
     .pl-preview-heading { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; margin-bottom: .45rem; }
     @media (max-width: 480px) {
       .pl-drawer-grid { grid-template-columns: minmax(0, 1fr); gap: .55rem; }
-      .pl-product-preview { grid-column: 1 / -1 !important; width: 100% !important; min-width: 0; display: block !important; position: relative; }
-      .pl-product-preview .pl-preview-image { position: static; float: right; width: 130px !important; height: 145px; margin: 0 0 .4rem .55rem; border: 0; border-radius: 0; background: transparent; object-fit: contain; object-position: center; }
+      .pl-product-preview { grid-column: 1 / -1 !important; width: 100% !important; min-width: 0; display: grid !important; grid-template-columns: minmax(0,1fr) 130px; column-gap: .55rem; align-items: start; }
+      .pl-product-preview .pl-preview-image { grid-column: 2; grid-row: 2; position: static; float: none; width: 130px !important; height: 145px; margin: 0; border: 0; border-radius: 0; background: transparent; object-fit: contain; object-position: center; }
+      .pl-product-preview .pl-preview-copy { grid-column: 1; grid-row: 2; min-width: 0; }
       .pl-product-preview .pl-preview-title,
-      .pl-product-preview .pl-preview-line { display: block !important; margin-left: 0; width: calc(100% - 140px) !important; min-width: 200px !important; clear: none; writing-mode: horizontal-tb !important; }
-      .pl-product-preview .pl-preview-title { width: calc(100% - 140px) !important; min-width: 200px !important; writing-mode: horizontal-tb !important; }
+      .pl-product-preview .pl-preview-line { display: block !important; width: 100% !important; min-width: 0 !important; margin-left: 0; clear: none; writing-mode: horizontal-tb !important; word-break: normal !important; overflow-wrap: anywhere; }
       .pl-product-preview .pl-preview-heading { white-space: nowrap; }
       .pl-drawer-grid > div:nth-child(2) .pl-preview-heading { white-space: nowrap; width: max-content; }
       .pl-product-preview .pl-preview-title,
@@ -699,7 +699,7 @@
       .pl-product-preview .pl-preview-link { -webkit-line-clamp: unset; max-height: none; overflow: visible; white-space: normal; word-break: break-word; }
       .pl-product-preview .pl-preview-description,
       .pl-product-preview .pl-preview-link { grid-column: 1 / -1 !important; width: 100%; margin-left: 0; }
-      .pl-product-preview .pl-preview-description { margin-left: 0; width: calc(100% - 140px) !important; }
+      .pl-product-preview .pl-preview-description { margin-left: 0; width: 100% !important; }
       .pl-preview-image { height: 105px; }
     }
     .pl-drawer-qr {
@@ -770,11 +770,11 @@
     @media (max-width: 600px) {
       .product-list-drawer { padding: .55rem; }
       .pl-drawer-grid { grid-template-columns: minmax(0, 1fr); gap: .65rem; }
-      .pl-product-preview { grid-column: 1 / span 2 !important; width: 100% !important; min-width: 0; display: block !important; position: relative; }
-      .pl-product-preview .pl-preview-image { position: static; float: right; width: 145px !important; height: 165px; margin: 0 0 .4rem .65rem; border: 0; border-radius: 0; background: transparent; object-fit: contain; object-position: center; }
+      .pl-product-preview { grid-column: 1 / span 2 !important; width: 100% !important; min-width: 0; display: grid !important; grid-template-columns: minmax(0,1fr) 145px; column-gap: .65rem; align-items: start; }
+      .pl-product-preview .pl-preview-image { grid-column: 2; grid-row: 2; position: static; float: none; width: 145px !important; height: 165px; margin: 0; border: 0; border-radius: 0; background: transparent; object-fit: contain; object-position: center; }
+      .pl-product-preview .pl-preview-copy { grid-column: 1; grid-row: 2; min-width: 0; }
       .pl-product-preview .pl-preview-title,
-      .pl-product-preview .pl-preview-line { display: block !important; margin-left: 0; width: calc(100% - 155px) !important; min-width: 200px !important; clear: none; writing-mode: horizontal-tb !important; }
-      .pl-product-preview .pl-preview-title { width: calc(100% - 155px) !important; min-width: 200px !important; writing-mode: horizontal-tb !important; }
+      .pl-product-preview .pl-preview-line { display: block !important; width: 100% !important; min-width: 0 !important; margin-left: 0; clear: none; writing-mode: horizontal-tb !important; word-break: normal !important; overflow-wrap: anywhere; }
       .pl-product-preview .pl-preview-heading { white-space: nowrap; }
       .pl-drawer-grid > div:nth-child(2) .pl-preview-heading { white-space: nowrap; width: max-content; }
       .pl-product-preview .pl-preview-title,
@@ -782,7 +782,7 @@
       .pl-product-preview .pl-preview-link { -webkit-line-clamp: unset; max-height: none; overflow: visible; white-space: normal; word-break: break-word; }
       .pl-product-preview .pl-preview-description,
       .pl-product-preview .pl-preview-link { grid-column: 1 / -1 !important; width: 100%; margin-left: 0; }
-      .pl-product-preview .pl-preview-description { margin-left: 0; width: calc(100% - 155px) !important; }
+      .pl-product-preview .pl-preview-description { margin-left: 0; width: 100% !important; }
       .pl-preview-image { height: 110px; }
       .pl-drawer-qr { width: min(220px, 100%); justify-self: center; }
       .pl-drawer-meta { grid-column: 1 / -1 !important; grid-row: auto !important; }
@@ -3833,6 +3833,17 @@
   // Tracks which product rows the user has expanded — preserved across the
   // 30s background refresh so opened drawers don't auto-collapse.
   const openProductIds = new Set();
+  const productViewStateKey = () => `tif_product_view_${activeBrandId || 'guest'}`;
+  function saveProductViewState() {
+    try { sessionStorage.setItem(productViewStateKey(), JSON.stringify({ open: [...openProductIds], scroll: window.scrollY })); } catch (_) {}
+  }
+  function restoreProductViewState() {
+    try {
+      const state = JSON.parse(sessionStorage.getItem(productViewStateKey()) || '{}');
+      (state.open || []).forEach(id => openProductIds.add(id));
+      if (Number.isFinite(state.scroll)) requestAnimationFrame(() => window.scrollTo({ top: state.scroll, behavior: 'auto' }));
+    } catch (_) {}
+  }
 
   async function loadProducts() {
     if (!activeBrandId) return;
@@ -3841,6 +3852,7 @@
       const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed to load');
       allProducts = data.products || [];
+      restoreProductViewState();
       // Refresh QR product picker (used by legacy "+ Generate QR" if still around)
       const sel = document.getElementById('qrProductPick');
       if (sel) {
@@ -3928,6 +3940,7 @@
                 <div class="pl-product-preview">
                   <div class="pl-preview-heading">Complete product preview</div>
                   ${p.image_url ? `<img class="pl-preview-image" src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.name)}">` : '<div class="pl-preview-image pl-preview-placeholder">👗</div>'}
+                  <div class="pl-preview-copy">
                   <h3 class="pl-preview-title">${escapeHtml(p.name)}</h3>
                   <div class="pl-preview-line"><strong>${escapeHtml(priceTxt)}</strong></div>
                   <div class="pl-preview-line"><strong>Sizes:</strong> ${escapeHtml(sizeTxt)}</div>
@@ -3935,6 +3948,7 @@
                   ${p.custom_size_available ? `<div class="pl-preview-line"><strong>Custom sizing:</strong> Available${p.custom_size_note ? ` — ${escapeHtml(p.custom_size_note)}` : ''}</div>` : ''}
                   ${(p.audience || p.category_group || p.category) ? `<div class="pl-preview-line"><strong>Category:</strong> ${escapeHtml([p.audience, p.category_group, p.category].filter(Boolean).join(' · '))}</div>` : ''}
                   ${p.buy_url ? `<div class="pl-preview-line pl-preview-link"><strong>Buy link:</strong> ${escapeHtml(p.buy_url)}</div>` : ''}
+                  </div>
                 </div>
                 <div><div class="pl-preview-heading">Scan to try on</div><img class="pl-drawer-qr" src="${qrImageUrl(qr.scan_url, 220)}" alt="QR for ${escapeHtml(p.name)}"><div class="pl-qr-caption">QR for this product</div></div>
                 <div class="pl-drawer-meta">
@@ -3983,6 +3997,7 @@
       row.classList.remove('open');
       if (chevron) chevron.textContent = '›';
       openProductIds.delete(productId);
+      saveProductViewState();
     } else {
       // Keep the product list focused: only one detail drawer may be open.
       openProductIds.forEach(id => {
@@ -3999,6 +4014,7 @@
       row.classList.add('open');
       if (chevron) chevron.textContent = '⌃';
       openProductIds.add(productId);
+      saveProductViewState();
     }
   }
 
