@@ -5944,11 +5944,12 @@
 <link rel="stylesheet" href="/css/platform-polish.css">
 <style>
 @media (max-width:720px){
-  .pl-product-preview{display:block!important;position:relative!important;width:100%!important;min-width:0!important;padding-right:150px!important;box-sizing:border-box!important;writing-mode:horizontal-tb!important;}
-  .pl-product-preview .pl-preview-heading{display:block!important;width:100%!important;white-space:nowrap!important;}
-  .pl-product-preview .pl-preview-image{display:block!important;position:absolute!important;float:none!important;right:0!important;top:2.2rem!important;width:140px!important;height:160px!important;margin:0!important;}
-  .pl-product-preview .pl-preview-copy{display:block!important;position:static!important;width:100%!important;min-width:0!important;writing-mode:horizontal-tb!important;}
-  .pl-product-preview .pl-preview-copy>*{display:block!important;width:100%!important;min-width:0!important;writing-mode:horizontal-tb!important;word-break:normal!important;overflow-wrap:anywhere!important;}
+  .pl-drawer-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;}
+  .pl-product-preview{grid-column:1 / -1!important;display:grid!important;grid-template-columns:minmax(0,1fr) 140px!important;grid-template-rows:auto auto!important;column-gap:14px!important;row-gap:10px!important;position:relative!important;width:100%!important;min-width:0!important;padding:0!important;box-sizing:border-box!important;writing-mode:horizontal-tb!important;align-items:start!important;}
+  .pl-product-preview .pl-preview-heading{grid-column:1 / -1!important;grid-row:1!important;display:block!important;width:auto!important;white-space:nowrap!important;}
+  .pl-product-preview .pl-preview-image{grid-column:2!important;grid-row:2!important;display:block!important;position:static!important;float:none!important;width:140px!important;max-width:100%!important;height:160px!important;margin:0!important;border:0!important;border-radius:8px!important;background:transparent!important;object-fit:contain!important;}
+  .pl-product-preview .pl-preview-copy{grid-column:1!important;grid-row:2!important;display:block!important;position:static!important;width:auto!important;min-width:0!important;max-width:none!important;writing-mode:horizontal-tb!important;}
+  .pl-product-preview .pl-preview-copy>*{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;writing-mode:horizontal-tb!important;word-break:normal!important;overflow-wrap:anywhere!important;}
 }
 </style>
 </body>
