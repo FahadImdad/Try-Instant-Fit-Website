@@ -5950,6 +5950,19 @@
   .pl-product-preview .pl-preview-image{grid-column:2!important;grid-row:2!important;display:block!important;position:static!important;float:none!important;width:140px!important;max-width:100%!important;height:160px!important;margin:0!important;border:0!important;border-radius:8px!important;background:transparent!important;object-fit:contain!important;}
   .pl-product-preview .pl-preview-copy{grid-column:1!important;grid-row:2!important;display:block!important;position:static!important;width:auto!important;min-width:0!important;max-width:none!important;writing-mode:horizontal-tb!important;}
   .pl-product-preview .pl-preview-copy>*{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;writing-mode:horizontal-tb!important;word-break:normal!important;overflow-wrap:anywhere!important;}
+  /* Final mobile guard: prevent inherited narrow grid tracks from collapsing copy. */
+  .product-list-drawer .pl-product-preview,
+  .product-list-drawer .pl-product-preview *{
+    writing-mode:horizontal-tb!important;
+  }
+  .product-list-drawer .pl-product-preview .pl-preview-copy,
+  .product-list-drawer .pl-product-preview .pl-preview-copy .pl-preview-title,
+  .product-list-drawer .pl-product-preview .pl-preview-copy .pl-preview-line{
+    white-space:normal!important;
+    word-break:normal!important;
+    overflow-wrap:anywhere!important;
+    letter-spacing:normal!important;
+  }
 }
 </style>
 </body>
