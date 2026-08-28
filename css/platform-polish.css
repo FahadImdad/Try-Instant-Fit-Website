@@ -150,3 +150,12 @@ label { color: #334155; }
   .pl-actions, .qr-actions { grid-template-columns: 1fr; }
   .btn, .btn-block { white-space: normal; text-align: center; }
 }
+/* Mobile product preview: keep the copy readable beside the product image. */
+@media (max-width: 720px) {
+  .product-list-drawer .pl-drawer-grid { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; width: 100% !important; }
+  .product-list-drawer .pl-product-preview { display: grid !important; grid-column: 1 / -1 !important; grid-template-columns: minmax(0, 1fr) 140px !important; grid-template-rows: auto auto !important; width: 100% !important; min-width: 0 !important; padding: 0 !important; writing-mode: horizontal-tb !important; }
+  .product-list-drawer .pl-product-preview .pl-preview-heading { grid-column: 1 / -1 !important; grid-row: 1 !important; white-space: nowrap !important; }
+  .product-list-drawer .pl-product-preview .pl-preview-copy { grid-column: 1 !important; grid-row: 2 !important; width: auto !important; min-width: 0 !important; writing-mode: horizontal-tb !important; }
+  .product-list-drawer .pl-product-preview .pl-preview-copy > * { width: auto !important; min-width: 0 !important; writing-mode: horizontal-tb !important; word-break: normal !important; overflow-wrap: anywhere !important; }
+  .product-list-drawer .pl-product-preview .pl-preview-image { grid-column: 2 !important; grid-row: 2 !important; position: static !important; width: 140px !important; max-width: 100% !important; height: 160px !important; margin: 0 !important; }
+}
