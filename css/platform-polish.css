@@ -133,8 +133,12 @@ label { color: #334155; }
   .pl-status { grid-column: 3; grid-row: 1; align-self: start; }
   .pl-chevron { grid-column: 3; grid-row: 2; justify-self: end; }
   .product-list-drawer { padding: .85rem; overflow: hidden; }
-  .pl-drawer-grid { grid-template-columns: 112px minmax(0, 1fr) !important; align-items: start; }
-  .pl-drawer-grid > div:first-child { width: 112px; max-width: 112px; }
+  /* The drawer is a single column on mobile (see the -v2 rules at the end of
+     this file). The old "112px minmax(0,1fr)" pair here dated from when the QR
+     block was the drawer's first child; the product preview is first child now,
+     so it pinned the preview into the 112px QR column, crushed the copy to 0px
+     and stacked the title one character per line. */
+  .pl-drawer-grid { align-items: start; }
   .pl-drawer-qr { width: 112px !important; height: 112px !important; object-fit: contain; }
   .pl-actions, .qr-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: .5rem !important; }
   .pl-actions .btn, .qr-actions .btn { width: 100%; min-width: 0; margin: 0 !important; }

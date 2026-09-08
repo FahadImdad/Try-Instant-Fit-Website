@@ -5947,22 +5947,45 @@
 <style>
 .pl-product-preview-v2{width:100%;min-width:0;box-sizing:border-box}
 .pl-preview-heading-v2{margin:0 0 12px;color:#64748b;font-size:.82rem;font-weight:800;letter-spacing:.045em;text-transform:uppercase;white-space:nowrap}
-.pl-preview-layout-v2{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:16px;align-items:start;width:100%;min-width:0}
-.pl-preview-copy-v2{display:block;width:100%;min-width:0;color:#64748b;writing-mode:horizontal-tb}
+/* Flex, not grid: this block sits inside drawer grid tracks that other
+   stylesheets still size for the pre-v2 markup. A nested grid inherits those
+   constraints and collapses the copy column to a few px, which stacks the
+   title one character per line. Flex with an explicit basis cannot collapse. */
+.pl-preview-layout-v2{display:flex;flex-wrap:nowrap;gap:16px;align-items:flex-start;width:100%;min-width:0}
+.pl-preview-copy-v2{flex:1 1 auto;display:block;min-width:min(210px,100%);max-width:none;color:#64748b;writing-mode:horizontal-tb}
 .pl-preview-title-v2{margin:0 0 8px;color:#0f172a;font-size:1rem;line-height:1.25;font-weight:800;white-space:normal;word-break:normal;overflow-wrap:break-word}
 .pl-preview-line-v2{margin:0 0 7px;line-height:1.32;white-space:normal;word-break:normal;overflow-wrap:break-word}
 .pl-preview-link-v2{overflow-wrap:anywhere}
-.pl-preview-image-v2{display:block;justify-self:end;width:180px;height:220px;max-width:100%;margin:0;border:0;border-radius:8px;background:transparent;object-fit:contain}
-@media (max-width:720px){
+.pl-preview-image-v2{flex:0 0 180px;display:block;width:180px;height:220px;max-width:100%;margin:0;border:0;border-radius:8px;background:transparent;object-fit:contain}
+
+/* Stale pre-v2 rules in this file and in platform-polish.css still target the
+   old class names with !important and leave the drawer grid two columns wide.
+   Neutralise them so the -v2 block is the only thing laying this out. */
+.product-list-drawer .pl-drawer-grid{grid-template-columns:minmax(0,1fr)!important}
+/* The preview is the drawer's first child, so undo any fixed width left over
+   from the old 112px QR column. */
+.pl-drawer-grid > .pl-product-preview-v2{width:auto!important;max-width:none!important;min-width:0!important;grid-column:1/-1!important}
+.pl-drawer-grid > div:first-child{width:auto;max-width:none}
+.pl-product-preview-v2,
+.pl-product-preview-v2 *{writing-mode:horizontal-tb!important;text-orientation:mixed!important}
+@media (max-width:860px){
   .pl-drawer-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;}
   .pl-drawer-grid > div:nth-child(2){width:100%!important;min-width:0!important;}
   .pl-product-preview-v2{grid-column:1/-1!important;display:block!important;width:100%!important;min-width:0!important;padding:0!important;box-sizing:border-box!important;writing-mode:horizontal-tb!important}
   .pl-preview-heading-v2{display:block!important;width:100%!important;margin:0 0 12px!important;white-space:nowrap!important;writing-mode:horizontal-tb!important}
-  .pl-preview-layout-v2{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(128px,42%)!important;gap:12px!important;align-items:start!important;width:100%!important;min-width:0!important}
-  .pl-preview-copy-v2{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;writing-mode:horizontal-tb!important}
-  .pl-preview-copy-v2>*{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;position:static!important;writing-mode:horizontal-tb!important;white-space:normal!important;word-break:normal!important;overflow-wrap:break-word!important;letter-spacing:normal!important}
+  .pl-preview-layout-v2{display:flex!important;flex-wrap:nowrap!important;gap:12px!important;align-items:flex-start!important;width:100%!important;min-width:0!important}
+  .pl-preview-copy-v2{flex:1 1 auto!important;display:block!important;width:auto!important;min-width:0!important;max-width:none!important;writing-mode:horizontal-tb!important}
+  .pl-preview-copy-v2>*{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;position:static!important;float:none!important;writing-mode:horizontal-tb!important;white-space:normal!important;word-break:normal!important;overflow-wrap:break-word!important;letter-spacing:normal!important}
   .pl-preview-link-v2{overflow-wrap:anywhere!important}
-  .pl-preview-image-v2{display:block!important;position:static!important;justify-self:end!important;width:100%!important;max-width:150px!important;height:190px!important;margin:0!important;border:0!important;border-radius:8px!important;background:transparent!important;object-fit:contain!important}
+  .pl-preview-image-v2{flex:0 0 132px!important;display:block!important;position:static!important;width:132px!important;max-width:132px!important;height:165px!important;margin:0!important;border:0!important;border-radius:8px!important;background:transparent!important;object-fit:contain!important}
+  /* Under ~520px a 132px image column leaves too little room for the copy
+     (at 390px it collapsed to 19px and stacked the title 33 lines deep), so
+     put the image above the details and give the text the full width. */
+  @media (max-width:620px){
+    .pl-preview-layout-v2{flex-wrap:wrap!important;gap:10px!important}
+    .pl-preview-image-v2{flex:0 0 auto!important;order:1!important;width:150px!important;min-width:150px!important;max-width:150px!important;height:185px!important;align-self:flex-start!important}
+    .pl-preview-copy-v2{flex:1 1 100%!important;order:2!important;width:100%!important;max-width:100%!important;min-width:0!important}
+  }
   /* Flex avoids the inherited desktop grid tracks collapsing the copy to a 1px column. */
   .pl-product-preview{grid-column:1 / -1!important;display:flex!important;flex-wrap:wrap!important;align-items:flex-start!important;align-content:flex-start!important;gap:10px 14px!important;position:relative!important;width:100%!important;min-width:0!important;padding:0!important;box-sizing:border-box!important;writing-mode:horizontal-tb!important;}
   .pl-product-preview .pl-preview-heading{order:0!important;flex:0 0 100%!important;display:block!important;width:100%!important;white-space:nowrap!important;}
