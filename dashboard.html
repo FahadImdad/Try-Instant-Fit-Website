@@ -6044,30 +6044,35 @@ div.pl-preview-image-v2.pl-preview-placeholder{height:220px;aspect-ratio:auto}
      needs ~277px. Keep the QR and the rows side by side for as long as that
      fits: shrink the QR track as the viewport narrows so the rows keep their
      space, and only stack once even a small QR would leave too little. */
+  /* The QR heading, its caption and the passcode toggle each stay on ONE line;
+     the type shrinks to fit the column instead of wrapping. */
   @media (max-width:560px){
     .pl-drawer-grid,
-    .product-list-drawer .pl-drawer-grid{grid-template-columns:104px minmax(0,1fr)!important;column-gap:12px!important}
-    .pl-drawer-qr{width:104px!important;height:104px!important;margin:0!important;justify-self:start!important}
-    .pl-drawer-grid > div:nth-child(2) .pl-preview-heading{max-width:104px!important;white-space:normal!important;width:auto!important}
-    .pl-qr-caption{max-width:104px!important;white-space:normal!important}
+    .product-list-drawer .pl-drawer-grid{grid-template-columns:112px minmax(0,1fr)!important;column-gap:12px!important}
+    .pl-drawer-qr{width:112px!important;height:112px!important;margin:0!important;justify-self:start!important}
+    .pl-drawer-grid > div:nth-child(2) .pl-preview-heading{white-space:nowrap!important;width:auto!important;max-width:none!important;font-size:.66rem!important;letter-spacing:.03em!important}
+    .pl-qr-caption{white-space:nowrap!important;max-width:none!important;font-size:.62rem!important}
+    /* Toggle and "1 free left" stay on the toggle's line. */
+    .pl-free-count{flex-basis:auto!important;margin-top:0!important;margin-left:.4rem!important;white-space:nowrap!important;font-size:.68rem!important}
+    .pl-drawer-meta > div > :last-child{flex-wrap:nowrap!important}
   }
   @media (max-width:470px){
     .pl-drawer-grid,
-    .product-list-drawer .pl-drawer-grid{grid-template-columns:96px minmax(0,1fr)!important;column-gap:12px!important}
-    .pl-drawer-qr{width:96px!important;height:96px!important}
-    /* The "Scan to try on" heading and the caption are wider than the QR
-       column and were spilling over the status rows - wrap them instead. */
-    .pl-drawer-grid > div:nth-child(2) .pl-preview-heading{max-width:96px!important;white-space:normal!important;width:auto!important}
-    .pl-qr-caption{max-width:96px!important;white-space:normal!important}
-    /* Drop the free-try hint to its own line before anything can collide. */
-    .pl-free-count{flex-basis:100%!important;margin-left:0!important;margin-top:2px!important}
+    .product-list-drawer .pl-drawer-grid{grid-template-columns:100px minmax(0,1fr)!important;column-gap:10px!important}
+    .pl-drawer-qr{width:100px!important;height:100px!important}
+    .pl-drawer-grid > div:nth-child(2) .pl-preview-heading{font-size:.6rem!important;letter-spacing:.02em!important}
+    .pl-qr-caption{font-size:.58rem!important}
+    .pl-drawer-meta{font-size:.72rem!important}
+    .pl-free-count{font-size:.64rem!important}
   }
   @media (max-width:410px){
     .pl-drawer-grid,
-    .product-list-drawer .pl-drawer-grid{grid-template-columns:84px minmax(0,1fr)!important;column-gap:10px!important}
-    .pl-drawer-qr{width:84px!important;height:84px!important}
-    .pl-drawer-grid > div:nth-child(2) .pl-preview-heading{max-width:84px!important}
-    .pl-qr-caption{max-width:84px!important}
+    .product-list-drawer .pl-drawer-grid{grid-template-columns:92px minmax(0,1fr)!important;column-gap:8px!important}
+    .pl-drawer-qr{width:92px!important;height:92px!important}
+    .pl-drawer-grid > div:nth-child(2) .pl-preview-heading{font-size:.55rem!important;letter-spacing:0!important}
+    .pl-qr-caption{font-size:.54rem!important}
+    .pl-drawer-meta{font-size:.68rem!important}
+    .pl-free-count{font-size:.6rem!important;margin-left:.3rem!important}
   }
   /* Only on the very narrowest phones is there genuinely not enough room. */
   @media (max-width:360px){
