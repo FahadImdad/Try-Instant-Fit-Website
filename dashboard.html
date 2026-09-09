@@ -3943,6 +3943,7 @@
                 <div class="pl-product-preview-v2">
                   <div class="pl-preview-heading-v2">Complete product preview</div>
                   <div class="pl-preview-layout-v2">
+                    ${p.image_url ? `<img class="pl-preview-image-v2" src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.name)}">` : '<div class="pl-preview-image-v2 pl-preview-placeholder">👗</div>'}
                     <div class="pl-preview-copy-v2">
                       <h3 class="pl-preview-title-v2">${escapeHtml(p.name)}</h3>
                       <div class="pl-preview-line-v2"><strong>${escapeHtml(priceTxt)}</strong></div>
@@ -3952,7 +3953,6 @@
                       ${(p.audience || p.category_group || p.category) ? `<div class="pl-preview-line-v2"><strong>Category:</strong> ${escapeHtml([p.audience, p.category_group, p.category].filter(Boolean).join(' · '))}</div>` : ''}
                       ${p.buy_url ? `<div class="pl-preview-line-v2 pl-preview-link-v2"><strong>Buy link:</strong> ${escapeHtml(p.buy_url)}</div>` : ''}
                     </div>
-                    ${p.image_url ? `<img class="pl-preview-image-v2" src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.name)}">` : '<div class="pl-preview-image-v2 pl-preview-placeholder">👗</div>'}
                   </div>
                 </div>
                 <div><div class="pl-preview-heading">Scan to try on</div><img class="pl-drawer-qr" src="${qrImageUrl(qr.scan_url, 220)}" alt="QR for ${escapeHtml(p.name)}"><div class="pl-qr-caption">QR for this product</div></div>
@@ -5948,16 +5948,21 @@
 <style>
 .pl-product-preview-v2{width:100%;min-width:0;box-sizing:border-box}
 .pl-preview-heading-v2{margin:0 0 12px;color:#64748b;font-size:.82rem;font-weight:800;letter-spacing:.045em;text-transform:uppercase;white-space:nowrap}
-/* Flex, not grid: this block sits inside drawer grid tracks that other
-   stylesheets still size for the pre-v2 markup. A nested grid inherits those
-   constraints and collapses the copy column to a few px, which stacks the
-   title one character per line. Flex with an explicit basis cannot collapse. */
-.pl-preview-layout-v2{display:flex;flex-wrap:nowrap;gap:16px;align-items:flex-start;width:100%;min-width:0}
-.pl-preview-copy-v2{flex:1 1 auto;display:block;min-width:min(210px,100%);max-width:none;color:#64748b;writing-mode:horizontal-tb}
+/* Float, not flex/grid: the copy must run beside the image and then continue
+   full width once the image ends. Only a float lets text reflow under it -
+   flex and grid columns keep the text trapped in a narrow column all the way
+   down. The block cannot collapse because the copy is a normal-flow block. */
+.pl-preview-layout-v2{display:block;width:100%;min-width:0}
+.pl-preview-layout-v2::after{content:"";display:block;clear:both}
+/* The copy and its children must stay plain in-flow blocks with "overflow:
+   visible" - anything that creates a block formatting context (overflow,
+   flex, grid, contain) would sit beside the float in a narrow column instead
+   of letting the lines wrap under it. */
+.pl-preview-copy-v2{display:block;width:auto;min-width:0;max-width:none;overflow:visible;color:#64748b;writing-mode:horizontal-tb}
 .pl-preview-title-v2{margin:0 0 8px;color:#0f172a;font-size:1rem;line-height:1.25;font-weight:800;white-space:normal;word-break:normal;overflow-wrap:break-word}
 .pl-preview-line-v2{margin:0 0 7px;line-height:1.32;white-space:normal;word-break:normal;overflow-wrap:break-word}
 .pl-preview-link-v2{overflow-wrap:anywhere}
-.pl-preview-image-v2{flex:0 0 180px;display:block;width:180px;height:220px;max-width:100%;margin:0;border:0;border-radius:8px;background:transparent;object-fit:contain}
+.pl-preview-image-v2{float:right;display:block;width:180px;height:220px;max-width:40%;margin:0 0 10px 16px;border:0;border-radius:8px;background:transparent;object-fit:contain}
 
 /* Stale pre-v2 rules in this file and in platform-polish.css still target the
    old class names with !important and leave the drawer grid two columns wide.
@@ -5970,34 +5975,46 @@
 .pl-product-preview-v2,
 .pl-product-preview-v2 *{writing-mode:horizontal-tb!important;text-orientation:mixed!important}
 @media (max-width:860px){
-  .pl-drawer-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;}
+  /* Two tracks on mobile too: the preview spans both, then the QR sits in the
+     narrow left track with the status rows beside it in the wide right one.
+     The left track is sized to the QR itself (not max-content, which would let
+     the spanning preview dictate it and starve the right column). */
+  .pl-drawer-grid,
+  .product-list-drawer .pl-drawer-grid{display:grid!important;grid-template-columns:130px minmax(0,1fr)!important;width:100%!important;column-gap:14px!important;}
   /* Children must not place themselves into an explicit column 2: the desktop
      rules put .pl-drawer-meta in "grid-column:2", which creates an implicit
      second track even when the template declares one column, squeezing the
      preview into a ~91px sliver. Force every child into the single column. */
+  /* The preview spans the full width; the QR block and the status rows then
+     sit side by side on the next row instead of stacking. */
   .pl-drawer-grid > *,
+  .product-list-drawer .pl-drawer-grid > *{grid-row:auto!important;min-width:0!important;margin-top:0!important;}
+  .pl-drawer-grid > .pl-product-preview-v2,
+  .product-list-drawer .pl-drawer-grid > .pl-product-preview-v2{grid-column:1/-1!important;width:100%!important;max-width:100%!important;}
   .pl-drawer-grid > div:nth-child(2),
+  .product-list-drawer .pl-drawer-grid > div:nth-child(2){grid-column:1!important;width:auto!important;max-width:none!important;justify-self:start!important;}
   .pl-drawer-grid > .pl-drawer-meta,
-  .pl-drawer-grid > .pl-product-preview-v2{grid-column:1/-1!important;grid-row:auto!important;width:100%!important;min-width:0!important;max-width:100%!important;margin-top:0!important;}
+  .product-list-drawer .pl-drawer-grid > .pl-drawer-meta{grid-column:2!important;width:100%!important;max-width:none!important;align-self:start!important;}
   .pl-product-preview-v2{grid-column:1/-1!important;display:block!important;width:100%!important;min-width:0!important;padding:0!important;box-sizing:border-box!important;writing-mode:horizontal-tb!important}
   .pl-preview-heading-v2{display:block!important;width:100%!important;margin:0 0 12px!important;white-space:nowrap!important;writing-mode:horizontal-tb!important}
-  .pl-preview-layout-v2{display:flex!important;flex-wrap:nowrap!important;gap:12px!important;align-items:flex-start!important;width:100%!important;min-width:0!important}
-  .pl-preview-copy-v2{flex:1 1 0%!important;display:block!important;width:auto!important;min-width:0!important;max-width:none!important;writing-mode:horizontal-tb!important}
+  .pl-preview-layout-v2{display:block!important;width:100%!important;min-width:0!important}
+  .pl-preview-copy-v2{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;overflow:visible!important;writing-mode:horizontal-tb!important}
   .pl-preview-copy-v2>*{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;position:static!important;float:none!important;writing-mode:horizontal-tb!important;white-space:normal!important;word-break:normal!important;overflow-wrap:break-word!important;letter-spacing:normal!important}
   .pl-preview-link-v2{overflow-wrap:anywhere!important}
-  /* The image takes at most 38% of the preview's own width (percentages
-     resolve against the container, unlike vw) and is allowed to shrink, so
-     the copy always keeps ~60% no matter how narrow the drawer gets. */
-  .pl-preview-image-v2{flex:0 1 38%!important;display:block!important;position:static!important;width:38%!important;min-width:0!important;max-width:150px!important;height:auto!important;aspect-ratio:5/6!important;margin:0!important;border:0!important;border-radius:8px!important;background:transparent!important;object-fit:cover!important}
-  /* Under ~520px a 132px image column leaves too little room for the copy
-     (at 390px it collapsed to 19px and stacked the title 33 lines deep), so
-     put the image above the details and give the text the full width. */
-  /* Keep the image beside the details on phones. The image column shrinks with
-     the viewport so the copy always keeps a readable share of the width. */
-  @media (max-width:620px){
-    .pl-preview-layout-v2{flex-wrap:nowrap!important;gap:10px!important}
-    .pl-preview-copy-v2{flex:1 1 0%!important;order:1!important;width:auto!important;max-width:none!important;min-width:0!important}
-    .pl-preview-image-v2{order:2!important;align-self:flex-start!important}
+  /* Floated right so the details sit beside the image and then continue the
+     full width of the card once the image ends. */
+  .pl-preview-image-v2{float:right!important;display:block!important;position:static!important;width:38%!important;min-width:110px!important;max-width:150px!important;height:auto!important;aspect-ratio:5/6!important;margin:0 0 10px 12px!important;border:0!important;border-radius:8px!important;background:transparent!important;object-fit:cover!important}
+  /* On the narrowest phones give the image a little less width so the wrapped
+     lines beside it still fit a few words. */
+  @media (max-width:420px){
+    .pl-preview-image-v2{width:36%!important;max-width:120px!important;margin-left:10px!important}
+  }
+  /* Below ~360px a 130px QR column squeezes the status rows until their labels
+     and values overlap, so shrink the QR and let the rows keep the space. */
+  @media (max-width:380px){
+    .pl-drawer-grid,
+    .product-list-drawer .pl-drawer-grid{grid-template-columns:96px minmax(0,1fr)!important;column-gap:10px!important}
+    .pl-drawer-qr{width:96px!important;height:96px!important}
   }
   /* Flex avoids the inherited desktop grid tracks collapsing the copy to a 1px column. */
   .pl-product-preview{grid-column:1 / -1!important;display:flex!important;flex-wrap:wrap!important;align-items:flex-start!important;align-content:flex-start!important;gap:10px 14px!important;position:relative!important;width:100%!important;min-width:0!important;padding:0!important;box-sizing:border-box!important;writing-mode:horizontal-tb!important;}
