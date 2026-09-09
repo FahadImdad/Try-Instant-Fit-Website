@@ -926,7 +926,7 @@ function renderBrands() {
   }
   container.innerHTML = `
     <table class="data-table">
-      <thead><tr><th>Brand</th><th>Status</th><th>Credits</th><th>Used</th><th>Rate</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Brand</th><th>Status</th><th>Credits</th><th>Used</th><th>Rate</th><th>Download logo</th><th>Actions</th></tr></thead>
       <tbody>
         ${list.map(b => {
           const remaining = (b.tryon_credits || 0) - (b.tryon_credits_used || 0);
@@ -959,6 +959,7 @@ function renderBrands() {
                 </div>
               </td>
               <td data-label="Rate">$${Number(b.price_per_tryon_usd).toFixed(3)}</td>
+              <td data-label="Download logo"><label style="display:flex;align-items:center;gap:.35rem;font-size:.78rem;white-space:nowrap;"><input type="checkbox" ${b.show_platform_logo !== false ? 'checked' : ''} data-brand-logo-toggle="${b.id}" onchange="toggleDownloadLogo('${b.id}', this)"> Try Instant Fit</label></td>
               <td data-label="Actions">
                 <div class="row-actions">
                   ${!b.unlimited ? `<button class="btn btn-primary" onclick="openAddCredits('${b.id}', ${nameAttr}, ${b.price_per_tryon_usd})">+ Credits</button>` : ''}
@@ -970,6 +971,20 @@ function renderBrands() {
         }).join('')}
       </tbody>
     </table>`;
+}
+
+async function toggleDownloadLogo(brandId, checkbox) {
+  checkbox.disabled = true;
+  try {
+    const res = await fetchAdmin(`/api/admin/brands/${brandId}/download-branding`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ showPlatformLogo: checkbox.checked }),
+    });
+    if (!res.ok) throw new Error('Could not save setting');
+  } catch (err) {
+    checkbox.checked = !checkbox.checked;
+    alert(err.message || err);
+  } finally { checkbox.disabled = false; }
 }
 
 async function deleteBrand(brandId, brandName) {
