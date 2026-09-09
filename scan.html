@@ -1233,7 +1233,10 @@
       ctx.fillText(text, cursorX, pillY + pillH / 2 + 1);
 
       const vendor = qrInfo?.brand || {};
-      const vendorLogo = vendor.logo_url ? await loadImageForCanvas(vendor.logo_url) : null;
+      const vendorLogoUrl = vendor.logo_url || qrInfo?.brand_logo_url || vendor.logo || null;
+      const vendorLogo = vendorLogoUrl
+        ? await loadImageForCanvas(`${API}/api/proxy-image?url=${encodeURIComponent(vendorLogoUrl)}`)
+        : null;
       const vendorName = vendor.name || '';
       if (vendorLogo || vendorName) {
         const vendorFont = Math.max(18, Math.round(fontSize * .85));
