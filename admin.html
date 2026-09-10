@@ -962,16 +962,41 @@ function renderBrands() {
               <td data-label="Download logo"><label style="display:flex;align-items:center;gap:.35rem;font-size:.78rem;white-space:nowrap;"><input type="checkbox" ${b.show_platform_logo !== false ? 'checked' : ''} data-brand-logo-toggle="${b.id}" onchange="toggleDownloadLogo('${b.id}', this)"> Try Instant Fit</label></td>
               <td data-label="Actions">
                 <div class="row-actions">
-                  <button class="btn btn-secondary" onclick="openBrandSettings('${b.id}', ${nameAttr}, ${b.show_platform_logo !== false})">Brand settings</button>
+                  <button class="btn btn-secondary" onclick="toggleBrandSettings('${b.id}')">Brand settings ▾</button>
                   ${!b.unlimited ? `<button class="btn btn-primary" onclick="openAddCredits('${b.id}', ${nameAttr}, ${b.price_per_tryon_usd})">+ Credits</button>` : ''}
                   <a class="btn btn-secondary" href="/dashboard?id=${b.id}" target="_blank">Dashboard ↗</a>
                   <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteBrand('${b.id}', ${nameAttr})">Delete</button>
+                </div>
+              </td>
+            </tr>
+            <tr id="brand-settings-${b.id}" style="display:none;background:#f8fafc;">
+              <td colspan="7" style="padding:1rem 1.25rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;border:1px solid var(--border);border-radius:12px;background:#fff;padding:1rem;">
+                  <div><strong>Brand Settings</strong><div style="font-size:.78rem;color:var(--muted);margin-top:.25rem;">Download image branding for ${escapeHtml(b.name)}.</div></div>
+                  <label style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;font-weight:600;cursor:pointer;"><input type="checkbox" id="brand-settings-toggle-${b.id}" ${b.show_platform_logo !== false ? 'checked' : ''} onchange="saveInlineBrandSettings('${b.id}', this)"> Show Try Instant Fit logo on downloaded images</label>
                 </div>
               </td>
             </tr>`;
         }).join('')}
       </tbody>
     </table>`;
+}
+
+function toggleBrandSettings(brandId) {
+  const row = document.getElementById(`brand-settings-${brandId}`);
+  if (!row) return;
+  const opening = row.style.display === 'none';
+  row.style.display = opening ? 'table-row' : 'none';
+  document.querySelectorAll(`[onclick="toggleBrandSettings('${brandId}')"]`).forEach(btn => { btn.textContent = opening ? 'Brand settings ▴' : 'Brand settings ▾'; });
+}
+
+async function saveInlineBrandSettings(brandId, input) {
+  input.disabled = true;
+  try {
+    const res = await fetchAdmin(`/api/admin/brands/${brandId}/download-branding`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ showPlatformLogo: input.checked }) });
+    if (!res.ok) throw new Error('Could not save brand settings');
+  } catch (err) { input.checked = !input.checked; alert(err.message || err); }
+  finally { input.disabled = false; }
 }
 
 function openBrandSettings(brandId, brandName, showPlatformLogo) {
