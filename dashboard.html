@@ -2432,7 +2432,7 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: .6rem; padding-top: .6rem; border-top: 1px dashed rgba(90,103,242,.2);">
               <span style="font-size:.95rem; font-weight:700;">Total</span>
-              <span style="font-size: 1.5rem; font-weight: 900; color: var(--indigo);" id="tuTotal">$—</span>
+              <span><span id="tuOriginalTotal" style="display:none;margin-right:.6rem;color:var(--muted);text-decoration:line-through;font-size:1rem;"></span><span style="font-size: 1.5rem; font-weight: 900; color: var(--indigo);" id="tuTotal">$—</span></span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: .25rem;">
               <span style="font-size:.75rem; color:var(--muted);">Local (~)</span>
@@ -5868,13 +5868,15 @@
     }
     const rate = (lastDashboardData?.brand?.price_per_tryon_usd) ? Number(lastDashboardData.brand.price_per_tryon_usd) : 0.125;
     const automatic = Number(topupPromotions.offers?.[0]?.discount_percent || 0);
-    const discount = Math.max(automatic, selectedTopupDiscount);
+    const discount = selectedTopupDiscount || automatic;
+    document.getElementById('tuOriginalTotal').textContent = discount ? `$${(credits * rate).toFixed(2)}` : '';
+    document.getElementById('tuOriginalTotal').style.display = discount ? 'inline' : 'none';
     const usd = credits * rate * (1 - discount / 100);
     const pkr = Math.round(usd * USD_TO_PKR);
     document.getElementById('tuCreditsLine').textContent = `${fmt(credits)} credits`;
     document.getElementById('tuRateLine').textContent = `$${rate.toFixed(3)} / try-on (≈ Rs ${fmt(Math.round(rate * USD_TO_PKR))})`;
     document.getElementById('tuTotal').textContent = `$${usd.toFixed(2)}`;
-    document.getElementById('tuPromoHint').textContent = discount ? `${discount}% discount applied.` : document.getElementById('tuPromoHint').textContent;
+    document.getElementById('tuPromoHint').textContent = discount ? `${selectedTopupDiscount ? 'Promo code' : 'Promotional offer'}: ${discount}% discount applied.` : '';
     document.getElementById('tuLocal').textContent = `Rs ${fmt(pkr)}`;
     document.getElementById('tuConversion').style.display = 'block';
   }
@@ -5900,7 +5902,7 @@
     const brand = lastDashboardData?.brand || {};
     const rate = brand.price_per_tryon_usd ? Number(brand.price_per_tryon_usd) : 0.125;
     const automatic = Number(topupPromotions.offers?.[0]?.discount_percent || 0);
-    const discount = Math.max(automatic, selectedTopupDiscount);
+    const discount = selectedTopupDiscount || automatic;
     const usd = credits * rate * (1 - discount / 100);
     const pkr = Math.round(usd * USD_TO_PKR);
     const receiptId = document.getElementById('tuReceiptId').textContent;
