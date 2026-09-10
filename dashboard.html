@@ -2392,6 +2392,7 @@
       </div>
     </div>
 
+    <style>.topup-switch{display:inline-flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--muted)}.topup-switch input{position:absolute;opacity:0}.topup-switch-track{width:42px;height:24px;background:#cbd5e1;border-radius:99px;position:relative;transition:.2s}.topup-switch-knob{position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px #0003}.topup-switch input:checked+.topup-switch-track{background:linear-gradient(90deg,#5a67f2,#00c8e8)}.topup-switch input:checked+.topup-switch-track .topup-switch-knob{left:21px}</style>
     <!-- ── Modal: Top Up Credits ── -->
     <div class="modal-backdrop" id="topupModal" onclick="if(event.target===this)closeTopupModal()">
       <div class="modal" style="max-width: 560px;">
@@ -2414,7 +2415,7 @@
             <input type="number" id="tuCreditsInput" min="1" step="1" required placeholder="Or enter custom number of try-ons" oninput="recalcTopup()">
           </div>
 
-          <div class="field"><label for="tuPromoCode">Promo code (optional)</label><div id="tuOfferChoice" style="display:none;margin-bottom:.55rem;padding:.55rem .7rem;border-radius:10px;background:rgba(90,103,242,.07);color:var(--indigo);font-weight:700;"><label style="display:flex;align-items:center;gap:.45rem;cursor:pointer;"><input type="checkbox" id="tuUsePromoCode" onchange="toggleTopupPromoMode()"> Use promo code instead of the automatic offer</label></div><div id="tuPromoEntry" style="display:none;gap:.5rem;"><input id="tuPromoCode" placeholder="Enter promo code" style="flex:1;text-transform:uppercase;"><button type="button" class="btn btn-secondary" onclick="applyTopupPromo()">Apply</button></div><small id="tuPromoHint" style="color:var(--muted);"></small></div>
+          <div class="field"><label for="tuPromoCode">Promo code (optional)</label><div id="tuOfferChoice" style="display:none;margin-bottom:.55rem;padding:.65rem .8rem;border-radius:12px;background:linear-gradient(90deg,rgba(90,103,242,.08),rgba(0,200,232,.08));border:1px solid rgba(90,103,242,.18);color:var(--ink);"><label style="display:flex;align-items:center;justify-content:space-between;gap:.7rem;cursor:pointer;font-weight:700;"><span>Use promo code instead of automatic offer</span><span class="topup-switch"><input type="checkbox" id="tuUsePromoCode" onchange="toggleTopupPromoMode()"><span class="topup-switch-track"><span class="topup-switch-knob"></span></span><b id="tuPromoModeLabel">OFF</b></span></label></div><div id="tuPromoEntry" style="display:none;gap:.5rem;"><input id="tuPromoCode" placeholder="Enter promo code" style="flex:1;text-transform:uppercase;"><button type="button" class="btn btn-secondary" onclick="applyTopupPromo()">Apply</button></div><small id="tuPromoHint" style="color:var(--muted);"></small></div>
 
           <!-- Receipt preview -->
           <div id="tuConversion" style="display:none; padding: 1.1rem 1.2rem; background: linear-gradient(135deg, rgba(90,103,242,.08), rgba(0,200,232,.08)); border: 1px solid rgba(90,103,242,.18); border-radius: var(--r-md); margin-bottom: 1.25rem;">
@@ -5965,6 +5966,7 @@
     return false;
   }
 
+  function toggleTopupPromoMode(){const use=document.getElementById('tuUsePromoCode').checked;document.getElementById('tuPromoModeLabel').textContent=use?'ON':'OFF';selectedTopupDiscount=0;document.getElementById('tuPromoEntry').style.display=use?'flex':'none';document.getElementById('tuPromoHint').textContent=use?'Enter a promo code to replace the automatic offer.':(topupPromotions.offers?.[0]?`${topupPromotions.offers[0].name}: ${topupPromotions.offers[0].discount_percent}% automatic discount applied.`:'');recalcTopup();}
   function escapeHtml(s) {
     return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
