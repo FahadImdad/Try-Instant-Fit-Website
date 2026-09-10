@@ -1188,6 +1188,7 @@
       ctx.restore(); */
 
       // Top-left brand pill (logo + text). No tiled watermark is added.
+      if (showPlatformLogo) {
       const logoSize = showPlatformLogo && logo ? Math.round(fontSize * 1.55) : 0;
       const logoGap  = showPlatformLogo && logo ? Math.round(fontSize * 0.38) : 0;
       const padX = Math.round(fontSize * 0.55);
@@ -1231,6 +1232,7 @@
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'left';
       ctx.fillText(text, cursorX, pillY + pillH / 2 + 1);
+      }
 
       const vendor = qrInfo?.brand || {};
       const vendorLogoUrl = vendor.logo_url || qrInfo?.brand_logo_url || vendor.logo || null;
