@@ -626,6 +626,7 @@ function logout() {
 async function fetchAdmin(path, opts = {}) {
   const res = await fetch(`${API}${path}`, {
     ...opts,
+    cache: 'no-store',
     headers: {
       'Authorization': authHeader,
       'Content-Type': 'application/json',
