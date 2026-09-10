@@ -381,6 +381,15 @@
       .data-table td[data-label="Date"]        { font-size: .72rem; color: var(--muted); margin-bottom: .4rem; }
     }
   </style>
+  <style>
+    .promo-switch{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;user-select:none}
+    .promo-switch input{position:absolute;opacity:0;pointer-events:none}
+    .promo-switch-track{width:42px;height:24px;border-radius:999px;background:#cbd5e1;position:relative;transition:.2s}
+    .promo-switch-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px #0003}
+    .promo-switch input:checked+.promo-switch-track{background:#2563eb}
+    .promo-switch input:checked+.promo-switch-track .promo-switch-knob{left:21px}
+    .promo-switch-label{font-size:.78rem;font-weight:700;min-width:22px}
+  </style>
 </head>
 <body>
 
@@ -1374,6 +1383,8 @@ async function loadPromotionLists(){const [a,c]=await Promise.all([fetchAdmin('/
 async function togglePromotion(type,id,input){const url=type==='offer'?`/api/admin/promotional-offers/${id}`:`/api/admin/promo-codes/${id}`;const r=await fetchAdmin(url,{method:'PATCH',body:JSON.stringify({active:input.checked})});if(!r.ok){input.checked=!input.checked;alert('Could not update promotion');}}
 async function loadPromotionLists(){const [a,c]=await Promise.all([fetchAdmin('/api/admin/promotional-offers').then(r=>r.json()),fetchAdmin('/api/admin/promo-codes').then(r=>r.json())]);const row=(x,t)=>`<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);border-radius:10px;padding:.7rem;margin:.4rem 0;gap:1rem;"><strong>${escapeHtml(x.name||x.code)}</strong><span>${x.discount_percent}% off · <label><input type="checkbox" ${x.active?'checked':''} onchange="togglePromotion('${t}','${x.id}',this)"> On</label> <button class="btn btn-secondary" onclick="deletePromotion('${t}','${x.id}')">Delete</button></span></div>`;const o=document.getElementById('offerList'),d=document.getElementById('codeList');if(o)o.innerHTML='<h3>Created automatic offers</h3>'+(a.offers||[]).map(x=>row(x,'offer')).join('')||'<p>No offers created yet.</p>';if(d)d.innerHTML='<h3>Created promo codes</h3>'+(c.promoCodes||[]).map(x=>row(x,'code')).join('')||'<p>No promo codes created yet.</p>';}
 async function deletePromotion(type,id){if(!confirm('Delete this promotion?'))return;const r=await fetchAdmin(type==='offer'?`/api/admin/promotional-offers/${id}`:`/api/admin/promo-codes/${id}`,{method:'DELETE'});if(!r.ok)return alert('Could not delete promotion');loadPromotionLists();}
+async function loadPromotionLists(){const [a,c]=await Promise.all([fetchAdmin('/api/admin/promotional-offers').then(r=>r.json()),fetchAdmin('/api/admin/promo-codes').then(r=>r.json())]);const row=(x,t)=>`<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);border-radius:10px;padding:.7rem;margin:.4rem 0;gap:1rem;"><strong>${escapeHtml(x.name||x.code)}</strong><span>${x.discount_percent}% off · <label class="promo-switch"><input type="checkbox" ${x.active?'checked':''} onchange="togglePromotion('${t}','${x.id}',this)"><span class="promo-switch-track"><span class="promo-switch-knob"></span></span><span class="promo-switch-label">${x.active?'On':'Off'}</span></label> <button class="btn btn-secondary" onclick="deletePromotion('${t}','${x.id}')">Delete</button></span></div>`;const o=document.getElementById('offerList'),d=document.getElementById('codeList');if(o)o.innerHTML='<h3>Created automatic offers</h3>'+((a.offers||[]).map(x=>row(x,'offer')).join('')||'<p>No offers created yet.</p>');if(d)d.innerHTML='<h3>Created promo codes</h3>'+((c.promoCodes||[]).map(x=>row(x,'code')).join('')||'<p>No promo codes created yet.</p>');}
+async function togglePromotion(type,id,input){const url=type==='offer'?`/api/admin/promotional-offers/${id}`:`/api/admin/promo-codes/${id}`;const label=input.parentElement.querySelector('.promo-switch-label');if(label)label.textContent=input.checked?'On':'Off';const r=await fetchAdmin(url,{method:'PATCH',body:JSON.stringify({active:input.checked})});if(!r.ok){input.checked=!input.checked;if(label)label.textContent=input.checked?'On':'Off';alert('Could not update promotion');}}
 </script>
 
 <link rel="stylesheet" href="/css/platform-polish.css">
