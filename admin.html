@@ -962,6 +962,7 @@ function renderBrands() {
               <td data-label="Download logo"><label style="display:flex;align-items:center;gap:.35rem;font-size:.78rem;white-space:nowrap;"><input type="checkbox" ${b.show_platform_logo !== false ? 'checked' : ''} data-brand-logo-toggle="${b.id}" onchange="toggleDownloadLogo('${b.id}', this)"> Try Instant Fit</label></td>
               <td data-label="Actions">
                 <div class="row-actions">
+                  <button class="btn btn-secondary" onclick="openBrandSettings('${b.id}', ${nameAttr}, ${b.show_platform_logo !== false})">Brand settings</button>
                   ${!b.unlimited ? `<button class="btn btn-primary" onclick="openAddCredits('${b.id}', ${nameAttr}, ${b.price_per_tryon_usd})">+ Credits</button>` : ''}
                   <a class="btn btn-secondary" href="/dashboard?id=${b.id}" target="_blank">Dashboard ↗</a>
                   <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteBrand('${b.id}', ${nameAttr})">Delete</button>
@@ -971,6 +972,32 @@ function renderBrands() {
         }).join('')}
       </tbody>
     </table>`;
+}
+
+function openBrandSettings(brandId, brandName, showPlatformLogo) {
+  document.getElementById('brandSettingsModal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'brandSettingsModal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,.42);display:flex;align-items:center;justify-content:center;padding:1rem;';
+  modal.innerHTML = `<div style="width:min(520px,100%);background:#fff;border-radius:18px;padding:1.35rem;box-shadow:0 24px 80px rgba(15,23,42,.25);">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1rem;"><div><h2 style="margin:0;font-size:1.1rem;">Brand Settings</h2><div style="color:var(--muted);font-size:.82rem;margin-top:.2rem;">${escapeHtml(brandName)}</div></div><button class="btn btn-secondary" onclick="document.getElementById('brandSettingsModal').remove()">Close</button></div>
+    <div style="border:1px solid var(--border);border-radius:12px;padding:1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;"><div><strong>Try Instant Fit logo on downloads</strong><div style="font-size:.78rem;color:var(--muted);margin-top:.25rem;">Show the Try Instant Fit logo in the top-left of downloaded try-on images for this brand.</div></div><label class="switch-toggle"><input id="brandSettingsLogoToggle" type="checkbox" ${showPlatformLogo ? 'checked' : ''}><span class="switch-toggle-track">${showPlatformLogo ? 'On' : 'Off'}</span></label></div>
+    <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:1rem;"><button class="btn btn-primary" onclick="saveBrandSettings('${brandId}')">Save settings</button></div>
+  </div>`;
+  document.body.appendChild(modal);
+  const input = document.getElementById('brandSettingsLogoToggle');
+  input?.addEventListener('change', () => { input.nextElementSibling.textContent = input.checked ? 'On' : 'Off'; });
+}
+
+async function saveBrandSettings(brandId) {
+  const input = document.getElementById('brandSettingsLogoToggle');
+  if (!input) return;
+  try {
+    const res = await fetchAdmin(`/api/admin/brands/${brandId}/download-branding`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ showPlatformLogo: input.checked }) });
+    if (!res.ok) throw new Error('Could not save brand settings');
+    document.getElementById('brandSettingsModal')?.remove();
+    await loadBrands();
+  } catch (err) { alert(err.message || err); }
 }
 
 async function toggleDownloadLogo(brandId, checkbox) {
