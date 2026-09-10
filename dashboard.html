@@ -2414,6 +2414,8 @@
             <input type="number" id="tuCreditsInput" min="1" step="1" required placeholder="Or enter custom number of try-ons" oninput="recalcTopup()">
           </div>
 
+          <div class="field"><label for="tuPromoCode">Promo code (optional)</label><div style="display:flex;gap:.5rem;"><input id="tuPromoCode" placeholder="Enter promo code" style="flex:1;text-transform:uppercase;"><button type="button" class="btn btn-secondary" onclick="applyTopupPromo()">Apply</button></div><small id="tuPromoHint" style="color:var(--muted);"></small></div>
+
           <!-- Receipt preview -->
           <div id="tuConversion" style="display:none; padding: 1.1rem 1.2rem; background: linear-gradient(135deg, rgba(90,103,242,.08), rgba(0,200,232,.08)); border: 1px solid rgba(90,103,242,.18); border-radius: var(--r-md); margin-bottom: 1.25rem;">
             <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.6rem; padding-bottom:.6rem; border-bottom: 1px dashed rgba(90,103,242,.2);">
@@ -5817,6 +5819,9 @@
     } catch (_) { /* keep fallback */ }
   })();
   const TIF_WHATSAPP = '923147800991';
+  let topupPromotions = { offers: [], promoCodes: [] }, selectedTopupDiscount = 0;
+  async function loadTopupPromotions(){ if(!activeBrandId)return; try{const r=await fetch(`${API}/api/brands/${activeBrandId}/promotions`,{cache:'no-store'});if(r.ok)topupPromotions=await r.json();const offer=topupPromotions.offers?.[0];document.getElementById('tuPromoHint').textContent=offer?`${offer.name}: ${offer.discount_percent}% automatic discount available`:'';}catch(_){} }
+  function applyTopupPromo(){const code=(document.getElementById('tuPromoCode').value||'').trim().toUpperCase();const p=topupPromotions.promoCodes?.find(x=>x.code===code);if(!p){selectedTopupDiscount=0;document.getElementById('tuPromoHint').textContent=code?'Invalid or inactive promo code.':'';}else{selectedTopupDiscount=Number(p.discount_percent);document.getElementById('tuPromoHint').textContent=`${p.name||p.code}: ${selectedTopupDiscount}% discount applied.`;}recalcTopup();}
 
   function genReceiptId() {
     // Short human-friendly receipt code: TIF-YYMMDD-XXXX
@@ -5833,6 +5838,7 @@
     document.getElementById('tuCreditsInput').value = '';
     document.querySelectorAll('.topup-preset').forEach(p => p.classList.remove('active'));
     document.getElementById('tuConversion').style.display = 'none';
+    document.getElementById('tuPromoCode').value = ''; selectedTopupDiscount = 0; loadTopupPromotions();
     const reasonEl = document.getElementById('tuReason');
     if (reason) {
       reasonEl.textContent = reason;
@@ -5861,11 +5867,14 @@
       return;
     }
     const rate = (lastDashboardData?.brand?.price_per_tryon_usd) ? Number(lastDashboardData.brand.price_per_tryon_usd) : 0.125;
-    const usd = credits * rate;
+    const automatic = Number(topupPromotions.offers?.[0]?.discount_percent || 0);
+    const discount = Math.max(automatic, selectedTopupDiscount);
+    const usd = credits * rate * (1 - discount / 100);
     const pkr = Math.round(usd * USD_TO_PKR);
     document.getElementById('tuCreditsLine').textContent = `${fmt(credits)} credits`;
     document.getElementById('tuRateLine').textContent = `$${rate.toFixed(3)} / try-on (≈ Rs ${fmt(Math.round(rate * USD_TO_PKR))})`;
     document.getElementById('tuTotal').textContent = `$${usd.toFixed(2)}`;
+    document.getElementById('tuPromoHint').textContent = discount ? `${discount}% discount applied.` : document.getElementById('tuPromoHint').textContent;
     document.getElementById('tuLocal').textContent = `Rs ${fmt(pkr)}`;
     document.getElementById('tuConversion').style.display = 'block';
   }
@@ -5890,7 +5899,9 @@
 
     const brand = lastDashboardData?.brand || {};
     const rate = brand.price_per_tryon_usd ? Number(brand.price_per_tryon_usd) : 0.125;
-    const usd = credits * rate;
+    const automatic = Number(topupPromotions.offers?.[0]?.discount_percent || 0);
+    const discount = Math.max(automatic, selectedTopupDiscount);
+    const usd = credits * rate * (1 - discount / 100);
     const pkr = Math.round(usd * USD_TO_PKR);
     const receiptId = document.getElementById('tuReceiptId').textContent;
     const brandName = brand.name || 'My brand';
