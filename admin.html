@@ -423,6 +423,7 @@
       <button class="admin-tab" data-tab="topups" onclick="switchAdminTab('topups')">💳 Top-Up Requests <span class="count" id="cntTopups" style="background:#fef3c7; color:#92400e;">0</span></button>
       <button class="admin-tab" data-tab="reports" onclick="switchAdminTab('reports')">🚩 Reports <span class="count" id="cntReports" style="background:#fee2e2; color:#991b1b;">0</span></button>
       <button class="admin-tab" data-tab="brands" onclick="switchAdminTab('brands')">🏢 Brands <span class="count" id="cntBrands">0</span></button>
+      <button class="admin-tab" data-tab="promotions" onclick="switchAdminTab('promotions')">🏷️ Promotions</button>
     </div>
 
     <!-- ── ANALYTICS PANE ── -->
@@ -464,6 +465,12 @@
         <input type="search" id="brandSearch" placeholder="🔎  Search by name, email, or ID…" oninput="renderBrands()" style="padding:.5rem .85rem; border:1px solid var(--border); border-radius: var(--r-md); font-size:.85rem; min-width:260px; font-family: inherit;">
       </div>
       <div id="brandsList"></div>
+    </div>
+    <div id="pane-promotions" class="admin-pane">
+      <div class="sw-section"><h2>Promotional Offers</h2><p>Create a promo code and choose which brands can use it.</p>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin:1rem 0;"><input id="promoCode" placeholder="PROMO2026" style="padding:.65rem;border:1px solid var(--border);border-radius:8px;text-transform:uppercase;"><select id="promoDiscount" style="padding:.65rem;border:1px solid var(--border);border-radius:8px;"><option value="5">5% off</option><option value="10">10% off</option><option value="15">15% off</option><option value="20">20% off</option><option value="25">25% off</option><option value="30">30% off</option><option value="35">35% off</option><option value="40">40% off</option><option value="45">45% off</option><option value="50">50% off</option></select><button class="btn btn-primary" onclick="createPromotion()">Create promotion</button></div>
+        <div id="promoBrandChoices" style="display:grid;gap:.4rem;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));"></div><div id="promotionsList" style="margin-top:1rem;"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -902,6 +909,7 @@ async function loadBrands() {
     document.getElementById('cntBrands').textContent = allBrands.length;
     renderBrands();
     renderAnalytics();
+    renderPromoBrands();
   } catch (err) {
     document.getElementById('brandsList').innerHTML = `<div class="empty"><p>Error: ${escapeHtml(err.message)}</p></div>`;
   }
@@ -980,6 +988,12 @@ function renderBrands() {
         }).join('')}
       </tbody>
     </table>`;
+}
+
+function renderPromoBrands() { const el=document.getElementById('promoBrandChoices'); if(el) el.innerHTML=(allBrands||[]).map(b=>`<label><input type="checkbox" value="${b.id}" class="promo-brand"> ${escapeHtml(b.name)}</label>`).join(''); }
+async function createPromotion() {
+  const code=document.getElementById('promoCode')?.value.trim(); const discount=Number(document.getElementById('promoDiscount')?.value); const brandIds=[...document.querySelectorAll('.promo-brand:checked')].map(x=>x.value);
+  try { const res=await fetchAdmin('/api/admin/promotions',{method:'POST',body:JSON.stringify({code,discountPercent:discount,brandIds})}); const data=await res.json(); if(!res.ok) throw new Error(data.error||'Could not create promotion'); alert('Promotion created'); document.getElementById('promoCode').value=''; } catch(e){ alert(e.message||e); }
 }
 
 function toggleBrandSettings(brandId) {
