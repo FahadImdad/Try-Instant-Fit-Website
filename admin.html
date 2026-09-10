@@ -927,7 +927,7 @@ function renderBrands() {
   }
   container.innerHTML = `
     <table class="data-table">
-      <thead><tr><th>Brand</th><th>Status</th><th>Credits</th><th>Used</th><th>Rate</th><th>Download logo</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Brand</th><th>Status</th><th>Credits</th><th>Used</th><th>Rate</th><th>Actions</th></tr></thead>
       <tbody>
         ${list.map(b => {
           const remaining = (b.tryon_credits || 0) - (b.tryon_credits_used || 0);
@@ -960,7 +960,6 @@ function renderBrands() {
                 </div>
               </td>
               <td data-label="Rate">$${Number(b.price_per_tryon_usd).toFixed(3)}</td>
-              <td data-label="Download logo"><label style="display:flex;align-items:center;gap:.35rem;font-size:.78rem;white-space:nowrap;"><input type="checkbox" ${b.show_platform_logo !== false ? 'checked' : ''} data-brand-logo-toggle="${b.id}" onchange="toggleDownloadLogo('${b.id}', this)"> Try Instant Fit</label></td>
               <td data-label="Actions">
                 <div class="row-actions">
                   <button class="btn btn-secondary" onclick="toggleBrandSettings('${b.id}')">Brand settings ▾</button>
