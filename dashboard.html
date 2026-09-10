@@ -2414,7 +2414,7 @@
             <input type="number" id="tuCreditsInput" min="1" step="1" required placeholder="Or enter custom number of try-ons" oninput="recalcTopup()">
           </div>
 
-          <div class="field"><label for="tuPromoCode">Promo code (optional)</label><div style="display:flex;gap:.5rem;"><input id="tuPromoCode" placeholder="Enter promo code" style="flex:1;text-transform:uppercase;"><button type="button" class="btn btn-secondary" onclick="applyTopupPromo()">Apply</button></div><small id="tuPromoHint" style="color:var(--muted);"></small></div>
+          <div class="field"><label for="tuPromoCode">Promo code (optional)</label><div id="tuOfferChoice" style="display:none;margin-bottom:.55rem;padding:.55rem .7rem;border-radius:10px;background:rgba(90,103,242,.07);color:var(--indigo);font-weight:700;"><label style="display:flex;align-items:center;gap:.45rem;cursor:pointer;"><input type="checkbox" id="tuUsePromoCode" onchange="toggleTopupPromoMode()"> Use promo code instead of the automatic offer</label></div><div id="tuPromoEntry" style="display:none;gap:.5rem;"><input id="tuPromoCode" placeholder="Enter promo code" style="flex:1;text-transform:uppercase;"><button type="button" class="btn btn-secondary" onclick="applyTopupPromo()">Apply</button></div><small id="tuPromoHint" style="color:var(--muted);"></small></div>
 
           <!-- Receipt preview -->
           <div id="tuConversion" style="display:none; padding: 1.1rem 1.2rem; background: linear-gradient(135deg, rgba(90,103,242,.08), rgba(0,200,232,.08)); border: 1px solid rgba(90,103,242,.18); border-radius: var(--r-md); margin-bottom: 1.25rem;">
@@ -5821,7 +5821,8 @@
   })();
   const TIF_WHATSAPP = '923147800991';
   let topupPromotions = { offers: [], promoCodes: [] }, selectedTopupDiscount = 0;
-  async function loadTopupPromotions(){ if(!activeBrandId)return; try{const r=await fetch(`${API}/api/brands/${activeBrandId}/promotions`,{cache:'no-store'});if(r.ok)topupPromotions=await r.json();const offer=topupPromotions.offers?.[0];document.getElementById('tuPromoHint').textContent=offer?`${offer.name}: ${offer.discount_percent}% automatic discount available`:'';}catch(_){} }
+  async function loadTopupPromotions(){ if(!activeBrandId)return; try{const r=await fetch(`${API}/api/brands/${activeBrandId}/promotions`,{cache:'no-store'});if(r.ok)topupPromotions=await r.json();const offer=topupPromotions.offers?.[0];document.getElementById('tuOfferChoice').style.display=offer?'block':'none';document.getElementById('tuPromoEntry').style.display=offer?'none':'flex';document.getElementById('tuPromoHint').textContent=offer?`${offer.name}: ${offer.discount_percent}% automatic discount applied.`:'';recalcTopup();}catch(_){} }
+  function toggleTopupPromoMode(){const use=document.getElementById('tuUsePromoCode').checked;selectedTopupDiscount=0;document.getElementById('tuPromoEntry').style.display=use?'flex':'none';document.getElementById('tuPromoHint').textContent=use?'Enter a promo code to replace the automatic offer.':(topupPromotions.offers?.[0]?`${topupPromotions.offers[0].name}: ${topupPromotions.offers[0].discount_percent}% automatic discount applied.`:'');recalcTopup();}
   function applyTopupPromo(){const code=(document.getElementById('tuPromoCode').value||'').trim().toUpperCase();const p=topupPromotions.promoCodes?.find(x=>x.code===code);if(!p){selectedTopupDiscount=0;document.getElementById('tuPromoHint').textContent=code?'Invalid or inactive promo code.':'';}else{selectedTopupDiscount=Number(p.discount_percent);document.getElementById('tuPromoHint').textContent=`${p.name||p.code}: ${selectedTopupDiscount}% discount applied.`;}recalcTopup();}
 
   function genReceiptId() {
@@ -5840,6 +5841,7 @@
     document.querySelectorAll('.topup-preset').forEach(p => p.classList.remove('active'));
     document.getElementById('tuConversion').style.display = 'none';
     document.getElementById('tuPromoCode').value = ''; selectedTopupDiscount = 0; loadTopupPromotions();
+    document.getElementById('tuUsePromoCode').checked = false;
     const reasonEl = document.getElementById('tuReason');
     if (reason) {
       reasonEl.textContent = reason;
@@ -5868,7 +5870,7 @@
       return;
     }
     const rate = (lastDashboardData?.brand?.price_per_tryon_usd) ? Number(lastDashboardData.brand.price_per_tryon_usd) : 0.125;
-    const automatic = Number(topupPromotions.offers?.[0]?.discount_percent || 0);
+    const automatic = document.getElementById('tuUsePromoCode')?.checked ? 0 : Number(topupPromotions.offers?.[0]?.discount_percent || 0);
     const discount = selectedTopupDiscount || automatic;
     document.getElementById('tuOriginalTotal').textContent = discount ? `$${(credits * rate).toFixed(2)}` : '';
     document.getElementById('tuOriginalTotal').style.display = discount ? 'inline' : 'none';
@@ -5905,7 +5907,7 @@
 
     const brand = lastDashboardData?.brand || {};
     const rate = brand.price_per_tryon_usd ? Number(brand.price_per_tryon_usd) : 0.125;
-    const automatic = Number(topupPromotions.offers?.[0]?.discount_percent || 0);
+    const automatic = document.getElementById('tuUsePromoCode')?.checked ? 0 : Number(topupPromotions.offers?.[0]?.discount_percent || 0);
     const discount = selectedTopupDiscount || automatic;
     const usd = credits * rate * (1 - discount / 100);
     const pkr = Math.round(usd * USD_TO_PKR);
@@ -5966,6 +5968,7 @@
   function escapeHtml(s) {
     return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+function applyTopupPromo(){if(!document.getElementById('tuUsePromoCode').checked)return document.getElementById('tuPromoHint').textContent='Please select “Use promo code instead” first.';const code=(document.getElementById('tuPromoCode').value||'').trim().toUpperCase();const p=topupPromotions.promoCodes?.find(x=>x.code===code);selectedTopupDiscount=p?Number(p.discount_percent):0;document.getElementById('tuPromoHint').textContent=p?`${p.name||p.code}: ${selectedTopupDiscount}% discount applied.`:'Invalid or inactive promo code.';recalcTopup();}
 </script>
 <link rel="stylesheet" href="/css/platform-polish.css">
 <style>
