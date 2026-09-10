@@ -2430,9 +2430,10 @@
               <span style="font-size:.85rem; color:var(--muted);">Rate</span>
               <span style="font-weight: 700;" id="tuRateLine">$0.25 / try-on</span>
             </div>
+            <div id="tuOfferBanner" style="display:none;margin-top:.7rem;padding:.65rem .8rem;border-radius:10px;background:linear-gradient(90deg,#fff1f2,#fff7ed);border:1px solid #fecdd3;color:#be123c;font-weight:800;text-align:center;">🔥 LIMITED-TIME OFFER — SAVE NOW</div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: .6rem; padding-top: .6rem; border-top: 1px dashed rgba(90,103,242,.2);">
               <span style="font-size:.95rem; font-weight:700;">Total</span>
-              <span><span id="tuOriginalTotal" style="display:none;margin-right:.6rem;color:var(--muted);text-decoration:line-through;font-size:1rem;"></span><span style="font-size: 1.5rem; font-weight: 900; color: var(--indigo);" id="tuTotal">$—</span></span>
+              <span><span id="tuOriginalTotal" style="display:none;margin-right:.6rem;color:#dc2626;text-decoration:line-through;font-size:1.05rem;font-weight:700;"></span><span style="font-size: 1.65rem; font-weight: 900; color: #e11d48;" id="tuTotal">$—</span></span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: .25rem;">
               <span style="font-size:.75rem; color:var(--muted);">Local (~)</span>
@@ -5871,6 +5872,7 @@
     const discount = selectedTopupDiscount || automatic;
     document.getElementById('tuOriginalTotal').textContent = discount ? `$${(credits * rate).toFixed(2)}` : '';
     document.getElementById('tuOriginalTotal').style.display = discount ? 'inline' : 'none';
+    document.getElementById('tuOfferBanner').style.display = discount ? 'block' : 'none';
     const usd = credits * rate * (1 - discount / 100);
     const pkr = Math.round(usd * USD_TO_PKR);
     document.getElementById('tuCreditsLine').textContent = `${fmt(credits)} credits`;
