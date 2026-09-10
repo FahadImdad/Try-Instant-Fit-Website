@@ -1243,19 +1243,24 @@
       if (vendorLogo || vendorName) {
         const vendorFont = Math.max(18, Math.round(fontSize * .85));
         ctx.font = `700 ${vendorFont}px Arial, sans-serif`;
+        const vendorPadX = Math.round(fontSize * .55);
+        const vendorPadY = Math.round(fontSize * .32);
+        const vendorMargin = Math.round(fontSize * .7);
         const vendorLogoSize = vendorLogo ? Math.round(fontSize * 1.55) : 0;
         const vendorGap = vendorLogo ? Math.round(fontSize * .38) : 0;
-        const vendorWidth = vendorLogoSize + vendorGap + ctx.measureText(vendorName).width + padX * 2;
-        const vendorX = canvas.width - vendorWidth - margin;
+        const vendorPillH = Math.max(vendorLogoSize, vendorFont) + vendorPadY * 2;
+        const vendorRadius = Math.round(vendorPillH * .32);
+        const vendorWidth = vendorLogoSize + vendorGap + ctx.measureText(vendorName).width + vendorPadX * 2;
+        const vendorX = canvas.width - vendorWidth - vendorMargin;
         ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
         ctx.beginPath();
-        if (typeof ctx.roundRect === 'function') ctx.roundRect(vendorX, margin, vendorWidth, pillH, radius); else ctx.rect(vendorX, margin, vendorWidth, pillH);
+        if (typeof ctx.roundRect === 'function') ctx.roundRect(vendorX, vendorMargin, vendorWidth, vendorPillH, vendorRadius); else ctx.rect(vendorX, vendorMargin, vendorWidth, vendorPillH);
         ctx.fill();
-        let vx = vendorX + padX;
-        if (vendorLogo) { ctx.drawImage(vendorLogo, vx, margin + (pillH - vendorLogoSize) / 2, vendorLogoSize, vendorLogoSize); vx += vendorLogoSize + vendorGap; }
+        let vx = vendorX + vendorPadX;
+        if (vendorLogo) { ctx.drawImage(vendorLogo, vx, vendorMargin + (vendorPillH - vendorLogoSize) / 2, vendorLogoSize, vendorLogoSize); vx += vendorLogoSize + vendorGap; }
         ctx.fillStyle = 'rgba(255,255,255,.9)';
         ctx.textBaseline = 'middle';
-        ctx.fillText(vendorName, vx, margin + pillH / 2 + 1);
+        ctx.fillText(vendorName, vx, vendorMargin + vendorPillH / 2 + 1);
       }
 
       return await new Promise((resolve, reject) => {
