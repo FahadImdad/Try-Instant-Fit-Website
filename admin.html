@@ -993,7 +993,7 @@ function renderBrands() {
     </table>`;
 }
 
-function renderPromoBrands() { const el=document.getElementById('promoBrandChoices'); if(el) el.innerHTML=(allBrands||[]).map(b=>`<label><input type="checkbox" value="${b.id}" class="promo-brand"> ${escapeHtml(b.name)}</label>`).join(''); }
+function renderPromoBrands() { const el=document.getElementById('promoBrandChoices'); if(el) el.innerHTML=`<div style="grid-column:1/-1;font-weight:700;margin-top:.5rem;">Select brands for this promotion</div>`+(allBrands||[]).map(b=>`<label><input type="checkbox" value="${b.id}" class="promo-brand"> ${escapeHtml(b.name)}</label>`).join(''); }
 async function createPromoCode() {
   const code=document.getElementById('promoCode')?.value.trim(); const discount=Number(document.getElementById('promoDiscount')?.value); const brandIds=[...document.querySelectorAll('.promo-brand:checked')].map(x=>x.value);
   try { const res=await fetchAdmin('/api/admin/promotions',{method:'POST',body:JSON.stringify({code,discountPercent:discount,brandIds})}); const data=await res.json(); if(!res.ok) throw new Error(data.error||'Could not create promotion'); alert('Promotion created'); document.getElementById('promoCode').value=''; } catch(e){ alert(e.message||e); }
