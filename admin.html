@@ -467,8 +467,11 @@
       <div id="brandsList"></div>
     </div>
     <div id="pane-promotions" class="admin-pane">
-      <div class="sw-section"><h2>Promotional Offers</h2><p>Create a promo code and choose which brands can use it.</p>
-        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin:1rem 0;"><input id="promoCode" placeholder="PROMO2026" style="padding:.65rem;border:1px solid var(--border);border-radius:8px;text-transform:uppercase;"><select id="promoDiscount" style="padding:.65rem;border:1px solid var(--border);border-radius:8px;"><option value="5">5% off</option><option value="10">10% off</option><option value="15">15% off</option><option value="20">20% off</option><option value="25">25% off</option><option value="30">30% off</option><option value="35">35% off</option><option value="40">40% off</option><option value="45">45% off</option><option value="50">50% off</option></select><button class="btn btn-primary" onclick="createPromotion()">Create promotion</button></div>
+      <div class="sw-section"><h2>Promotions</h2><p>Manage automatic offers and promo codes separately. Each can be turned on or off independently.</p>
+        <h3 style="margin:1.25rem 0 .35rem;">Automatic Promotional Offer</h3><p style="font-size:.8rem;color:var(--muted);">Applied automatically to selected brands—no code required.</p>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin:1rem 0;"><input id="offerName" placeholder="Summer offer" style="padding:.65rem;border:1px solid var(--border);border-radius:8px;"><select id="offerDiscount" style="padding:.65rem;border:1px solid var(--border);border-radius:8px;"><option value="5">5% off</option><option value="10">10% off</option><option value="15">15% off</option><option value="20">20% off</option><option value="25">25% off</option><option value="30">30% off</option><option value="35">35% off</option><option value="40">40% off</option><option value="45">45% off</option><option value="50">50% off</option></select><button class="btn btn-primary" onclick="createAutomaticOffer()">Create offer</button></div>
+        <h3 style="margin:1.5rem 0 .35rem;">Promo Code</h3><p style="font-size:.8rem;color:var(--muted);">Customer enters this code manually. It has its own discount and toggle.</p>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin:1rem 0;"><input id="promoCode" placeholder="PROMO2026" style="padding:.65rem;border:1px solid var(--border);border-radius:8px;text-transform:uppercase;"><select id="promoDiscount" style="padding:.65rem;border:1px solid var(--border);border-radius:8px;"><option value="5">5% off</option><option value="10">10% off</option><option value="15">15% off</option><option value="20">20% off</option><option value="25">25% off</option><option value="30">30% off</option><option value="35">35% off</option><option value="40">40% off</option><option value="45">45% off</option><option value="50">50% off</option></select><button class="btn btn-primary" onclick="createPromoCode()">Create promo code</button></div>
         <div id="promoBrandChoices" style="display:grid;gap:.4rem;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));"></div><div id="promotionsList" style="margin-top:1rem;"></div>
       </div>
     </div>
@@ -991,9 +994,13 @@ function renderBrands() {
 }
 
 function renderPromoBrands() { const el=document.getElementById('promoBrandChoices'); if(el) el.innerHTML=(allBrands||[]).map(b=>`<label><input type="checkbox" value="${b.id}" class="promo-brand"> ${escapeHtml(b.name)}</label>`).join(''); }
-async function createPromotion() {
+async function createPromoCode() {
   const code=document.getElementById('promoCode')?.value.trim(); const discount=Number(document.getElementById('promoDiscount')?.value); const brandIds=[...document.querySelectorAll('.promo-brand:checked')].map(x=>x.value);
   try { const res=await fetchAdmin('/api/admin/promotions',{method:'POST',body:JSON.stringify({code,discountPercent:discount,brandIds})}); const data=await res.json(); if(!res.ok) throw new Error(data.error||'Could not create promotion'); alert('Promotion created'); document.getElementById('promoCode').value=''; } catch(e){ alert(e.message||e); }
+}
+async function createAutomaticOffer() {
+  const name=document.getElementById('offerName')?.value.trim(); const discount=Number(document.getElementById('offerDiscount')?.value); const brandIds=[...document.querySelectorAll('.promo-brand:checked')].map(x=>x.value);
+  try { const res=await fetchAdmin('/api/admin/promotional-offers',{method:'POST',body:JSON.stringify({name,discountPercent:discount,brandIds})}); const data=await res.json(); if(!res.ok) throw new Error(data.error||'Could not create offer'); alert('Automatic offer created and enabled'); document.getElementById('offerName').value=''; } catch(e){ alert(e.message||e); }
 }
 
 function toggleBrandSettings(brandId) {
