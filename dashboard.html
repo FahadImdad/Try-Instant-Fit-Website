@@ -2392,7 +2392,7 @@
       </div>
     </div>
 
-    <style>.topup-switch{display:inline-flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--muted)}.topup-switch input{position:absolute;opacity:0}.topup-switch-track{width:42px;height:24px;background:#cbd5e1;border-radius:99px;position:relative;transition:.2s}.topup-switch-knob{position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px #0003}.topup-switch input:checked+.topup-switch-track{background:linear-gradient(90deg,#5a67f2,#00c8e8)}.topup-switch input:checked+.topup-switch-track .topup-switch-knob{left:21px}</style>
+    <style>.topup-switch{display:inline-flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--muted)}.topup-switch input{position:absolute;opacity:0}.topup-switch-track{width:42px;height:24px;background:#cbd5e1;border-radius:99px;position:relative;transition:.2s}.topup-switch-knob{position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px #0003}.topup-switch input:checked+.topup-switch-track{background:linear-gradient(90deg,#5a67f2,#00c8e8)}.topup-switch input:checked+.topup-switch-track .topup-switch-knob{left:21px}.promo-celebrate{animation:promoCelebrate .7s ease both, promoGlow 1.8s ease-in-out infinite alternate}@keyframes promoCelebrate{0%{transform:scale(.96);opacity:.3}60%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}@keyframes promoGlow{from{box-shadow:0 0 0 rgba(90,103,242,0)}to{box-shadow:0 0 22px rgba(0,200,232,.28)}}</style>
     <!-- ── Modal: Top Up Credits ── -->
     <div class="modal-backdrop" id="topupModal" onclick="if(event.target===this)closeTopupModal()">
       <div class="modal" style="max-width: 560px;">
@@ -6127,5 +6127,8 @@ div.pl-preview-image-v2.pl-preview-placeholder{height:220px;aspect-ratio:auto}
   }
 }
 </style>
+<script>
+function applyTopupPromo(){if(!document.getElementById('tuUsePromoCode').checked)return document.getElementById('tuPromoHint').textContent='Please select “Use promo code instead” first.';const code=(document.getElementById('tuPromoCode').value||'').trim().toUpperCase();const p=topupPromotions.promoCodes?.find(x=>x.code===code);selectedTopupDiscount=p?Number(p.discount_percent):0;document.getElementById('tuPromoHint').textContent=p?`🎉 Congratulations! Promo code ${p.code} activated — ${selectedTopupDiscount}% off.`:'Invalid or inactive promo code.';if(p){const b=document.getElementById('tuOfferBanner');b.classList.remove('promo-celebrate');void b.offsetWidth;b.classList.add('promo-celebrate');}recalcTopup();}
+</script>
 </body>
 </html>
