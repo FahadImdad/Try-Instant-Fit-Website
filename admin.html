@@ -476,7 +476,7 @@
       </div>
       <div id="brandsList"></div>
     </div>
-    <div id="pane-support" class="admin-pane"><div class="sw-section"><h2>Support chat</h2><p>Vendor conversations and replies.</p><div id="supportInbox"><div class="empty"><p>Loading support conversations…</p></div></div></div></div>
+    <div id="pane-support" class="admin-pane"><div class="sw-section"><h2>Support chat</h2><p>Vendor conversations and replies.</p><div style="display:flex;gap:.5rem;margin:1rem 0;flex-wrap:wrap;"><select id="supportBrandSelect" style="padding:.65rem;border:1px solid var(--border);border-radius:8px;min-width:220px;"><option value="">Select a brand to contact</option></select><input id="supportNewMessage" placeholder="Write a message…" style="flex:1;min-width:220px;padding:.65rem;border:1px solid var(--border);border-radius:8px;"><button class="btn btn-primary" onclick="startSupportChat()">Start chat</button></div><div id="supportInbox"><div class="empty"><p>Loading support conversations…</p></div></div></div></div>
     <div id="pane-promotions" class="admin-pane">
       <div class="sw-section"><h2>Promotions</h2><p>Manage automatic offers and promo codes separately. Each can be turned on or off independently.</p>
         <h3 style="margin:1.25rem 0 .35rem;">Automatic Promotional Offer</h3><p style="font-size:.8rem;color:var(--muted);">Applied automatically to selected brands—no code required.</p>
@@ -1407,6 +1407,9 @@ async function savePromotionEdit(type,id,button){const panel=button.closest('.pr
 <button id="adminSupportFab" onclick="openAdminSupport()" style="position:fixed;right:24px;bottom:24px;z-index:2000;border:0;border-radius:999px;padding:.85rem 1.1rem;background:linear-gradient(90deg,#5a67f2,#00c8e8);color:#fff;font-weight:800;box-shadow:0 8px 24px #0003;cursor:pointer;">💬 Support inbox</button>
 <script>
 async function openAdminSupport(){const r=await fetchAdmin('/api/admin/support');const d=await r.json();if(!r.ok)return alert(d.error||'Could not load support inbox');const open=(d.conversations||[]).filter(x=>x.status==='open');if(!open.length)return alert('No open support conversations.');const lines=open.map((x,i)=>`${i+1}. ${x.brand?.name||'Brand'} — ${(x.support_messages||[]).slice(-1)[0]?.message||'No message'}`).join('\n');const pick=prompt(`Support inbox:\n\n${lines}\n\nEnter conversation number to reply:`);const c=open[Number(pick)-1];if(!c)return;const msg=prompt(`Reply to ${c.brand?.name||'brand'}:`);if(!msg?.trim())return;const reply=await fetchAdmin('/api/admin/support',{method:'POST',body:JSON.stringify({conversationId:c.id,message:msg})});alert(reply.ok?'Reply sent.':'Could not send reply.');}
+</script>
+<script>
+async function startSupportChat(){const sel=document.getElementById('supportBrandSelect');if(sel&&sel.options.length===1)(allBrands||[]).forEach(b=>sel.insertAdjacentHTML('beforeend',`<option value="${b.id}">${escapeHtml(b.name)}</option>`));const brandId=sel?.value,message=document.getElementById('supportNewMessage')?.value.trim();if(!brandId||!message)return alert('Select a brand and write a message.');const r=await fetchAdmin('/api/admin/support',{method:'POST',body:JSON.stringify({brandId,message})});if(!r.ok)return alert('Could not start chat.');document.getElementById('supportNewMessage').value='';loadSupportInbox();}
 </script>
 </body>
 </html>
