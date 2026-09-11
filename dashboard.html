@@ -6161,5 +6161,9 @@ function applyTopupPromo(){const hint=document.getElementById('tuPromoHint');if(
 function launchPromoCelebration(){const layer=document.createElement('div');Object.assign(layer.style,{position:'fixed',inset:'0',zIndex:'2147483647',pointerEvents:'none',overflow:'hidden'});for(let i=0;i<140;i++){const p=document.createElement('i');Object.assign(p.style,{position:'absolute',left:`${Math.random()*100}vw`,top:`-${10+Math.random()*80}px`,width:`${6+Math.random()*9}px`,height:`${10+Math.random()*15}px`,background:['#5a67f2','#00c8e8','#f59e0b','#ec4899','#22c55e','#f97316'][i%6],borderRadius:'2px',transform:`rotate(${Math.random()*360}deg)`,animation:`partyConfettiFall ${2.2+Math.random()*2.2}s cubic-bezier(.2,.7,.3,1) ${Math.random()*1.2}s forwards`});p.style.setProperty('--drift',`${(Math.random()-.5)*260}px`);p.style.setProperty('--spin',`${Math.random()*1440-720}deg`);layer.appendChild(p);}document.body.appendChild(layer);setTimeout(()=>layer.remove(),5200);}
 </script>
 <style>@keyframes partyConfettiFall{0%{transform:translate(0,0) rotate(0);opacity:0}8%{opacity:1}100%{transform:translate(var(--drift),115vh) rotate(var(--spin));opacity:0}}</style>
+<button id="supportFab" onclick="openSupportChat()" style="position:fixed;right:22px;bottom:22px;z-index:1000;border:0;border-radius:999px;padding:.8rem 1.1rem;background:linear-gradient(90deg,#5a67f2,#00c8e8);color:#fff;font-weight:800;box-shadow:0 8px 24px #0003;cursor:pointer;">💬 Contact support</button>
+<script>
+async function openSupportChat(){const message=prompt('Message our support team:');if(!message?.trim()||!activeBrandId)return;const r=await fetch(`${API}/api/brands/${activeBrandId}/support`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message})});alert(r.ok?'Message sent. We will reply soon.':'Could not send message.');}
+</script>
 </body>
 </html>
