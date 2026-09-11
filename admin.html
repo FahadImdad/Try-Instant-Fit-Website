@@ -431,6 +431,7 @@
       <button class="admin-tab active" data-tab="analytics" onclick="switchAdminTab('analytics')">📊 Analytics</button>
       <button class="admin-tab" data-tab="topups" onclick="switchAdminTab('topups')">💳 Top-Up Requests <span class="count" id="cntTopups" style="background:#fef3c7; color:#92400e;">0</span></button>
       <button class="admin-tab" data-tab="reports" onclick="switchAdminTab('reports')">🚩 Reports <span class="count" id="cntReports" style="background:#fee2e2; color:#991b1b;">0</span></button>
+      <button class="admin-tab" data-tab="support" onclick="switchAdminTab('support');loadSupportInbox()">💬 Support</button>
       <button class="admin-tab" data-tab="brands" onclick="switchAdminTab('brands')">🏢 Brands <span class="count" id="cntBrands">0</span></button>
       <button class="admin-tab" data-tab="promotions" onclick="switchAdminTab('promotions')">🏷️ Promotions</button>
     </div>
@@ -475,6 +476,7 @@
       </div>
       <div id="brandsList"></div>
     </div>
+    <div id="pane-support" class="admin-pane"><div class="sw-section"><h2>Support chat</h2><p>Vendor conversations and replies.</p><div id="supportInbox"><div class="empty"><p>Loading support conversations…</p></div></div></div></div>
     <div id="pane-promotions" class="admin-pane">
       <div class="sw-section"><h2>Promotions</h2><p>Manage automatic offers and promo codes separately. Each can be turned on or off independently.</p>
         <h3 style="margin:1.25rem 0 .35rem;">Automatic Promotional Offer</h3><p style="font-size:.8rem;color:var(--muted);">Applied automatically to selected brands—no code required.</p>
@@ -666,6 +668,8 @@ function escapeHtml(s) {
 let allReports = [];
 let reportFilter = '';
 
+async function loadSupportInbox(){const el=document.getElementById('supportInbox');if(!el)return;const r=await fetchAdmin('/api/admin/support');const d=await r.json();if(!r.ok){el.innerHTML='<p>Could not load support.</p>';return;}el.innerHTML=(d.conversations||[]).map(c=>`<div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin:.6rem 0;"><strong>${escapeHtml(c.brand?.name||'Vendor')}</strong><div style="margin:.6rem 0;max-height:180px;overflow:auto;">${(c.support_messages||[]).map(m=>`<div style="padding:.35rem 0;"><b>${m.sender_type==='admin'?'You':'Vendor'}:</b> ${escapeHtml(m.message)}</div>`).join('')}</div><div style="display:flex;gap:.5rem;"><input id="reply-${c.id}" placeholder="Reply to vendor" style="flex:1;"><button class="btn btn-primary" onclick="replySupport('${c.id}')">Send reply</button></div></div>`).join('')||'<p>No vendor conversations yet.</p>';}
+async function replySupport(id){const input=document.getElementById(`reply-${id}`);if(!input?.value.trim())return;const r=await fetchAdmin('/api/admin/support',{method:'POST',body:JSON.stringify({conversationId:id,message:input.value.trim()})});if(!r.ok)return alert('Could not send reply');input.value='';loadSupportInbox();}
 async function loadReports() {
   try {
     const res = await fetchAdmin(`/api/admin/reports`);
