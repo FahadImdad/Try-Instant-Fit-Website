@@ -549,6 +549,7 @@
 </div>
 
 <script>
+async function editPromotion(type,id,x){const nameOrCode=prompt(type==='offer'?'Offer name':'Promo code',x.name||x.code);if(nameOrCode===null)return;const discount=prompt('Discount percentage (5-50)',x.discount_percent);if(discount===null)return;const url=type==='offer'?`/api/admin/promotional-offers/${id}`:`/api/admin/promo-codes/${id}`;const body=type==='offer'?{name:nameOrCode,discountPercent:Number(discount)}:{code:nameOrCode,discountPercent:Number(discount)};const r=await fetchAdmin(url,{method:'PATCH',body:JSON.stringify(body)});const d=await r.json();if(!r.ok)return alert(d.error||'Could not update promotion');alert('Promotion updated.');loadPromotionLists();}
 // Same-origin via Vercel rewrite (see vercel.json). Avoids adblock/CORS issues.
 const API = '';
 
@@ -1392,5 +1393,8 @@ resetPromotionDiscountDefaults();
 </script>
 
 <link rel="stylesheet" href="/css/platform-polish.css">
+<script>
+async function loadPromotionLists(){const [a,c]=await Promise.all([fetchAdmin('/api/admin/promotional-offers').then(r=>r.json()),fetchAdmin('/api/admin/promo-codes').then(r=>r.json())]);const row=(x,t)=>`<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);border-radius:10px;padding:.7rem;margin:.4rem 0;gap:1rem;"><strong>${escapeHtml(x.name||x.code)}</strong><span>${x.discount_percent}% off · <label class="promo-switch"><input type="checkbox" ${x.active?'checked':''} onchange="togglePromotion('${t}','${x.id}',this)"><span class="promo-switch-track"><span class="promo-switch-knob"></span></span><span class="promo-switch-label">${x.active?'On':'Off'}</span></label> <button class="btn btn-secondary" onclick='editPromotion(${JSON.stringify(t)},${JSON.stringify(x.id)},${JSON.stringify(x)})'>Edit</button> <button class="btn btn-secondary" onclick="deletePromotion('${t}','${x.id}')">Delete</button></span></div>`;const o=document.getElementById('offerList'),d=document.getElementById('codeList');if(o)o.innerHTML='<h3>Created automatic offers</h3>'+((a.offers||[]).map(x=>row(x,'offer')).join('')||'<p>No offers created yet.</p>');if(d)d.innerHTML='<h3>Created promo codes</h3>'+((c.promoCodes||[]).map(x=>row(x,'code')).join('')||'<p>No promo codes created yet.</p>');}
+</script>
 </body>
 </html>
