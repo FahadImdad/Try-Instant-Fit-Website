@@ -6136,5 +6136,9 @@ function applyTopupPromo(){if(!document.getElementById('tuUsePromoCode').checked
 <script>
 function applyTopupPromo(){if(!document.getElementById('tuUsePromoCode').checked){alert('Please turn on “Use promo code instead” first.');return;}const code=(document.getElementById('tuPromoCode').value||'').trim().toUpperCase();const p=topupPromotions.promoCodes?.find(x=>x.code===code);if(!p){selectedTopupDiscount=0;document.getElementById('tuPromoHint').textContent='Promo code invalid.';recalcTopup();alert('Promo code invalid.');return;}if(!p.active){selectedTopupDiscount=0;document.getElementById('tuPromoHint').textContent='Promo code expired.';recalcTopup();alert('Promo code expired.');return;}selectedTopupDiscount=Number(p.discount_percent);document.getElementById('tuPromoHint').textContent=`🎉 Congratulations! Promo code ${p.code} activated — ${selectedTopupDiscount}% off.`;recalcTopup();const b=document.getElementById('tuOfferBanner');b.classList.remove('promo-celebrate');void b.offsetWidth;b.classList.add('promo-celebrate');launchPromoCelebration();alert(`🎉 Congratulations! ${selectedTopupDiscount}% discount activated.`);}
 </script>
+<script>
+function showPromoSuccess(discount){const n=document.createElement('div');n.textContent=`🎉 Congratulations! ${discount}% discount activated`;Object.assign(n.style,{position:'fixed',top:'24px',left:'50%',transform:'translateX(-50%)',zIndex:'2147483647',padding:'16px 24px',borderRadius:'14px',background:'linear-gradient(90deg,#5a67f2,#00c8e8)',color:'#fff',fontWeight:'800',fontSize:'18px',boxShadow:'0 12px 35px #0004'});document.body.appendChild(n);setTimeout(()=>n.remove(),3500);}
+const originalApplyTopupPromo=window.applyTopupPromo;window.applyTopupPromo=function(){const before=selectedTopupDiscount;originalApplyTopupPromo();if(selectedTopupDiscount>0&&selectedTopupDiscount!==before){showPromoSuccess(selectedTopupDiscount);launchPromoCelebration();}};
+</script>
 </body>
 </html>
