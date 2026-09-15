@@ -964,6 +964,10 @@ function renderBrands() {
           else if (remaining === 0) creditClass = 'low';
           else if (usagePct >= 80) creditClass = 'warn';
           const nameAttr = JSON.stringify(b.name).replace(/"/g, '&quot;');
+          const configuredRate = Number(b.price_per_tryon_usd) || 0.25;
+          const standardRate = configuredRate === 0.125 ? 0.25 : configuredRate;
+          const promotionDiscount = Number(b.active_promotional_discount) || 0;
+          const promotionalRate = standardRate * (1 - promotionDiscount / 100);
           return `
             <tr>
               <td data-label="Brand">
@@ -986,11 +990,14 @@ function renderBrands() {
                   <div><span style="font-weight:800; color:#ec4899;">${b.process_count || 0}</span> <span style="font-size:.72rem; color:var(--muted);">uploads</span></div>
                 </div>
               </td>
-              <td data-label="Rate">$${Number(b.price_per_tryon_usd).toFixed(3)}</td>
+              <td data-label="Rate">
+                <strong>$${standardRate.toFixed(3)}</strong>
+                ${promotionDiscount ? `<div style="font-size:.7rem;color:#059669;font-weight:700;margin-top:.2rem;">Promo: $${promotionalRate.toFixed(3)} (${promotionDiscount}% off)</div>` : ''}
+              </td>
               <td data-label="Actions">
                 <div class="row-actions">
                   <button class="btn btn-secondary" onclick="toggleBrandSettings('${b.id}')">Brand settings ▾</button>
-                  ${!b.unlimited ? `<button class="btn btn-primary" onclick="openAddCredits('${b.id}', ${nameAttr}, ${b.price_per_tryon_usd})">+ Credits</button>` : ''}
+                  ${!b.unlimited ? `<button class="btn btn-primary" onclick="openAddCredits('${b.id}', ${nameAttr}, ${standardRate})">+ Credits</button>` : ''}
                   <a class="btn btn-secondary" href="/dashboard?id=${b.id}" target="_blank">Dashboard ↗</a>
                   <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteBrand('${b.id}', ${nameAttr})">Delete</button>
                 </div>
