@@ -1802,7 +1802,7 @@
             <button type="button" id="profileToggleBtn" style="display:none;"></button>
             <div id="dashProfileGrid" style="display:none;"></div>
           </div>
-          <div style="display: flex; gap: .35rem; align-items: center; flex-wrap: nowrap; flex-shrink: 0;">
+          <div class="header-action-group" style="display: flex; gap: .35rem; align-items: center; flex-wrap: nowrap; flex-shrink: 0;">
             <a href="https://wa.me/923223146800?text=Hi%20Try%20Instant%20Fit%20Support" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-color:#25d366;text-decoration:none;white-space:nowrap;"><img src="/assets/whatsapp.svg" alt="" style="width:1.6em;height:1.6em;vertical-align:middle;margin-right:.25rem;border-radius:5px;"> <span class="header-action-label">WhatsApp</span></a>
             <button class="btn btn-primary btn-sm" type="button" onclick="openTopupModal()" style="white-space:nowrap;">💳 <span class="header-action-label">Top Up</span></button>
             <span id="liveIndicator" title="Auto-refreshes every 30 seconds while this tab is visible." style="display:none; font-size:.72rem; color: var(--muted); font-weight:600; align-self:center;">
@@ -1831,6 +1831,13 @@
               </div>
             </div>
           </div>
+          <style>
+            .header-action-group > a:first-child{order:3}
+            .header-action-group > button{order:4}
+            .header-action-group > #liveIndicator{order:1}
+            .header-action-group > div:nth-of-type(1){order:2}
+            .header-action-group > div:nth-of-type(2){order:5}
+          </style>
         </div>
 
         <!-- Tab navigation (Facebook-style top nav, visible all screens) -->
@@ -6212,14 +6219,6 @@ async function sendVendorSupport(){const i=document.getElementById('vendorSuppor
 (function(){
   const old=document.querySelector('.dash-tab-nav [data-tab="support"]');
   if(old) old.remove();
-  const nav=document.querySelector('.dash-tab-nav');
-  if(nav && !nav.querySelector('[data-whatsapp-support]')){
-    const a=document.createElement('a');
-    a.dataset.whatsappSupport='1'; a.className='tab-btn';
-    a.href='https://wa.me/923223146800?text=Hi%20Try%20Instant%20Fit%20Support';
-    a.target='_blank'; a.rel='noopener'; a.innerHTML='<img src="/assets/whatsapp.svg" alt="" style="width:1.2em;height:1.2em;vertical-align:middle;margin-right:.25rem;"> <span class="tab-label">WhatsApp Support</span>';
-    nav.appendChild(a);
-  }
   const pane=document.getElementById('tab-support'); if(pane) pane.remove();
 })();
 </script>
