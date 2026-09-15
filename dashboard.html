@@ -6203,5 +6203,21 @@ function launchPromoCelebration(){const layer=document.createElement('div');Obje
 async function loadVendorSupport(){if(!activeBrandId)return;const r=await fetch(`${API}/api/brands/${activeBrandId}/support`,{cache:'no-store'}),d=await r.json(),el=document.getElementById('vendorSupportMessages');if(el)el.innerHTML=(d.conversation?.support_messages||[]).map(m=>`<div style="padding:.6rem;margin:.4rem 0;border-radius:10px;background:${m.sender_type==='admin'?'#eef2ff':'#f1f5f9'}"><b>${m.sender_type==='admin'?'Support':'You'}:</b> ${escapeHtml(m.message)}</div>`).join('')||'<p>No messages yet. How can we help?</p>';}
 async function sendVendorSupport(){const i=document.getElementById('vendorSupportInput');if(!i?.value.trim()||!activeBrandId)return;const r=await fetch(`${API}/api/brands/${activeBrandId}/support`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:i.value.trim()})});if(r.ok){i.value='';loadVendorSupport();}}
 </script>
+<script>
+// WhatsApp is the single support channel; remove the legacy in-app chat tab.
+(function(){
+  const old=document.querySelector('.dash-tab-nav [data-tab="support"]');
+  if(old) old.remove();
+  const nav=document.querySelector('.dash-tab-nav');
+  if(nav && !nav.querySelector('[data-whatsapp-support]')){
+    const a=document.createElement('a');
+    a.dataset.whatsappSupport='1'; a.className='tab-btn';
+    a.href='https://wa.me/923223146800?text=Hi%20Try%20Instant%20Fit%20Support';
+    a.target='_blank'; a.rel='noopener'; a.innerHTML='💬 <span class="tab-label">WhatsApp Support</span>';
+    nav.appendChild(a);
+  }
+  const pane=document.getElementById('tab-support'); if(pane) pane.remove();
+})();
+</script>
 </body>
 </html>
