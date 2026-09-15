@@ -3597,7 +3597,7 @@
         <div class="passcode-row">
           <span class="passcode-code">${escapeHtml(p.code)}</span>
           <span class="passcode-label ${p.customer_label ? '' : 'passcode-label-empty'}">${p.customer_label ? escapeHtml(p.customer_label) : '(no label)'}</span>
-          <span class="passcode-usage"><strong>${p.used_count}/${p.use_limit}</strong> used</span>
+          <span class="passcode-usage"><strong>${Math.max(0, remaining)} left</strong></span>
           <span>${inactive ? '<span class="status-badge pill-inactive">Disabled</span>' : exhausted ? '<span class="status-badge pill-inactive">Used Up</span>' : '<span class="status-badge pill-active">Active</span>'}</span>
           <div style="display: flex; gap: .35rem;">
             <button class="btn btn-secondary" style="font-size:.75rem; padding:.35rem .6rem;" onclick="viewPasscodeTryons('${p.id}', ${JSON.stringify(p.code).replace(/"/g, '&quot;')})">Try-Ons</button>
