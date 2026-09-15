@@ -1,7 +1,7 @@
 // Region-aware homepage — PURE CLIENT-SIDE (no build step, no middleware).
-// Default page = Pakistan (cheap pricing, flag shown). For non-PK visitors we
-// swap to international pricing and hide the flag. If detection fails, we leave
-// the Pakistan default in place (safe fallback).
+// For non-PK visitors we keep USD pricing and hide Pakistan-only conversion.
+// If detection fails, default to the global view so international visitors are
+// never shown PKR by mistake.
 //
 // This file only reads a country code and edits text/visibility. It never
 // touches the dashboard, the API, or uploads — so it cannot break the platform.
@@ -19,12 +19,14 @@
   };
 
   function applyPakistan() {
+    document.documentElement.dataset.tifCountry = 'PK';
     var flag = document.getElementById('pkFlag');
     if (flag) flag.style.display = 'block';
     // Pricing is already the Pakistan default in the HTML — nothing to change.
   }
 
-  function applyGlobal() {
+  function applyGlobal(country) {
+    document.documentElement.dataset.tifCountry = country || 'GLOBAL';
     var flag = document.getElementById('pkFlag');
     if (flag) flag.style.display = 'none';
 
@@ -42,8 +44,11 @@
   }
 
   function decide(country) {
-    if (country && country !== 'PK') applyGlobal();
+    if (country && country !== 'PK') applyGlobal(country);
     else applyPakistan();
+    document.dispatchEvent(new CustomEvent('tif:region-ready', {
+      detail: { country: document.documentElement.dataset.tifCountry }
+    }));
   }
 
   function getCountry() {
@@ -57,13 +62,13 @@
     fetch('https://api.country.is/', { cache: 'no-store' })
       .then(function (r) { return r.json(); })
       .then(function (d) {
-        var country = (d && d.country) || 'PK';
+        var country = (d && d.country) || 'GLOBAL';
         try { localStorage.setItem(CACHE_KEY, JSON.stringify({ country: country, t: Date.now() })); } catch (e) {}
         decide(country);
       })
       .catch(function () {
         // Detection failed → keep Pakistan default (safe), show the flag.
-        applyPakistan();
+        decide('GLOBAL');
       });
   }
 
