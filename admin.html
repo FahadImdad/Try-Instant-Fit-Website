@@ -779,7 +779,7 @@ function renderReports() {
         ${r.resolution_note ? `<div style="font-size:.78rem; color:var(--muted); padding:.5rem .65rem; background:var(--surface); border-radius: var(--r-sm); margin-bottom:.5rem;"><strong>Resolution:</strong> ${escapeHtml(r.resolution_note)}${r.resolved_by ? ` · ${escapeHtml(r.resolved_by)}` : ''}</div>` : ''}
         ${isPending ? `
           <div class="report-actions" style="display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.25rem;">
-            ${refundEligible ? `<button class="btn btn-primary btn-sm" onclick="resolveReport('${r.id}', 'approve')" style="background:#10b981; border-color:transparent; flex:1 1 auto; min-width:0;">✓ Refund $0.125</button>` : ''}
+            ${refundEligible ? `<button class="btn btn-primary btn-sm" onclick="resolveReport('${r.id}', 'approve')" style="background:#10b981; border-color:transparent; flex:1 1 auto; min-width:0;">✓ Refund 1 credit</button>` : ''}
             <button class="btn btn-secondary btn-sm" onclick="resolveReport('${r.id}', 'deny')" style="color:#991b1b; border-color:#fca5a5; flex:1 1 auto; min-width:0;">✕ Deny</button>
             <button class="btn btn-secondary btn-sm" onclick="resolveReport('${r.id}', 'close')" style="flex:1 1 auto; min-width:0;">Close</button>
           </div>
@@ -794,7 +794,7 @@ async function resolveReport(reportId, action) {
     note = prompt(action === 'deny' ? 'Reason for denying (optional, shown to brand):' : 'Closing note (optional):');
     if (note === null) return; // user cancelled
   } else if (action === 'approve') {
-    if (!confirm('Approve this report and refund 1 credit ($0.125) to the brand?')) return;
+    if (!confirm('Approve this report and refund 1 credit to the brand?')) return;
   }
   try {
     const res = await fetchAdmin(`/api/admin/reports/${reportId}`, {
@@ -1120,7 +1120,7 @@ async function deleteBrand(brandId, brandName) {
 }
 
 let acBrandId = null;
-let acBrandPrice = 0.125;
+let acBrandPrice = 0.25;
 
 function openAddCredits(brandId, brandName, price) {
   acBrandId = brandId;
