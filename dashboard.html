@@ -2436,7 +2436,7 @@
               <span style="font-size:.95rem; font-weight:700;">Total</span>
               <span><span id="tuOriginalTotal" style="display:none;margin-right:.6rem;color:var(--muted);text-decoration:line-through;font-size:1.05rem;font-weight:700;"></span><span style="font-size: 1.65rem; font-weight: 900; color:var(--ink);" id="tuTotal">$—</span></span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: .25rem;">
+            <div id="tuLocalRow" style="display: flex; justify-content: space-between; align-items: center; margin-top: .25rem;">
               <span style="font-size:.75rem; color:var(--muted);">Local (~)</span>
               <span style="font-size:.85rem; color:var(--muted);" id="tuLocal">Rs —</span>
             </div>
@@ -2694,7 +2694,7 @@
         <h4>Support</h4>
         <ul class="footer-links">
           <li><a href="mailto:hello@tryinstantfit.com">hello@tryinstantfit.com</a></li>
-          <li><a href="https://wa.me/923147800991" style="display:inline-flex; align-items:center; gap:.4rem;"><img src="/assets/whatsapp.svg" alt="" style="width:1em; height:1em;"> WhatsApp</a></li>
+          <li><a href="https://wa.me/923223146800" style="display:inline-flex; align-items:center; gap:.4rem;"><img src="/assets/whatsapp.svg" alt="" style="width:1em; height:1em;"> WhatsApp</a></li>
         </ul>
       </div>
     </div>
@@ -3099,8 +3099,8 @@
       </div>
       <div class="source-stat">
         <div class="source-stat-label">Cost</div>
-        <div class="source-stat-val">$${((gl.total || 0) * (Number(brand.price_per_tryon_usd) || 0.125)).toFixed(2)}</div>
-        <div class="source-stat-sub">at $${(Number(brand.price_per_tryon_usd) || 0.125).toFixed(3)}/try-on</div>
+        <div class="source-stat-val">$${((gl.total || 0) * (Number(brand.price_per_tryon_usd) || 0.25)).toFixed(2)}</div>
+        <div class="source-stat-sub">at $${(Number(brand.price_per_tryon_usd) || 0.25).toFixed(3)}/try-on</div>
       </div>
     `;
 
@@ -3209,8 +3209,8 @@
       </div>
       <div class="source-stat">
         <div class="source-stat-label">Total Spend</div>
-        <div class="source-stat-val">$${((Number(brand.tryon_credits_used) || 0) * (Number(brand.price_per_tryon_usd) || 0.125)).toFixed(2)}</div>
-        <div class="source-stat-sub">${fmt(brand.tryon_credits_used || 0)} credit${(brand.tryon_credits_used || 0) === 1 ? '' : 's'} used · $${(Number(brand.price_per_tryon_usd) || 0.125).toFixed(3)}/try-on</div>
+        <div class="source-stat-val">$${((Number(brand.tryon_credits_used) || 0) * (Number(brand.price_per_tryon_usd) || 0.25)).toFixed(2)}</div>
+        <div class="source-stat-sub">${fmt(brand.tryon_credits_used || 0)} credit${(brand.tryon_credits_used || 0) === 1 ? '' : 's'} used · $${(Number(brand.price_per_tryon_usd) || 0.25).toFixed(3)}/try-on</div>
       </div>
     `;
 
@@ -5820,7 +5820,7 @@
       if (typeof d.rate === 'number' && d.rate > 0) USD_TO_PKR = d.rate;
     } catch (_) { /* keep fallback */ }
   })();
-  const TIF_WHATSAPP = '923147800991';
+  const TIF_WHATSAPP = '923223146800';
   let topupPromotions = { offers: [], promoCodes: [] }, selectedTopupDiscount = 0, promoCelebrationShown = false;
   async function loadTopupPromotions(){ if(!activeBrandId)return; try{const r=await fetch(`${API}/api/brands/${activeBrandId}/promotions`,{cache:'no-store'});if(r.ok)topupPromotions=await r.json();const offer=topupPromotions.offers?.[0];document.getElementById('tuOfferChoice').style.display=offer?'block':'none';document.getElementById('tuPromoEntry').style.display=offer?'none':'flex';document.getElementById('tuPromoHint').textContent=offer?`${offer.name}: ${offer.discount_percent}% automatic discount applied.`:'';recalcTopup();if(offer)launchPromoCelebration();}catch(_){} }
   function toggleTopupPromoMode(){const use=document.getElementById('tuUsePromoCode').checked;selectedTopupDiscount=0;document.getElementById('tuPromoEntry').style.display=use?'flex':'none';document.getElementById('tuPromoHint').textContent=use?'Enter a promo code to replace the automatic offer.':(topupPromotions.offers?.[0]?`${topupPromotions.offers[0].name}: ${topupPromotions.offers[0].discount_percent}% automatic discount applied.`:'');recalcTopup();}
@@ -5870,7 +5870,7 @@
       document.getElementById('tuConversion').style.display = 'none';
       return;
     }
-    const rate = (lastDashboardData?.brand?.price_per_tryon_usd) ? Number(lastDashboardData.brand.price_per_tryon_usd) : 0.125;
+    const rate = (lastDashboardData?.brand?.price_per_tryon_usd) ? Number(lastDashboardData.brand.price_per_tryon_usd) : 0.25;
     const automatic = document.getElementById('tuUsePromoCode')?.checked ? 0 : Number(topupPromotions.offers?.[0]?.discount_percent || 0);
     const discount = selectedTopupDiscount || automatic;
     document.getElementById('tuOriginalTotal').textContent = discount ? `$${(credits * rate).toFixed(2)}` : '';
@@ -5882,11 +5882,13 @@
     if(discount && !promoCelebrationShown){promoCelebrationShown=true;setTimeout(()=>launchPromoCelebration(),80);}
     const usd = credits * rate * (1 - discount / 100);
     const pkr = Math.round(usd * USD_TO_PKR);
+    const isPakistanBrand = ['PK', 'PAKISTAN'].includes(String(lastDashboardData?.brand?.country || '').trim().toUpperCase());
     document.getElementById('tuCreditsLine').textContent = `${fmt(credits)} credits`;
-    document.getElementById('tuRateLine').textContent = `$${rate.toFixed(3)} / try-on (≈ Rs ${fmt(Math.round(rate * USD_TO_PKR))})`;
+    document.getElementById('tuRateLine').textContent = `$${rate.toFixed(3)} / try-on${isPakistanBrand ? ` (≈ Rs ${fmt(Math.round(rate * USD_TO_PKR))})` : ''}`;
     document.getElementById('tuTotal').textContent = `$${usd.toFixed(2)}`;
     document.getElementById('tuPromoHint').textContent = discount ? `${selectedTopupDiscount ? 'Promo code' : 'Promotional offer'}: ${discount}% discount applied.` : '';
     document.getElementById('tuLocal').textContent = `Rs ${fmt(pkr)}`;
+    document.getElementById('tuLocalRow').style.display = isPakistanBrand ? 'flex' : 'none';
     document.getElementById('tuConversion').style.display = 'block';
   }
 
@@ -5909,11 +5911,20 @@
     }
 
     const brand = lastDashboardData?.brand || {};
-    const rate = brand.price_per_tryon_usd ? Number(brand.price_per_tryon_usd) : 0.125;
+    const rate = brand.price_per_tryon_usd ? Number(brand.price_per_tryon_usd) : 0.25;
     const automatic = document.getElementById('tuUsePromoCode')?.checked ? 0 : Number(topupPromotions.offers?.[0]?.discount_percent || 0);
     const discount = selectedTopupDiscount || automatic;
+    const selectedPromoCode = selectedTopupDiscount
+      ? (document.getElementById('tuPromoCode').value || '').trim().toUpperCase()
+      : '';
+    const activePromotion = selectedTopupDiscount
+      ? topupPromotions.promoCodes?.find(x => x.code === selectedPromoCode)
+      : topupPromotions.offers?.[0];
+    const discountedRate = rate * (1 - discount / 100);
+    const originalUsd = credits * rate;
     const usd = credits * rate * (1 - discount / 100);
     const pkr = Math.round(usd * USD_TO_PKR);
+    const isPakistanBrand = ['PK', 'PAKISTAN'].includes(String(brand.country || '').trim().toUpperCase());
     const receiptId = document.getElementById('tuReceiptId').textContent;
     const brandName = brand.name || 'My brand';
 
@@ -5927,11 +5938,14 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount_usd: usd,
-          amount_local: pkr,
-          local_currency: 'PKR',
+          amount_local: isPakistanBrand ? pkr : null,
+          local_currency: isPakistanBrand ? 'PKR' : null,
           credits_requested: credits,
           payment_method: 'whatsapp',
           receipt_id: receiptId,
+          notes: discount
+            ? `${selectedPromoCode ? `Promo code ${selectedPromoCode}` : `Offer ${activePromotion?.name || 'automatic promotion'}`} · ${discount}% off · base $${rate.toFixed(3)} · final $${discountedRate.toFixed(3)} per try-on`
+            : `Standard rate · $${rate.toFixed(3)} per try-on`,
         }),
       });
       if (!res.ok) {
@@ -5954,8 +5968,15 @@
       `Brand: *${brandName}*`,
       ``,
       `Try-on credits: *${fmt(credits)}*`,
-      `Rate: $${rate.toFixed(3)} / try-on`,
-      `Total: *$${usd.toFixed(2)}* (~ Rs ${fmt(pkr)})`,
+      `Standard rate: $${rate.toFixed(3)} / try-on`,
+      ...(discount ? [
+        `${selectedPromoCode ? 'Promo code' : 'Promotion'}: *${selectedPromoCode || activePromotion?.name || 'Automatic offer'}*`,
+        `Discount: *${discount}% off*`,
+        `Promotional rate: *$${discountedRate.toFixed(3)} / try-on*`,
+        `Subtotal: $${originalUsd.toFixed(2)}`,
+        `You save: *$${(originalUsd - usd).toFixed(2)}*`,
+      ] : []),
+      `Total: *$${usd.toFixed(2)}*${isPakistanBrand ? ` (~ Rs ${fmt(pkr)})` : ''}`,
       ``,
       `Hi! I'd like to top up ${fmt(credits)} try-on credits.`,
       `Please share your bank details so I can complete the payment.`,

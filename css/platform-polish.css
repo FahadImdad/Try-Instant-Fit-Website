@@ -16,6 +16,17 @@ body { color: var(--ui-ink); }
 ::selection { background: rgba(37, 99, 235, .16); }
 
 /* Calm, deliberate motion. Continuous animations should never feel frantic. */
+
+/* Temporary product check: remove customer/vendor review and credit-refund UI
+   without deleting report history or the admin-side audit workflow. */
+.tab-btn[data-tab="refunds"],
+#tab-refunds,
+#reportBlock,
+#viReportWrap,
+#qrReportWrap,
+[onclick^="reportProductImage("] {
+  display: none !important;
+}
 .spinner-lg { animation-duration: 1.45s !important; }
 .animate-up { animation-duration: .8s !important; }
 .float { animation-duration: 7s !important; }

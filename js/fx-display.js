@@ -1,4 +1,4 @@
-// Append "(≈ PKR X)" next to any element with data-usd="0.125".
+// Append an approximate PKR value only for visitors detected in Pakistan.
 // Rate is cached server-side at /api/fx (refreshes daily); we cache in
 // sessionStorage too so the network call is at most once per tab.
 (function () {
@@ -43,6 +43,7 @@
   }
 
   function init() {
+    if (document.documentElement.dataset.tifCountry !== 'PK') return;
     if (!document.querySelector('[data-usd]')) return;
     getRate().then(render).catch(function (err) {
       console.warn('[fx-display] using fallback rate:', err.message);
@@ -50,9 +51,14 @@
     });
   }
 
+  function initWhenRegionReady() {
+    if (document.documentElement.dataset.tifCountry) init();
+    else document.addEventListener('tif:region-ready', init, { once: true });
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', initWhenRegionReady);
   } else {
-    init();
+    initWhenRegionReady();
   }
 })();
