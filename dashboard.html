@@ -2025,7 +2025,6 @@
             </select>
             <div class="field-hint">Don't see your product? <a href="#" onclick="closeCreateQrModal(); openAddProduct(); return false;" style="color: var(--indigo); font-weight:600;">Add a new product first</a> — image gets pre-processed for AI.</div>
           </div>
-          <div class="field"><label for="epcExpiry">Passcode expiry</label><select id="epcExpiry" style="width:100%;"><option value="">No automatic expiry</option><option value="15m">15 minutes</option><option value="30m">30 minutes</option><option value="1h">1 hour</option><option value="2h">2 hours</option><option value="6h">6 hours</option><option value="1d">1 day</option></select><div class="field-hint">Passcode automatically deactivates after the selected time.</div></div>
           <div class="field setting-toggle-row">
             <label for="qrRequiresPasscode" class="setting-toggle-copy">🔑 Require a passcode to scan this QR</label>
             <label class="switch-toggle" for="qrRequiresPasscode">
@@ -2100,6 +2099,7 @@
             <div class="field-hint" id="epcRemoveHint">Remove unused allowance only. Already-used tries cannot be removed.</div>
           </div>
           <div class="field" style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);"><strong>Already used</strong><span id="epcUsedLocked" style="font-weight:800;color:var(--muted);">🔒 0 try-ons (locked)</span></div>
+          <div class="field"><label for="epcExpiry">Passcode expiry</label><select id="epcExpiry" style="width:100%;"><option value="">No automatic expiry</option><option value="15m">15 minutes</option><option value="30m">30 minutes</option><option value="1h">1 hour</option><option value="2h">2 hours</option><option value="6h">6 hours</option><option value="1d">1 day</option></select><div class="field-hint">Passcode automatically deactivates after the selected time.</div></div>
           <div class="field setting-toggle-row">
             <div><label for="epcActive" class="setting-toggle-copy">Passcode active</label><div class="field-hint">Turn off to stop the customer using this passcode.</div></div>
             <label class="switch-toggle" for="epcActive"><input type="checkbox" id="epcActive" onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">Off</span></label>
