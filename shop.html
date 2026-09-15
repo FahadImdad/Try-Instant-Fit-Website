@@ -113,7 +113,10 @@
     .shop-results-subtitle { margin:.2rem 0 0; color:rgba(255,255,255,.58); font-size:.86rem; }
 
     /* Grid — 2 up on phones (tight, app-like), scaling up on wider screens. */
-    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; align-items: start; }
+    /* Cards in a row share a height so their buttons line up. The slack goes
+       below the buttons (card-body flex:1 + card-actions margin-top:auto)
+       rather than opening a white gap above them. */
+    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; align-items: stretch; }
     @media (min-width: 560px) { .shop-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; } }
     @media (min-width: 980px) { .shop-grid { grid-template-columns: repeat(4, 1fr); gap: 1.15rem; } }
 
@@ -122,19 +125,22 @@
        otherwise inset every product image behind a white frame on mobile. */
     .shop-grid .card {
       background: #fff; border-radius: 12px; overflow: hidden;
-      display: flex; flex-direction: column; padding: 0; box-shadow: 0 8px 20px rgba(0,0,0,.16); border: 1px solid rgba(255,255,255,.55);
+      display: flex; flex-direction: column; height: 100%; padding: 0; box-shadow: 0 8px 20px rgba(0,0,0,.16); border: 1px solid rgba(255,255,255,.55);
       transition: transform .12s;
     }
     .shop-grid .card:active { transform: scale(.98); }
 
     .card-media { display: block; position:relative; overflow:hidden; background: #182442; padding: 0; margin: 0; line-height: 0; }
     .card-media.has-image::before { display:none; }
-    .card-img-bg { position:absolute; z-index:0; inset:-28px; width:calc(100% + 56px); height:calc(100% + 56px); object-fit:cover; filter:blur(30px) saturate(1.18); opacity:.98; transform:scale(1.1); }
+    /* Blurred copy of the photo fills the frame behind it, so a portrait or
+       square image that can't cover the 4:5 box sits on its own colours
+       instead of a bare letterbox. Sits under .card-img (z-index 0 vs 1). */
+    .card-img-bg { position:absolute; z-index:0; inset:-28px; width:calc(100% + 56px); height:calc(100% + 56px); object-fit:cover; filter:blur(26px) saturate(1.3) brightness(.82); opacity:1; transform:scale(1.12); }
     .card-img, .card-img-ph { width: 100%; aspect-ratio: 4/5; display: block; }
     .card-img { position:relative; z-index:1; object-fit: contain; object-position: center; background: transparent; }
     .card-img-ph { background: linear-gradient(135deg,#5a67f2,#00c8e8); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
 
-    .card-body { padding: .7rem .72rem .75rem; display: flex; flex-direction: column; }
+    .card-body { padding: .7rem .72rem .75rem; display: flex; flex: 1; flex-direction: column; }
     .card-cat { font-size: .68rem; color: #748096; margin: 0 0 .18rem; text-transform: uppercase; letter-spacing: .07em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .card-name {
       font-size: .94rem; font-weight: 750; color: var(--text); line-height: 1.25; margin: 0 0 .25rem;
@@ -142,21 +148,31 @@
     }
     .card-price { font-size: 1rem; font-weight: 800; color: var(--brand); margin: 0 0 .55rem; }
     .card-price.empty { display: none; }   /* no filler row when there's no price */
-    /* No margin-top:auto — cards size to content (see .shop-grid align-items:start),
-       so short cards don't stretch tall with wasted white space. */
-    .card-actions { display: flex; flex-direction: row; gap: .45rem; min-height:2.7rem; }
+    /* margin-top:auto pins the buttons to the bottom of the card so they line
+       up across a row. The text rows above stay top-aligned. */
+    .card-actions { display: flex; flex-direction: row; gap: .45rem; margin-top: auto; padding-top: .5rem; min-height:2.7rem; }
+    /* flex:1 with min-width:0 lets both buttons shrink inside narrow cards.
+       Without min-width:0 a flex item refuses to go below its content width,
+       so "Buy Now" pushed past the card edge on small screens. clamp() scales
+       the label with the viewport instead of needing a breakpoint per width. */
     .card-btn {
-      width: 100%; box-sizing: border-box; padding: .48rem .3rem; border-radius: 7px;
+      min-width: 0; box-sizing: border-box; padding: .48rem .3rem; border-radius: 7px;
       font-size: .84rem; font-weight: 750; cursor: pointer; font-family: inherit;
       text-decoration: none; display: flex; align-items: center; justify-content: center; gap: .25rem;
-      border: none; transition: all .15s; white-space: nowrap; flex:1;
+      border: none; transition: all .15s; white-space: nowrap; flex:1 1 0;
     }
     .card-btn.try { background: var(--brand); color: var(--brand-contrast); }
     .card-btn.try:active { background: var(--brand-dark); }
     /* Restore the original Buy Now button treatment. */
-    .card-btn.buy { background: #fff; color: #15803d; border: 1.5px solid #16a34a; padding: .45rem .3rem; font-size: .92rem; }
+    .card-btn.buy { background: #fff; color: #15803d; border: 1.5px solid #16a34a; padding: .45rem .3rem; font-size: .88rem; }
     .card-btn.buy:hover { background: #f0fdf4; }
     .card-btn-placeholder { visibility:hidden; pointer-events:none; }
+    /* Narrow cards can't fit two buttons side by side without clipping the
+       labels, so stack them instead. Full words stay readable at every width. */
+    @media (max-width: 900px) {
+      .card-actions { flex-direction: column; gap: .35rem; }
+      .card-btn { width: 100%; flex: 0 0 auto; }
+    }
 
     /* Phone catalogue cards must follow their content instead of inheriting
        equal-height desktop rows. This prevents the large blank lower half and
@@ -171,8 +187,8 @@
       .card-img, .card-img-ph { height:auto; aspect-ratio:auto; object-fit:initial; }
       .card-media { border-radius:12px 12px 0 0; }
       .card-actions { margin-top:auto; min-height:0; gap:.35rem; padding-top:.75rem; }
-      .card-btn { min-width:0; overflow:hidden; padding:.48rem .12rem; font-size:.64rem; white-space:nowrap; line-height:1.1; letter-spacing:-.02em; }
-      .card-btn.buy { font-size:.64rem; }
+      .card-btn { min-width:0; padding:.5rem .3rem; font-size:.78rem; white-space:nowrap; line-height:1.15; }
+      .card-btn.buy { font-size:.78rem; }
     }
 
     /* States */
@@ -467,7 +483,7 @@
       const sizes = Array.isArray(p.available_sizes) && p.available_sizes.length ? p.available_sizes.join(', ') : '';
       const cat = (p.category || '').trim();
       const buy = p.buy_url
-        ? `<a class="card-btn buy" href="${escAttr(p.buy_url)}" target="_blank" rel="noopener">🛒 Buy Now</a>`
+        ? `<a class="card-btn buy" href="${escAttr(p.buy_url)}" target="_blank" rel="noopener" aria-label="Buy Now"><span aria-hidden="true">🛒</span><span class="btn-label">Buy Now</span></a>`
         : '';
       return `<div class="card">
         <a class="card-media${p.image_url ? ' has-image' : ''}" ${p.image_url ? `style="--card-image:url('${escAttr(p.image_url)}')"` : ''} href="${href}" aria-label="Try on ${escAttr(p.name)}">${img}</a>
@@ -478,7 +494,7 @@
           ${sizes ? `<p class="card-cat"><strong>Sizes:</strong> ${esc(sizes)}</p>` : ''}
           ${p.custom_size_available ? `<p class="card-cat"><strong>Custom size available</strong>${p.custom_size_note ? ' · ' + esc(p.custom_size_note) : ''}</p>` : ''}
           <div class="card-actions">
-            <a class="card-btn try" href="${href}">✨ Try On</a>
+            <a class="card-btn try" href="${href}"><span aria-hidden="true">✨</span><span class="btn-label">Try On</span></a>
             ${buy || '<span class="card-btn buy card-btn-placeholder" aria-hidden="true"></span>'}
           </div>
         </div>
