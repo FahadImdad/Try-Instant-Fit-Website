@@ -430,7 +430,6 @@
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="analytics" onclick="switchAdminTab('analytics')">📊 Analytics</button>
       <button class="admin-tab" data-tab="topups" onclick="switchAdminTab('topups')">💳 Top-Up Requests <span class="count" id="cntTopups" style="background:#fef3c7; color:#92400e;">0</span></button>
-      <button class="admin-tab" data-tab="reports" onclick="switchAdminTab('reports')">🚩 Reports <span class="count" id="cntReports" style="background:#fee2e2; color:#991b1b;">0</span></button>
       <button class="admin-tab" data-tab="support" onclick="switchAdminTab('support');loadSupportInbox()">💬 Support</button>
       <button class="admin-tab" data-tab="brands" onclick="switchAdminTab('brands')">🏢 Brands <span class="count" id="cntBrands">0</span></button>
       <button class="admin-tab" data-tab="promotions" onclick="switchAdminTab('promotions')">🏷️ Promotions</button>
@@ -649,7 +648,7 @@ function switchAdminTab(name) {
 }
 
 async function refreshAll() {
-  await Promise.all([loadBrands(), loadTopups(), loadReports()]);
+  await Promise.all([loadBrands(), loadTopups()]);
   // Analytics is derived from those — re-render after all land.
   renderAnalytics();
 }
