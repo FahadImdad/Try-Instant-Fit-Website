@@ -430,7 +430,6 @@
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="analytics" onclick="switchAdminTab('analytics')">📊 Analytics</button>
       <button class="admin-tab" data-tab="topups" onclick="switchAdminTab('topups')">💳 Top-Up Requests <span class="count" id="cntTopups" style="background:#fef3c7; color:#92400e;">0</span></button>
-      <a class="admin-tab" href="https://wa.me/923223146800?text=Hi%20Try%20Instant%20Fit%20Support" target="_blank" rel="noopener"><img src="/assets/whatsapp.svg" alt="" style="width:1.6em;height:1.6em;vertical-align:middle;margin-right:.25rem;border-radius:5px;"> WhatsApp Support</a>
       <button class="admin-tab" data-tab="brands" onclick="switchAdminTab('brands')">🏢 Brands <span class="count" id="cntBrands">0</span></button>
       <button class="admin-tab" data-tab="promotions" onclick="switchAdminTab('promotions')">🏷️ Promotions</button>
     </div>
@@ -996,6 +995,7 @@ function renderBrands() {
               <td data-label="Actions">
                 <div class="row-actions">
                   <button class="btn btn-secondary" onclick="toggleBrandSettings('${b.id}')">Brand settings ▾</button>
+                  ${b.contact_phone ? `<a class="btn btn-secondary" href="https://wa.me/${String(b.contact_phone).replace(/\D/g,'')}?text=${encodeURIComponent(`Hi ${b.name}, Try Instant Fit support here.`)}" target="_blank" rel="noopener" style="color:#20B21A;border-color:#20B21A;display:inline-flex;align-items:center;gap:.35rem;"><img src="/assets/whatsapp.svg" alt="" style="width:1.35em;height:1.35em;border-radius:4px;"> Chat Support</a>` : ''}
                   ${!b.unlimited ? `<button class="btn btn-primary" onclick="openAddCredits('${b.id}', ${nameAttr}, ${standardRate})">+ Credits</button>` : ''}
                   <a class="btn btn-secondary" href="/dashboard?id=${b.id}" target="_blank">Dashboard ↗</a>
                   <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteBrand('${b.id}', ${nameAttr})">Delete</button>
