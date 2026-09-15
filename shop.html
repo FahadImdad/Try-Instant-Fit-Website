@@ -155,6 +155,18 @@
     .card-btn.buy:hover { background: #f0fdf4; }
     .card-btn-placeholder { visibility:hidden; pointer-events:none; }
 
+    /* Phone catalogue cards must follow their content instead of inheriting
+       equal-height desktop rows. This prevents the large blank lower half and
+       keeps Buy Now fully inside narrow two-column cards. */
+    @media (max-width: 559px) {
+      .shop-grid { align-items:start; grid-auto-rows:auto; }
+      .card { height:auto; min-height:0; }
+      .card-body { min-width:0; }
+      .card-actions { margin-top:.75rem; min-height:0; gap:.35rem; }
+      .card-btn { min-width:0; padding:.48rem .22rem; font-size:.7rem; white-space:normal; line-height:1.1; }
+      .card-btn.buy { font-size:.7rem; }
+    }
+
     /* States */
     .shop-state { text-align: center; color: #fff; padding: 3rem 1rem; }
     .shop-state .spinner { width: 44px; height: 44px; border: 4px solid rgba(255,255,255,.15); border-top-color: #00c8e8; border-radius: 50%; animation: shopSpinSlow 20s linear infinite; margin: 0 auto 1rem; }
