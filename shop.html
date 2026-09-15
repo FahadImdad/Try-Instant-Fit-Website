@@ -113,16 +113,19 @@
     .shop-results-subtitle { margin:.2rem 0 0; color:rgba(255,255,255,.58); font-size:.86rem; }
 
     /* Grid — 2 up on phones (tight, app-like), scaling up on wider screens. */
-    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; align-items: stretch; grid-auto-rows: 1fr; }
+    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; align-items: start; }
     @media (min-width: 560px) { .shop-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; } }
     @media (min-width: 980px) { .shop-grid { grid-template-columns: repeat(4, 1fr); gap: 1.15rem; } }
 
-    .card {
+    /* Scoped under .shop-grid so these outrank the site-wide .card rule in
+       platform-polish.css, which adds padding:1.25rem under 720px and would
+       otherwise inset every product image behind a white frame on mobile. */
+    .shop-grid .card {
       background: #fff; border-radius: 12px; overflow: hidden;
-      display: flex; flex-direction: column; height:100%; min-height:500px; padding: 0; box-shadow: 0 8px 20px rgba(0,0,0,.16); border: 1px solid rgba(255,255,255,.55);
+      display: flex; flex-direction: column; padding: 0; box-shadow: 0 8px 20px rgba(0,0,0,.16); border: 1px solid rgba(255,255,255,.55);
       transition: transform .12s;
     }
-    .card:active { transform: scale(.98); }
+    .shop-grid .card:active { transform: scale(.98); }
 
     .card-media { display: block; position:relative; overflow:hidden; background: #182442; padding: 0; margin: 0; line-height: 0; }
     .card-media.has-image::before { display:none; }
@@ -131,7 +134,7 @@
     .card-img { position:relative; z-index:1; object-fit: contain; object-position: center; background: transparent; }
     .card-img-ph { background: linear-gradient(135deg,#5a67f2,#00c8e8); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
 
-    .card-body { padding: .7rem .72rem .75rem; display: flex; flex:1; flex-direction: column; }
+    .card-body { padding: .7rem .72rem .75rem; display: flex; flex-direction: column; }
     .card-cat { font-size: .68rem; color: #748096; margin: 0 0 .18rem; text-transform: uppercase; letter-spacing: .07em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .card-name {
       font-size: .94rem; font-weight: 750; color: var(--text); line-height: 1.25; margin: 0 0 .25rem;
@@ -141,7 +144,7 @@
     .card-price.empty { display: none; }   /* no filler row when there's no price */
     /* No margin-top:auto — cards size to content (see .shop-grid align-items:start),
        so short cards don't stretch tall with wasted white space. */
-    .card-actions { display: flex; flex-direction: row; gap: .45rem; margin-top:auto; min-height:2.7rem; }
+    .card-actions { display: flex; flex-direction: row; gap: .45rem; min-height:2.7rem; }
     .card-btn {
       width: 100%; box-sizing: border-box; padding: .48rem .3rem; border-radius: 7px;
       font-size: .84rem; font-weight: 750; cursor: pointer; font-family: inherit;
