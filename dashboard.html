@@ -2100,7 +2100,7 @@
             <div class="field-hint" id="epcRemoveHint">Remove unused allowance only. Already-used tries cannot be removed.</div>
           </div>
           <div class="field" style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);"><strong>Already used</strong><span id="epcUsedLocked" style="font-weight:800;color:var(--muted);">🔒 0 try-ons (locked)</span></div>
-          <div class="field"><label for="epcExpiry">Passcode expiry</label><select id="epcExpiry" style="width:100%;"><option value="">No automatic expiry</option><option value="15m">15 minutes</option><option value="30m">30 minutes</option><option value="1h">1 hour</option><option value="2h">2 hours</option><option value="6h">6 hours</option><option value="1d">1 day</option></select><div class="field-hint">Passcode automatically deactivates after the selected time.</div></div>
+          <div class="field"><label for="epcExpiry">Passcode expiry</label><select id="epcExpiry" onchange="toggleCustomExpiry()" style="width:100%;"><option value="">No automatic expiry</option><option value="15m">15 minutes</option><option value="30m">30 minutes</option><option value="1h">1 hour</option><option value="2h">2 hours</option><option value="6h">6 hours</option><option value="1d">1 day</option><option value="custom">Custom</option></select><div id="epcCustomExpiry" style="display:none;grid-template-columns:repeat(3,1fr);gap:.45rem;margin-top:.5rem;"><input id="epcHours" type="number" min="0" max="24" placeholder="Hours (0-24)"><input id="epcMinutes" type="number" min="0" max="60" placeholder="Minutes (1-60)"><input id="epcDays" type="number" min="0" placeholder="Days (0=unlimited)"></div><div class="field-hint">Passcode automatically deactivates after the selected time.</div></div>
           <div class="field setting-toggle-row">
             <div><label for="epcActive" class="setting-toggle-copy">Passcode active</label><div class="field-hint">Turn off to stop the customer using this passcode.</div></div>
             <label class="switch-toggle" for="epcActive"><input type="checkbox" id="epcActive" onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">Off</span></label>
@@ -3597,7 +3597,7 @@
         <div class="passcode-row">
           <span class="passcode-code">${escapeHtml(p.code)}</span>
           <span class="passcode-label ${p.customer_label ? '' : 'passcode-label-empty'}">${p.customer_label ? escapeHtml(p.customer_label) : '(no label)'}</span>
-          <span class="passcode-usage"><strong>${Math.max(0, remaining)} left</strong></span>
+          <span class="passcode-usage"><strong>${Math.max(0, remaining)} left</strong> <small>(${p.used_count}/${p.use_limit} used)</small></span>
           <span>${inactive ? '<span class="status-badge pill-inactive">Disabled</span>' : exhausted ? '<span class="status-badge pill-inactive">Used Up</span>' : '<span class="status-badge pill-active">Active</span>'}</span>
           <div style="display: flex; gap: .35rem;">
             <button class="btn btn-secondary" style="font-size:.75rem; padding:.35rem .6rem;" onclick="viewPasscodeTryons('${p.id}', ${JSON.stringify(p.code).replace(/"/g, '&quot;')})">Try-Ons</button>
@@ -3661,6 +3661,7 @@
     input.value = next;
     input.dispatchEvent(new Event('input', { bubbles: true }));
   }
+  function toggleCustomExpiry(){const custom=document.getElementById('epcCustomExpiry');if(custom)custom.style.display=document.getElementById('epcExpiry')?.value==='custom'?'grid':'none';}
 
   function editPasscode(id) {
     const p = allBrandPasscodes.find(x => x.id === id);
@@ -3725,7 +3726,8 @@
     const targetRemaining = parseInt(document.getElementById('epcAllowance')?.value || currentRemaining, 10);
     const allowanceChange = targetRemaining - currentRemaining;
     const expiryChoice = document.getElementById('epcExpiry').value;
-    const expiryMs = {'15m':900000,'30m':1800000,'1h':3600000,'2h':7200000,'6h':21600000,'1d':86400000}[expiryChoice];
+    let expiryMs = {'15m':900000,'30m':1800000,'1h':3600000,'2h':7200000,'6h':21600000,'1d':86400000}[expiryChoice];
+    if(expiryChoice==='custom'){const h=Number(document.getElementById('epcHours').value||0),m=Number(document.getElementById('epcMinutes').value||0),d=Number(document.getElementById('epcDays').value||0);if(h<0||h>24||m<0||m>60||d<0||(h===0&&m===0&&d===0)){errEl.textContent='Enter a valid custom expiry.';errEl.className='alert error';return false;}expiryMs=((d*24+h)*60+m)*60000||undefined;}
 
     btn.disabled = true; btn.textContent = 'Saving…';
     try {
