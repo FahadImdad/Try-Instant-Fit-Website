@@ -172,6 +172,10 @@
     @media (max-width: 900px) {
       .card-actions { flex-direction: column; gap: .35rem; }
       .card-btn { width: 100%; flex: 0 0 auto; }
+      /* Stacked buttons make a card with no Buy Now shorter than its
+         neighbour, and the equal row height turns that difference into a gap
+         above the buttons. Keep the placeholder in flow to reserve the row. */
+      .card-btn-placeholder { display: flex; visibility: hidden; }
     }
 
     /* Phone catalogue cards must follow their content instead of inheriting
@@ -181,10 +185,14 @@
       .shop-grid { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:stretch; grid-auto-rows:1fr; }
       .card { height:100%; min-height:0; }
       .card-body { min-width:0; width:100%; box-sizing:border-box; padding-left:.7rem; padding-right:.7rem; }
-      .card-media { aspect-ratio:auto; }
       .card-media, .card-img, .card-img-ph { display:block!important; width:100%!important; margin:0!important; padding:0!important; }
       .card-media.has-image { background:#182442!important; }
-      .card-img, .card-img-ph { height:auto; aspect-ratio:auto; object-fit:initial; }
+      /* Keep the 4:5 frame on phones too. Letting each photo use its own
+         natural height made every image a different size, and because cards in
+         a row share a height the shorter ones left a blank block above the
+         buttons. A fixed ratio + contain keeps the row even; the blurred
+         backdrop fills whatever the photo doesn't cover. */
+      .card-img, .card-img-ph { height:auto; aspect-ratio:4/5; object-fit:contain; }
       .card-media { border-radius:12px 12px 0 0; }
       .card-actions { margin-top:auto; min-height:0; gap:.35rem; padding-top:.75rem; }
       .card-btn { min-width:0; padding:.5rem .3rem; font-size:.78rem; white-space:nowrap; line-height:1.15; }
