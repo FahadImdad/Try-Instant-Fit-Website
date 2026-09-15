@@ -6038,6 +6038,16 @@ div.pl-preview-image-v2.pl-preview-placeholder{height:220px;aspect-ratio:auto}
 .pl-drawer-grid > div:first-child{width:auto;max-width:none}
 .pl-product-preview-v2,
 .pl-product-preview-v2 *{writing-mode:horizontal-tb!important;text-orientation:mixed!important}
+/* Desktop: use the full card width so the product image sits at the far
+   right edge instead of stopping in the middle of the preview. The QR/status
+   row shares the full remaining width, with the status panel filling its
+   height rather than floating at the bottom of a large blank area. */
+@media (min-width:861px){
+  .pl-preview-layout-v2{max-width:none!important;width:100%!important}
+  .pl-preview-image-v2{margin-right:0!important}
+  .product-list-drawer .pl-drawer-grid{align-items:stretch!important}
+  .product-list-drawer .pl-drawer-grid > .pl-drawer-meta{align-self:stretch!important;display:flex!important;flex-direction:column!important;justify-content:space-evenly!important}
+}
 @media (max-width:860px){
   /* Two tracks on mobile too: the preview spans both, then the QR sits in the
      narrow left track with the status rows beside it in the wide right one.
