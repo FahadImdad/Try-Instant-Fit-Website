@@ -194,6 +194,7 @@
     }
     .acct-menu-item:hover { background: var(--surface); }
     .acct-menu-item + .acct-menu-item { border-top: 1px solid var(--border); }
+    #editPasscodeModal .field:has(#epcLimit),#editPasscodeModal .field:has(#epcRemoveUnused){display:none}
 
     /* ── Install hint card ── */
     .install-hint {
@@ -3664,12 +3665,14 @@
   function editPasscode(id) {
     const p = allBrandPasscodes.find(x => x.id === id);
     if (!p) return;
+    if (!document.getElementById('epcAllowance')) { const f=document.createElement('div'); f.className='field'; f.id='epcAllowanceField'; f.innerHTML='<label>Credits remaining</label><div style="display:flex;align-items:center;gap:.45rem"><button type="button" class="btn btn-secondary btn-sm" onclick="adjustPasscodeCount(\'epcAllowance\',-1)">−</button><input type="number" id="epcAllowance" min="1" style="text-align:center;flex:1"><button type="button" class="btn btn-secondary btn-sm" onclick="adjustPasscodeCount(\'epcAllowance\',1)">+</button></div><div class="field-hint">Adjust unused credits. Used credits stay protected.</div>'; document.getElementById('epcUsedLocked').closest('.field').before(f); }
     editingPasscodeId = id;
     document.getElementById('epcError').className = 'alert';
     document.getElementById('epcCode').value = p.code || '';
     document.getElementById('epcLabel').value = p.customer_label || '';
     document.getElementById('epcLimit').value = '';
     document.getElementById('epcRemoveUnused').value = '0';
+    document.getElementById('epcAllowance').value = Math.max(1, (p.use_limit || 0) - (p.used_count || 0));
     document.getElementById('epcRemoveUnused').max = Math.max(0, p.use_limit - p.used_count);
     document.getElementById('epcUsedLocked').textContent = `🔒 ${p.used_count || 0} try-ons (locked)`;
     document.getElementById('epcLimitHint').textContent =
@@ -3718,7 +3721,9 @@
       errEl.className = 'alert error';
       return false;
     }
-    const allowanceChange = additionalUses === undefined ? (removeUnused ? -removeUnused : undefined) : additionalUses;
+    const currentRemaining = Math.max(0, (allBrandPasscodes.find(x => x.id === editingPasscodeId)?.use_limit || 0) - (allBrandPasscodes.find(x => x.id === editingPasscodeId)?.used_count || 0));
+    const targetRemaining = parseInt(document.getElementById('epcAllowance')?.value || currentRemaining, 10);
+    const allowanceChange = targetRemaining - currentRemaining;
     const expiryChoice = document.getElementById('epcExpiry').value;
     const expiryMs = {'15m':900000,'30m':1800000,'1h':3600000,'2h':7200000,'6h':21600000,'1d':86400000}[expiryChoice];
 
