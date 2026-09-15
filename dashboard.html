@@ -3475,6 +3475,12 @@
   // ── Tab switching ──
   function switchTab(tabName, options = {}) {
     closeAccountMenu();
+    // Product drawers are local to the Products tab; changing tabs should
+    // always leave them collapsed when the user returns.
+    if (typeof openProductIds !== 'undefined') {
+      openProductIds.clear();
+      try { sessionStorage.removeItem(productViewStateKey()); } catch (_) {}
+    }
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabName));
     if (!activeBrandId) return;
