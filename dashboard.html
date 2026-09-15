@@ -2728,6 +2728,7 @@
 
 <script src="js/script.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('label[for]').forEach(l=>{const el=document.getElementById(l.htmlFor);if(el?.required&&!l.querySelector('.required-mark')){const s=document.createElement('span');s.className='required-mark';s.textContent=' *';l.appendChild(s);}});});
   // Empty = same-origin. Vercel rewrites /api/* to api.tryinstantfit.com/api/*
   // so adblockers/extensions can't intercept what looks like a third-party host.
   const API = '';
