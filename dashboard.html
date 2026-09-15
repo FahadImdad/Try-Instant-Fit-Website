@@ -557,6 +557,7 @@
     @media (max-width: 720px) {
       .dash-wrap { padding: 0 .25rem; }
       .dash-header { gap: .5rem !important; margin-bottom: .5rem !important; }
+      .header-action-label { display:none; }
       .dash-brand-info h2 { font-size: 1rem; line-height: 1.2; }
       .dash-brand-info p { font-size: .72rem; }
       .status-badge { padding: .15rem .5rem; font-size: .62rem; }
@@ -1802,6 +1803,8 @@
             <div id="dashProfileGrid" style="display:none;"></div>
           </div>
           <div style="display: flex; gap: .35rem; align-items: center; flex-wrap: nowrap; flex-shrink: 0;">
+            <a href="https://wa.me/923223146800?text=Hi%20Try%20Instant%20Fit%20Support" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-color:#25d366;text-decoration:none;white-space:nowrap;">💬 <span class="header-action-label">WhatsApp</span></a>
+            <button class="btn btn-primary btn-sm" type="button" onclick="openTopupModal()" style="white-space:nowrap;">💳 <span class="header-action-label">Top Up</span></button>
             <span id="liveIndicator" title="Auto-refreshes every 30 seconds while this tab is visible." style="display:none; font-size:.72rem; color: var(--muted); font-weight:600; align-self:center;">
               <span style="display:inline-block; width:.45rem; height:.45rem; border-radius:50%; background:#10b981; margin-right:.3rem; vertical-align:.05rem; box-shadow: 0 0 0 0 rgba(16,185,129,.5); animation: livePulse 2s infinite;"></span>
               Live
