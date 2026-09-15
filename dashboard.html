@@ -564,6 +564,7 @@
       .dash-header { gap: .5rem !important; margin-bottom: .5rem !important; }
       .header-action-label { display:none; }
       .mobile-header-action { display:none !important; }
+      .account-edit-profile { display:none !important; }
       .dash-brand-info h2 { font-size: 1rem; line-height: 1.2; }
       .dash-brand-info p { font-size: .72rem; }
       .status-badge { padding: .15rem .5rem; font-size: .62rem; }
@@ -1832,7 +1833,7 @@
             <div style="position: relative;">
               <button class="btn btn-outline-dark btn-sm" id="accountMenuBtn" onclick="toggleAccountMenu(event)">Account ▾</button>
               <div id="accountMenuPanel" style="display:none; position:absolute; right:0; top:calc(100% + .5rem); min-width: 280px; background:#fff; border:1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--sh2); z-index: 100; overflow:hidden;">
-                <button class="acct-menu-item" onclick="closeAccountMenu(); openEditProfile();">✎ Edit Profile</button>
+                <button class="acct-menu-item account-edit-profile" onclick="closeAccountMenu(); openEditProfile();">✎ Edit Profile</button>
                 <a class="acct-menu-item" href="https://wa.me/923223146800?text=Hi%20Try%20Instant%20Fit%20Support" target="_blank" rel="noopener" style="color:var(--text);font-weight:800;"><img src="/assets/whatsapp.svg" alt="" style="width:1.8em;height:1.8em;vertical-align:middle;margin-right:.35rem;border-radius:5px;"> Chat Support</a>
                 <button class="acct-menu-item" onclick="closeAccountMenu(); openTopupModal();">💳 Top Up Credits</button>
                 <button class="acct-menu-item" onclick="closeAccountMenu(); logout();" style="color:#991b1b;">↩ Switch Account</button>
