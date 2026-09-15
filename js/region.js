@@ -14,7 +14,7 @@
   var GLOBAL = {
     price: '$0.25',
     perDollar: '4 try-ons',
-    subtext: 'Standard rate $0.25 · Current promotional rate $0.125 · No setup fee or subscription',
+    subtext: 'Base price $0.25 · Limited Time Promotion Offer - Flat 50% OFF · No setup fee or subscription',
     faqHtml: '$0.25 per try-on'
   };
 
