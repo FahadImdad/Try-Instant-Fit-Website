@@ -2025,6 +2025,7 @@
             </select>
             <div class="field-hint">Don't see your product? <a href="#" onclick="closeCreateQrModal(); openAddProduct(); return false;" style="color: var(--indigo); font-weight:600;">Add a new product first</a> — image gets pre-processed for AI.</div>
           </div>
+          <div class="field"><label for="epcExpiry">Passcode expiry</label><select id="epcExpiry" style="width:100%;"><option value="">No automatic expiry</option><option value="15m">15 minutes</option><option value="30m">30 minutes</option><option value="1h">1 hour</option><option value="2h">2 hours</option><option value="6h">6 hours</option><option value="1d">1 day</option></select><div class="field-hint">Passcode automatically deactivates after the selected time.</div></div>
           <div class="field setting-toggle-row">
             <label for="qrRequiresPasscode" class="setting-toggle-copy">🔑 Require a passcode to scan this QR</label>
             <label class="switch-toggle" for="qrRequiresPasscode">
@@ -3676,6 +3677,7 @@
     document.getElementById('epcRemoveHint').textContent =
       `${Math.max(0, p.use_limit - p.used_count)} unused tries available to remove. Used tries stay protected.`;
     document.getElementById('epcActive').checked = !!p.active;
+    document.getElementById('epcExpiry').value = '';
     document.getElementById('editPasscodeModal').classList.add('open');
   }
 
@@ -3717,6 +3719,8 @@
       return false;
     }
     const allowanceChange = additionalUses === undefined ? (removeUnused ? -removeUnused : undefined) : additionalUses;
+    const expiryChoice = document.getElementById('epcExpiry').value;
+    const expiryMs = {'15m':900000,'30m':1800000,'1h':3600000,'2h':7200000,'6h':21600000,'1d':86400000}[expiryChoice];
 
     btn.disabled = true; btn.textContent = 'Saving…';
     try {
@@ -3728,6 +3732,7 @@
           customer_label: document.getElementById('epcLabel').value.trim() || null,
           additional_uses: allowanceChange,
           active: document.getElementById('epcActive').checked,
+          ...(expiryMs ? { expires_at: new Date(Date.now() + expiryMs).toISOString() } : {}),
         }),
       });
       const data = await safeJson(res);
