@@ -3070,15 +3070,17 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     const productName = decodeURIComponent(encodedProductName || '');
     const search = document.getElementById('productSearch');
     if (search) search.value = '';
-    switchTab('products');
-    await Promise.all([loadProducts(), loadQrCodes()]);
+    // The dashboard preloads products and QRs. Reuse that cache so opening a
+    // product feels immediate instead of waiting for duplicate API requests.
+    switchTab('products', { skipLoad: true });
+    if (!allProducts.length) await Promise.all([loadProducts(), loadQrCodes()]);
     const match = allProducts.find(p => p.id === productId || p.sku === productId)
       || allProducts.find(p => String(p.name || '').trim().toLowerCase() === productName.trim().toLowerCase());
     const targetId = match?.id || productId;
     openProductIds.clear();
     openProductIds.add(targetId);
     renderUnified();
-    requestAnimationFrame(() => document.getElementById('plrow-' + targetId)?.scrollIntoView({ behavior:'smooth', block:'center' }));
+    requestAnimationFrame(() => document.getElementById('plrow-' + targetId)?.scrollIntoView({ behavior:'auto', block:'center' }));
   }
 
   function renderDashboard(data) {
@@ -3635,7 +3637,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabName));
     if (!activeBrandId) return;
-    if (tabName === 'products') { loadProducts(); loadQrCodes(); }
+    if (tabName === 'products' && !options.skipLoad) { loadProducts(); loadQrCodes(); }
     else if (tabName === 'code') { loadBrandPasscodes(); }
     else if (tabName === 'leads') { loadCustomerLeads(); }
     if (!options.fromHistory) {
