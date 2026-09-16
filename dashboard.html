@@ -2677,15 +2677,30 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   // A brand_id alone is not a credential — it travels in URLs and is easy to
   // guess or share. The API now requires a signed token, issued only after a
   // verified Google sign-in (or minted by admin to open a vendor dashboard).
+  // Stored in localStorage, not sessionStorage, so a vendor stays signed in on
+  // the same device for the token's full 7 days — closing the tab or the
+  // browser does not sign them out.
   let brandToken = null;
   function setBrandToken(t) {
     brandToken = t || null;
-    try { t ? sessionStorage.setItem('tif_brand_token', t) : sessionStorage.removeItem('tif_brand_token'); } catch (_) {}
+    try { t ? localStorage.setItem('tif_brand_token', t) : localStorage.removeItem('tif_brand_token'); } catch (_) {}
   }
   function getBrandToken() {
     if (brandToken) return brandToken;
-    try { brandToken = sessionStorage.getItem('tif_brand_token'); } catch (_) {}
+    try { brandToken = localStorage.getItem('tif_brand_token'); } catch (_) {}
     return brandToken;
+  }
+
+  // Read the brand id out of a token so a returning vendor can resume without
+  // having ticked "Remember me". This is only a hint for which dashboard to
+  // request — the server re-verifies the signature on every call, so a doctored
+  // token gets a 401 rather than someone else's data.
+  function brandIdFromToken(token) {
+    try {
+      const payload = atob(token.slice(0, token.lastIndexOf('.')).replace(/-/g, '+').replace(/_/g, '/'));
+      const id = payload.split('.')[0];
+      return /^[0-9a-f-]{36}$/i.test(id) ? id : null;
+    } catch (_) { return null; }
   }
 
   // Wrapper around fetch that attaches the session token to brand API calls.
@@ -2827,6 +2842,19 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     // Fallback to localStorage (remembered session)
     const remembered = localStorage.getItem('tif_brand_id');
     const rememberedEmail = localStorage.getItem('tif_brand_email');
+
+    // A valid session token is itself enough to resume: the vendor signed in
+    // on this device and the token lasts 7 days, so don't ask again just
+    // because "Remember me" was left unticked.
+    if (!remembered && !rememberedEmail && getBrandToken()) {
+      const tokenBrandId = brandIdFromToken(getBrandToken());
+      if (tokenBrandId) {
+        document.getElementById('loginBrandId').value = tokenBrandId;
+        loadDashboard({ silent: true });
+        return;
+      }
+    }
+
     if (remembered) {
       document.getElementById('loginBrandId').value = remembered;
       loadDashboard({ silent: true });
@@ -2841,7 +2869,11 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     try {
       localStorage.removeItem('tif_brand_id');
       localStorage.removeItem('tif_brand_email');
+      // The token is the actual credential — leaving it behind would keep the
+      // session alive after signing out.
+      localStorage.removeItem('tif_brand_token');
     } catch { /* ignore */ }
+    brandToken = null;
   }
 
   // ── Login / Load ──
