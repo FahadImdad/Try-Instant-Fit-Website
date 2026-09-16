@@ -591,7 +591,7 @@
     <img id="resultImage" class="result-image" src="" alt="Try-on result">
     <div class="result-actions">
       <button id="downloadBtn" class="btn btn-secondary" onclick="downloadResult()">⬇ Download</button>
-      <button class="btn btn-secondary" onclick="shareResult()">↗ Share</button>
+      <button id="shareBtn" class="btn btn-secondary" onclick="shareResult()">↗ Share</button>
     </div>
     <button class="btn-block primary" onclick="retryFlow()">Try Another Photo</button>
     <a id="buyNowResult" class="btn-block buy-now" href="#" target="_blank" rel="noopener" style="display:none; margin-top:.6rem; text-decoration:none; text-align:center;" onclick="trackBuyClick()">🛒 Buy Now</a>
@@ -1030,6 +1030,18 @@
         });
       } catch { /* fall through — show whatever we have */ }
 
+      // Start building the shareable image now, while the user is still
+      // looking at the result. navigator.share() must be called inside the
+      // click that triggered it — the browser only honours it for about a
+      // second of "user activation" — but composing the image takes several
+      // seconds. Doing that work on click blows the window and Chrome refuses
+      // to open the share sheet at all. Preparing it up front means the click
+      // handler already has the file in hand.
+      _sharePrep = makeWatermarkedBlob().catch(err => {
+        console.error('[share] prepare failed:', err);
+        return null;
+      });
+
       // One try-on consumed a credit — decrement the in-memory counter so the
       // result view's "tries left" pill (and the upload view, if the user goes
       // back) reflects the new total.
@@ -1279,59 +1291,73 @@
     }
   }
 
+  // Holds the watermarked image, prepared as soon as the result arrives so
+  // that a Share click has something to hand the OS immediately.
+  let _sharePrep = null;
+
   async function shareResult() {
     if (!resultUrl) return;
-    let blob = null;
-    try { blob = await makeWatermarkedBlob(); } catch (e) { console.error('[share]', e); }
 
     const productName = qrInfo?.product_name || 'this outfit';
     const shareText = `Check out how ${productName} looks on me — Try Instant Fit`;
+    const btn = document.getElementById('shareBtn');
 
-    // Step 1: mobile primary path — share the watermarked image file via the
-    // OS share sheet.
-    //
-    // canShare({files}) is NOT a reliable test for "a share sheet will open":
-    // Chrome on Windows reports true, then resolves share() without ever
-    // showing a sheet. The old code returned as though it had succeeded, so
-    // the button looked dead. Treat the share as done only when the browser
-    // actually raised a sheet — which it signals by consuming the transient
-    // user activation the click provided.
+    // navigator.share() is only honoured while the click that triggered it is
+    // still "active" (roughly a second). Composing the image takes several
+    // seconds, so it is prepared up front; here we only wait if it somehow has
+    // not finished, and in that case we accept that the sheet may be refused
+    // and fall back to saving.
+    let blob = null;
+    if (_sharePrep) {
+      const settled = await Promise.race([_sharePrep, Promise.resolve('__pending__')]);
+      if (settled === '__pending__') {
+        if (btn) { btn.disabled = true; btn.textContent = 'Preparing…'; }
+        blob = await _sharePrep.catch(() => null);
+        if (btn) { btn.disabled = false; btn.textContent = '↗ Share'; }
+      } else {
+        blob = settled;
+      }
+    }
+    if (!blob) {
+      _sharePrep = makeWatermarkedBlob().catch(() => null);
+      blob = await _sharePrep;
+    }
+
+    // Preferred path: hand the image file to the OS share sheet, so the user
+    // can send it to WhatsApp, Instagram, Messages, AirDrop and so on.
     if (blob && navigator.canShare) {
-      const file = new File([blob], buildResultFilename(), { type: 'image/png' });
+      const file = new File([blob], buildResultFilename(), { type: blob.type || 'image/png' });
       if (navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ title: 'My virtual try-on', text: shareText, files: [file] });
-          const sheetOpened = navigator.userActivation
-            ? !navigator.userActivation.isActive
-            : true;  // no userActivation API (older Safari) — trust the resolve
-          if (sheetOpened) return;
-          /* resolved without opening anything — fall through and save the file */
+          return;  // sheet opened (or the user picked something) — done
         } catch (err) {
-          if (err?.name === 'AbortError') return; // user cancelled the share
-          /* other failure — fall through to URL share */
+          if (err?.name === 'AbortError') return;  // user dismissed the sheet
+          // NotAllowedError means the activation window had already closed.
+          // Anything else means the platform refused. Either way, fall through.
+          console.error('[share] file share failed:', err?.name, err?.message);
         }
       }
     }
 
-    // The result is a data: URI held only in this session — there is no
-    // shareable link to it, and a multi-megabyte data: URI is not valid as a
-    // share `url` or as clipboard text. So when the file share is unavailable,
-    // the only honest fallback is to hand the user the image itself.
+    // Text-only share still gives the user a way to pass the link along on
+    // platforms that cannot take files. Skipped for an inline data: result,
+    // which has no URL worth sending.
     const isInlineResult = resultUrl.startsWith('data:');
-
-    // Step 2: share the URL via the OS share sheet. Only meaningful for a
-    // hosted result; skipped entirely for an inline one.
-    if (!isInlineResult && navigator.share) {
+    if (navigator.share) {
       try {
-        await navigator.share({ title: 'My virtual try-on', text: shareText, url: resultUrl });
+        const payload = isInlineResult
+          ? { title: 'My virtual try-on', text: shareText }
+          : { title: 'My virtual try-on', text: shareText, url: resultUrl };
+        await navigator.share(payload);
         return;
       } catch (err) {
-        if (err?.name === 'AbortError') return; // user cancelled — don't fall through
-        /* API failed (e.g. Chrome-on-Windows where the sheet never opens) — fall through */
+        if (err?.name === 'AbortError') return;
+        console.error('[share] text share failed:', err?.name, err?.message);
       }
     }
 
-    // Step 3: fallback — save the image so the user has something real to send.
+    // Last resort: save the image so the user still has something to send.
     if (blob) {
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1342,13 +1368,6 @@
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
-      return;
-    }
-
-    if (!isInlineResult) {
-      try {
-        await navigator.clipboard.writeText(resultUrl);
-      } catch { /* clipboard blocked — nothing more we can do, stay silent */ }
     }
   }
 
