@@ -4206,10 +4206,14 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
       const qNameEsc  = JSON.stringify(p.name).replace(/"/g, '&quot;');
       const qScanEsc  = qr ? JSON.stringify(qr.scan_url).replace(/"/g, '&quot;') : '""';
       const priceTxt  = p.price ? formatPrice(p.price, p.currency) : '—';
+      // The backend now counts all three figures from the try-on records, so
+      // they reconcile: total = free + passcode. Free was previously derived
+      // by subtracting passcode from a larger total sourced elsewhere, which
+      // inflated it badly — a product with 3 free try-ons displayed 13.
       const backendHasSplitUsage = qr && Number.isFinite(Number(qr.free_tryons)) && Number.isFinite(Number(qr.passcode_tryons));
       const analyticsTryons = productMetric(lastDashboardData?.top_garments, p, 'tryon_count');
-      const totalTryons = qr
-        ? (backendHasSplitUsage ? Number(qr.free_tryons) + Number(qr.passcode_tryons) : Math.max(Number(qr.total_used || 0), analyticsTryons))
+      const totalTryons = backendHasSplitUsage
+        ? Number(qr.total_tryons ?? (Number(qr.free_tryons) + Number(qr.passcode_tryons)))
         : analyticsTryons;
       const frontendPasscodeTryons = Math.max(
         productPasscodeTryonCounts.get(String(p.id)) || 0,
