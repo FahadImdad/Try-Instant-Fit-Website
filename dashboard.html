@@ -5825,13 +5825,18 @@ div.pl-preview-image-v2.pl-preview-placeholder{height:220px;aspect-ratio:auto}
 @media (min-width:861px){
   .pl-preview-layout-v2{max-width:none!important;width:100%!important;position:relative!important;min-height:0!important;margin:0!important}
   .pl-preview-layout-v2::after{display:none!important}
-  .pl-preview-copy-v2{padding-right:145px!important;box-sizing:border-box!important}
-  .pl-preview-image-v2{position:absolute!important;top:0!important;right:0!important;float:none!important;width:110px!important;max-width:110px!important;height:auto!important;max-height:250px!important;margin:0!important;object-fit:contain!important;object-position:top right!important}
-  .product-list-drawer .pl-drawer-grid{grid-template-columns:280px minmax(0,1fr)!important;column-gap:20px!important}
+  .pl-preview-copy-v2{padding-right:120px!important;box-sizing:border-box!important;min-height:150px!important}
+  /* The image is absolutely positioned, so it is out of flow and cannot grow
+     the preview box. max-height:250px let a tall portrait run 66px past the
+     bottom of the copy and overlap the QR row below. Cap it to the copy
+     block's height and let object-fit:contain letterbox instead. */
+  .pl-preview-image-v2{position:absolute!important;top:0!important;right:0!important;float:none!important;width:100px!important;max-width:100px!important;height:auto!important;max-height:150px!important;margin:0!important;object-fit:contain!important;object-position:top right!important}
+  /* Size the QR track to the QR itself rather than a fixed 280px: the extra
+     150px was dead space between the code and the status panel. */
+  .product-list-drawer .pl-drawer-grid{grid-template-columns:max-content minmax(0,1fr)!important;column-gap:20px!important}
   .product-list-drawer .pl-drawer-grid{row-gap:.25rem!important;margin-bottom:.25rem!important}
   .product-list-drawer .pl-drawer-grid > .pl-product-preview-v2{grid-column:1/-1!important}
-  .product-list-drawer .pl-drawer-grid > div:nth-child(2){grid-column:1!important;width:100%!important}
-  .product-list-drawer .pl-drawer-grid > div:nth-child(2){width:280px!important;max-width:280px!important;justify-self:start!important}
+  .product-list-drawer .pl-drawer-grid > div:nth-child(2){grid-column:1!important;width:auto!important;max-width:none!important;justify-self:start!important}
   .product-list-drawer .pl-drawer-grid > .pl-drawer-meta{grid-column:2!important;width:100%!important}
   /* Keep the status panel in its own track beside the QR.  Do not pull it
      back over the QR column: that caused the labels and dividers to render
