@@ -3200,7 +3200,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   // its data changed. Lists remain stable until the vendor refreshes them.
   let livePollInterval = null;
   let lastLiveRefreshAt = 0;
-  const LIVE_REFRESH_MS = 120000;
+  const LIVE_REFRESH_MS = 15000;
 
   async function refreshDashboardLive() {
     if (!activeBrandId || document.hidden) return;
@@ -3210,8 +3210,10 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
       const data = await res.json();
       const changed = !lastDashboardData || JSON.stringify(data) !== JSON.stringify(lastDashboardData);
       if (changed) renderDashboard(data);
-      // Keep product, QR and passcode DOM stable during background refresh.
-      // Their data updates on manual refresh or the next full page visit.
+      // Passcode usage changes from customer scans, so refresh it in the
+      // background as well. Rendering is deterministic and does not disturb
+      // the currently selected dashboard tab.
+      await loadBrandPasscodes();
       lastLiveRefreshAt = Date.now();
     } catch (err) {
       // Background refresh — never surface errors to the UI.
@@ -3495,7 +3497,9 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     if (!activeBrandId) return;
     const list = document.getElementById('brandPasscodesList');
     try {
-      const res = await fetch(`${API}/api/brands/${activeBrandId}/passcodes`);
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/passcodes?t=${Date.now()}`, {
+        cache: 'no-store',
+      });
       const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed to load');
       allBrandPasscodes = data.passcodes || [];
