@@ -432,6 +432,7 @@
       <button class="admin-tab" data-tab="topups" onclick="switchAdminTab('topups')">💳 Top-Up Requests <span class="count" id="cntTopups" style="background:#fef3c7; color:#92400e;">0</span></button>
       <button class="admin-tab" data-tab="brands" onclick="switchAdminTab('brands')">🏢 Brands <span class="count" id="cntBrands">0</span></button>
       <button class="admin-tab" data-tab="promotions" onclick="switchAdminTab('promotions')">🏷️ Promotions</button>
+      <button class="admin-tab" data-tab="announcements" onclick="switchAdminTab('announcements')">📢 Announcements</button>
     </div>
 
     <!-- ── ANALYTICS PANE ── -->
@@ -482,6 +483,49 @@
         <h3 style="margin:1.5rem 0 .35rem;">Promo Code</h3><p style="font-size:.8rem;color:var(--muted);">Customer enters this code manually. It has its own discount and toggle.</p>
         <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin:1rem 0;"><input id="promoCode" placeholder="PROMO2026" style="padding:.65rem;border:1px solid var(--border);border-radius:8px;text-transform:uppercase;"><select id="promoDiscount" style="padding:.65rem;border:1px solid var(--border);border-radius:8px;"><option value="5">5% off</option><option value="10">10% off</option><option value="15">15% off</option><option value="20">20% off</option><option value="25">25% off</option><option value="30">30% off</option><option value="35">35% off</option><option value="40">40% off</option><option value="45">45% off</option><option value="50">50% off</option></select><button class="btn btn-primary" onclick="createPromoCode()">Create promo code</button></div>
         <div id="promoBrandChoices" style="display:grid;gap:.4rem;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));"></div><div id="promotionsList" style="margin-top:1rem;"></div>
+      </div>
+    </div>
+
+    <!-- ── ANNOUNCEMENTS PANE ── -->
+    <div id="pane-announcements" class="admin-pane">
+      <div class="sw-section">
+        <h2>Announcements</h2>
+        <p>Post a notice to your vendors. It appears as a banner on their dashboard, which they can dismiss, and stays in their notification bell.</p>
+
+        <div style="display:grid; gap:.75rem; max-width:640px; margin:1.25rem 0;">
+          <input id="annTitle" maxlength="120" placeholder="Title — e.g. Scheduled maintenance on Sunday"
+                 style="padding:.65rem; border:1px solid var(--border); border-radius:8px;">
+          <textarea id="annBody" maxlength="2000" rows="4" placeholder="Message to your vendors…"
+                    style="padding:.65rem; border:1px solid var(--border); border-radius:8px; font: inherit; resize:vertical;"></textarea>
+
+          <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
+            <label style="font-size:.85rem;">Type
+              <select id="annLevel" style="padding:.5rem; border:1px solid var(--border); border-radius:8px; margin-left:.35rem;">
+                <option value="info">📢 Info</option>
+                <option value="warning">⚠️ Warning</option>
+                <option value="success">🎉 Good news</option>
+              </select>
+            </label>
+            <label style="font-size:.85rem;">Show until
+              <input id="annEndsAt" type="date" style="padding:.5rem; border:1px solid var(--border); border-radius:8px; margin-left:.35rem;">
+            </label>
+            <span style="font-size:.78rem; color:var(--muted);">Leave blank to run until you turn it off.</span>
+          </div>
+
+          <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center;">
+            <label style="font-size:.85rem;"><input type="radio" name="annAudience" value="all" checked onchange="toggleAnnBrandPicker()"> All vendors</label>
+            <label style="font-size:.85rem;"><input type="radio" name="annAudience" value="selected" onchange="toggleAnnBrandPicker()"> Selected vendors</label>
+          </div>
+
+          <div id="annBrandChoices" style="display:none; gap:.4rem; grid-template-columns:repeat(auto-fit,minmax(180px,1fr));"></div>
+
+          <div>
+            <button class="btn btn-primary" onclick="createAnnouncement()">Post announcement</button>
+            <span id="annStatus" style="font-size:.82rem; margin-left:.6rem;"></span>
+          </div>
+        </div>
+
+        <div id="announcementsList" style="margin-top:1.5rem;"></div>
       </div>
     </div>
   </div>
@@ -647,7 +691,7 @@ function switchAdminTab(name) {
 }
 
 async function refreshAll() {
-  await Promise.all([loadBrands(), loadTopups()]);
+  await Promise.all([loadBrands(), loadTopups(), loadAnnouncements()]);
   // Analytics is derived from those — re-render after all land.
   renderAnalytics();
 }
@@ -1013,6 +1057,109 @@ function renderBrands() {
         }).join('')}
       </tbody>
     </table>`;
+}
+
+// ── Announcements ──
+function toggleAnnBrandPicker() {
+  const selected = document.querySelector('input[name="annAudience"]:checked')?.value === 'selected';
+  const el = document.getElementById('annBrandChoices');
+  if (!el) return;
+  el.style.display = selected ? 'grid' : 'none';
+  if (selected && !el.innerHTML) {
+    el.innerHTML = (allBrands || [])
+      .map(b => `<label style="font-size:.85rem;"><input type="checkbox" value="${b.id}" class="ann-brand"> ${escapeHtml(b.name)}</label>`)
+      .join('');
+  }
+}
+
+async function createAnnouncement() {
+  const status = document.getElementById('annStatus');
+  const title = document.getElementById('annTitle').value.trim();
+  const body  = document.getElementById('annBody').value.trim();
+  const level = document.getElementById('annLevel').value;
+  const endsAtRaw = document.getElementById('annEndsAt').value;
+  const audience = document.querySelector('input[name="annAudience"]:checked')?.value || 'all';
+  const brandIds = [...document.querySelectorAll('.ann-brand:checked')].map(c => c.value);
+
+  const fail = (msg) => { status.textContent = msg; status.style.color = '#b91c1c'; };
+
+  if (!title || !body) return fail('Add a title and a message.');
+  if (audience === 'selected' && !brandIds.length) return fail('Pick at least one vendor, or choose All vendors.');
+
+  // A date input gives midnight; show the notice through the end of that day.
+  const endsAt = endsAtRaw ? new Date(`${endsAtRaw}T23:59:59`).toISOString() : null;
+
+  status.textContent = 'Posting…';
+  status.style.color = 'var(--muted)';
+  try {
+    const res = await fetchAdmin('/api/admin/announcements', {
+      method: 'POST',
+      body: JSON.stringify({ title, body, level, audience, brandIds, endsAt }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return fail(data.error || 'Could not post that announcement.');
+
+    status.textContent = 'Posted.';
+    status.style.color = '#047857';
+    document.getElementById('annTitle').value = '';
+    document.getElementById('annBody').value = '';
+    document.getElementById('annEndsAt').value = '';
+    document.querySelectorAll('.ann-brand:checked').forEach(c => { c.checked = false; });
+    loadAnnouncements();
+  } catch (e) {
+    fail('Network error. Please try again.');
+  }
+}
+
+async function loadAnnouncements() {
+  const list = document.getElementById('announcementsList');
+  if (!list) return;
+  try {
+    const res = await fetchAdmin('/api/admin/announcements');
+    const data = await res.json().catch(() => ({}));
+    const items = data.announcements || [];
+    if (!items.length) {
+      list.innerHTML = '<p style="color:var(--muted); font-size:.87rem;">No announcements yet.</p>';
+      return;
+    }
+    list.innerHTML = '<h3 style="margin:0 0 .6rem;">Posted announcements</h3>' + items.map(a => {
+      const icon = a.level === 'warning' ? '⚠️' : a.level === 'success' ? '🎉' : '📢';
+      const who = a.audience === 'all'
+        ? 'All vendors'
+        : `${(a.announcement_brands || []).length} selected vendor${(a.announcement_brands || []).length === 1 ? '' : 's'}`;
+      const expired = a.ends_at && new Date(a.ends_at) < new Date();
+      const state = !a.active ? 'Off' : expired ? 'Expired' : 'Live';
+      const stateColor = state === 'Live' ? '#047857' : '#6b7280';
+      return `<div style="border:1px solid var(--border); border-radius:8px; padding:.75rem .9rem; margin-bottom:.6rem;">
+        <div style="display:flex; gap:.5rem; align-items:baseline; flex-wrap:wrap;">
+          <strong style="font-size:.92rem;">${icon} ${escapeHtml(a.title)}</strong>
+          <span style="font-size:.75rem; color:${stateColor}; font-weight:700;">${state}</span>
+          <span style="font-size:.75rem; color:var(--muted);">· ${who}</span>
+          ${a.ends_at ? `<span style="font-size:.75rem; color:var(--muted);">· until ${new Date(a.ends_at).toLocaleDateString()}</span>` : ''}
+        </div>
+        <div style="font-size:.85rem; color:var(--muted); margin:.35rem 0 .5rem; white-space:pre-wrap;">${escapeHtml(a.body)}</div>
+        <button class="btn btn-sm" onclick="setAnnouncementActive('${a.id}', ${!a.active})">${a.active ? 'Turn off' : 'Turn on'}</button>
+        <button class="btn btn-sm" onclick="deleteAnnouncement('${a.id}')" style="color:#b91c1c;">Delete</button>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<p style="color:var(--muted); font-size:.87rem;">Could not load announcements.</p>';
+  }
+}
+
+async function setAnnouncementActive(id, active) {
+  try {
+    await fetchAdmin(`/api/admin/announcements/${id}`, { method: 'PATCH', body: JSON.stringify({ active }) });
+    loadAnnouncements();
+  } catch (e) { /* the list reload below surfaces any problem */ }
+}
+
+async function deleteAnnouncement(id) {
+  if (!confirm('Delete this announcement? Vendors will stop seeing it.')) return;
+  try {
+    await fetchAdmin(`/api/admin/announcements/${id}`, { method: 'DELETE' });
+    loadAnnouncements();
+  } catch (e) { /* as above */ }
 }
 
 function renderPromoBrands() { const el=document.getElementById('promoBrandChoices'); if(el) el.innerHTML=`<div style="grid-column:1/-1;font-weight:700;margin-top:.5rem;">Select brands for this promotion</div>`+(allBrands||[]).map(b=>`<label><input type="checkbox" value="${b.id}" class="promo-brand"> ${escapeHtml(b.name)}</label>`).join(''); }

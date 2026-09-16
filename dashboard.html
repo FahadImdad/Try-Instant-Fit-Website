@@ -1852,6 +1852,10 @@
           </style>
         </div>
 
+        <!-- Admin announcement banner. Populated by renderAnnouncementBanner();
+             sits above the tabs so it shows whichever section is open. -->
+        <div id="announcementBanner" role="status" style="display:none;"></div>
+
         <!-- Tab navigation (Facebook-style top nav, visible all screens) -->
         <nav class="tab-nav dash-tab-nav" role="tablist" aria-label="Dashboard sections">
           <button class="tab-btn active" role="tab" data-tab="analytics" onclick="switchTab('analytics')">📊 <span class="tab-label">Analytics</span></button>
@@ -5409,6 +5413,81 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   // NOTIFICATIONS — derived from top-up history + low-credits warning
   // ════════════════════════════════════════════════════════════════
   let notifications = [];
+  let announcements = [];
+
+  // ── Admin announcement banner ──
+  // Shows the newest announcement this brand hasn't dismissed. Dismissing
+  // records it server-side (so it stays dismissed on any device) and reveals
+  // the next one, if there is one.
+  function renderAnnouncementBanner() {
+    const host = document.getElementById('announcementBanner');
+    if (!host) return;
+
+    const live = announcements.filter(a => !a.dismissed);
+    if (!live.length) { host.style.display = 'none'; host.innerHTML = ''; return; }
+
+    const a = live[0];
+    const tone = a.level === 'warning'
+      ? { bg: '#fffbeb', border: '#fcd34d', fg: '#92400e', icon: '⚠️' }
+      : a.level === 'success'
+      ? { bg: '#ecfdf5', border: '#6ee7b7', fg: '#065f46', icon: '🎉' }
+      : { bg: '#eff6ff', border: '#93c5fd', fg: '#1e40af', icon: '📢' };
+
+    host.style.cssText = `display:block; background:${tone.bg}; border:1px solid ${tone.border};` +
+      'border-radius:10px; padding:.85rem 1rem; margin-bottom:1rem;';
+    host.innerHTML = '';
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; gap:.7rem; align-items:flex-start;';
+
+    const icon = document.createElement('span');
+    icon.textContent = tone.icon;
+    icon.style.cssText = 'font-size:1.05rem; line-height:1.3; flex-shrink:0;';
+
+    const text = document.createElement('div');
+    text.style.cssText = 'flex:1; min-width:0;';
+    const h = document.createElement('div');
+    h.textContent = a.title;
+    h.style.cssText = `font-weight:700; font-size:.9rem; color:${tone.fg}; margin-bottom:.15rem;`;
+    const p = document.createElement('div');
+    p.textContent = a.body;
+    p.style.cssText = `font-size:.85rem; color:${tone.fg}; opacity:.9; line-height:1.45; white-space:pre-wrap;`;
+    text.append(h, p);
+
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Dismiss this notice');
+    close.textContent = '✕';
+    close.style.cssText = `background:none; border:none; cursor:pointer; color:${tone.fg};` +
+      'opacity:.6; font-size:.95rem; line-height:1; padding:.2rem .3rem; flex-shrink:0;';
+    close.onclick = () => dismissAnnouncement(a.id, close);
+
+    row.append(icon, text, close);
+    host.appendChild(row);
+
+    // More than one waiting — say so, so dismissing doesn't feel like a loop.
+    if (live.length > 1) {
+      const more = document.createElement('div');
+      more.textContent = `+${live.length - 1} more notice${live.length - 1 === 1 ? '' : 's'}`;
+      more.style.cssText = `font-size:.75rem; color:${tone.fg}; opacity:.7; margin-top:.4rem; padding-left:1.75rem;`;
+      host.appendChild(more);
+    }
+  }
+
+  async function dismissAnnouncement(id, btn) {
+    if (btn) btn.disabled = true;
+    // Hide it locally first so the banner reacts immediately; the server call
+    // is what makes it stick across devices.
+    const item = announcements.find(a => a.id === id);
+    if (item) item.dismissed = true;
+    renderAnnouncementBanner();
+    try {
+      await fetch(`${API}/api/brands/${activeBrandId}/announcements/${id}/dismiss`, { method: 'POST' });
+    } catch (e) {
+      console.warn('[announcements] dismiss failed:', e);
+    }
+  }
+
   function notifReadKey() { return `tif_notif_read_${activeBrandId || 'anon'}`; }
   function getReadIds() {
     try { return new Set(JSON.parse(localStorage.getItem(notifReadKey()) || '[]')); }
@@ -5454,6 +5533,28 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
         }
       }
     } catch (e) { console.warn('[notif] failed to load topups:', e); }
+
+    // Admin announcements. The server already filters these by start date,
+    // expiry and targeting, so whatever comes back is meant for this brand.
+    // Dismissed ones still arrive (flagged) so they stay in this bell as
+    // history — only the banner hides them.
+    try {
+      const res = await fetch(`${API}/api/brands/${activeBrandId}/announcements`);
+      if (res.ok) {
+        const data = await safeJson(res);
+        announcements = data.announcements || [];
+        for (const a of announcements) {
+          notifications.push({
+            id:    `announcement-${a.id}`,
+            icon:  a.level === 'warning' ? '⚠️' : a.level === 'success' ? '🎉' : '📢',
+            title: a.title,
+            body:  a.body,
+            ts:    a.created_at,
+          });
+        }
+        renderAnnouncementBanner();
+      }
+    } catch (e) { console.warn('[notif] failed to load announcements:', e); }
 
     // Low-credit warning, derived from current dashboard state.
     const brand = lastDashboardData?.brand;
