@@ -86,18 +86,23 @@
     .stat-value { font-size: 2.2rem; font-weight: 900; color: var(--primary); line-height: 1; margin-bottom: .25rem; }
     .stat-sub { font-size: .78rem; color: var(--muted); }
 
-    .leaderboard-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r-xl); padding:1.4rem; margin-bottom:2rem; }
+    .analytics-insight-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.25rem; margin-bottom:2rem; }
+    .leaderboard-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r-xl); padding:1.4rem; min-width:0; }
     .leaderboard-head { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
     .leaderboard-head h3 { margin:0; font-size:1.05rem; }
     .leaderboard-head p { margin:.2rem 0 0; color:var(--muted); font-size:.8rem; }
     .leaderboard-list { display:flex; flex-direction:column; gap:.55rem; }
-    .leaderboard-row { display:grid; grid-template-columns:2rem 42px minmax(0,1fr) auto; align-items:center; gap:.75rem; padding:.65rem .75rem; border:1px solid var(--border); border-radius:12px; background:var(--surface); }
+    .leaderboard-row { width:100%; display:grid; grid-template-columns:2rem 42px minmax(0,1fr) auto; align-items:center; gap:.75rem; padding:.65rem .75rem; border:1px solid var(--border); border-radius:12px; background:var(--surface); color:var(--text); font:inherit; text-align:left; cursor:pointer; transition:border-color .15s,transform .15s,box-shadow .15s; }
+    .leaderboard-row:hover { border-color:var(--cyan); transform:translateY(-1px); box-shadow:0 6px 16px rgba(15,23,42,.06); }
     .leaderboard-rank { font-weight:900; color:var(--indigo); text-align:center; }
     .leaderboard-img,.leaderboard-img-ph { width:42px; height:42px; border-radius:9px; background:var(--surface2); }
     .leaderboard-img { object-fit:cover; }
     .leaderboard-img-ph { display:grid; place-items:center; }
     .leaderboard-name { min-width:0; font-size:.9rem; font-weight:750; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .leaderboard-count { font-size:.82rem; font-weight:800; color:var(--text); white-space:nowrap; }
+    .analytics-see-all { width:100%; margin-top:.8rem; padding:.65rem; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--indigo); font:800 .82rem inherit; cursor:pointer; }
+    .analytics-see-all:hover { border-color:var(--indigo); background:rgba(90,103,242,.05); }
+    @media (max-width:800px) { .analytics-insight-grid { grid-template-columns:1fr; } }
 
     /* ── Recent try-ons table ── */
     .table-wrap {
@@ -1936,15 +1941,25 @@
             <div class="stat-card"><div class="stat-label">This Week</div><div class="stat-value" id="statWeek">—</div><div class="stat-sub">Last 7 days</div></div>
             <div class="stat-card"><div class="stat-label">This Month</div><div class="stat-value" id="statMonth">—</div><div class="stat-sub">Current month</div></div>
             <div class="stat-card"><div class="stat-label">Avg AI Time</div><div class="stat-value" id="statAvg">—</div><div class="stat-sub">Per try-on</div></div>
-            <div class="stat-card"><div class="stat-label">Outbound Buy Now Clicks</div><div class="stat-value" id="statBuyClicks">—</div><div class="stat-sub">Storefront redirects · all time</div></div>
           </div>
 
-          <div class="leaderboard-card">
-            <div class="leaderboard-head">
-              <div><h3>🏆 Top Performing Garments</h3><p>Your most-tried designs across catalogue and QR experiences.</p></div>
-              <span class="stat-sub">Top 5 · all time</span>
+          <div class="analytics-insight-grid">
+            <div class="leaderboard-card" data-analytics-panel="garments">
+              <div class="leaderboard-head">
+                <div><h3>🏆 Top Performing Garments</h3><p>Your most-tried designs across catalogue and QR experiences.</p></div>
+                <span class="stat-sub">All time</span>
+              </div>
+              <div class="leaderboard-list" id="topGarmentsLeaderboard"></div>
+              <button type="button" class="analytics-see-all" id="topGarmentsSeeAll" onclick="toggleAnalyticsList('garments', event)" style="display:none;">See all</button>
             </div>
-            <div class="leaderboard-list" id="topGarmentsLeaderboard"></div>
+            <div class="leaderboard-card" data-analytics-panel="outbound">
+              <div class="leaderboard-head">
+                <div><h3>🛒 Outbound Buy Now Clicks</h3><p>Products sending shoppers to your main storefront.</p></div>
+                <div><div class="stat-value" id="statBuyClicks" style="font-size:1.7rem;text-align:right;">—</div><span class="stat-sub">All time</span></div>
+              </div>
+              <div class="leaderboard-list" id="buyNowProductsList"></div>
+              <button type="button" class="analytics-see-all" id="buyNowSeeAll" onclick="toggleAnalyticsList('outbound', event)" style="display:none;">See all</button>
+            </div>
           </div>
 
           <!-- Per-source stat strip -->
@@ -2993,6 +3008,72 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   }
 
   let lastDashboardData = null;
+  const analyticsListExpanded = { garments: false, outbound: false };
+
+  function closeAnalyticsExpansions() {
+    if (!analyticsListExpanded.garments && !analyticsListExpanded.outbound) return;
+    analyticsListExpanded.garments = false;
+    analyticsListExpanded.outbound = false;
+    renderAnalyticsProductLists();
+  }
+
+  function toggleAnalyticsList(type, event) {
+    event?.stopPropagation();
+    analyticsListExpanded[type] = !analyticsListExpanded[type];
+    const other = type === 'garments' ? 'outbound' : 'garments';
+    analyticsListExpanded[other] = false;
+    renderAnalyticsProductLists();
+  }
+
+  function analyticsProductRow(item, metric, suffix) {
+    const productId = String(item.product_id || '');
+    const canOpen = productId && productId !== 'unknown';
+    const encodedId = encodeURIComponent(productId);
+    return `
+      <button type="button" class="leaderboard-row" ${canOpen ? `onclick="openAnalyticsProduct('${encodedId}')"` : 'disabled'}>
+        <div class="leaderboard-rank">#${item.rank}</div>
+        ${item.isolated_garment_url
+          ? `<img class="leaderboard-img" src="${escapeHtml(item.isolated_garment_url)}" alt="" loading="lazy">`
+          : '<div class="leaderboard-img-ph">👗</div>'}
+        <div class="leaderboard-name">${escapeHtml(item.product_name || productId || 'Garment')}</div>
+        <div class="leaderboard-count">${fmt(metric)} ${suffix}</div>
+      </button>`;
+  }
+
+  function renderAnalyticsProductLists() {
+    if (!lastDashboardData) return;
+    const garments = Array.isArray(lastDashboardData.top_garments) ? lastDashboardData.top_garments : [];
+    const outbound = Array.isArray(lastDashboardData.buy_now_products) ? lastDashboardData.buy_now_products : [];
+    const garmentVisible = analyticsListExpanded.garments ? garments : garments.slice(0, 5);
+    const outboundVisible = analyticsListExpanded.outbound ? outbound : outbound.slice(0, 5);
+
+    document.getElementById('topGarmentsLeaderboard').innerHTML = garmentVisible.length
+      ? garmentVisible.map(item => analyticsProductRow(item, item.tryon_count || 0, `try-on${item.tryon_count === 1 ? '' : 's'}`)).join('')
+      : '<div class="empty-state-mini">Your garment leaderboard will appear after the first customer try-on.</div>';
+    document.getElementById('buyNowProductsList').innerHTML = outboundVisible.length
+      ? outboundVisible.map(item => analyticsProductRow(item, item.click_count || 0, `click${item.click_count === 1 ? '' : 's'}`)).join('')
+      : '<div class="empty-state-mini">Product click details will appear after shoppers use Buy Now.</div>';
+
+    const garmentButton = document.getElementById('topGarmentsSeeAll');
+    garmentButton.style.display = garments.length > 5 ? 'block' : 'none';
+    garmentButton.textContent = analyticsListExpanded.garments ? 'Show top 5' : `See all ${garments.length}`;
+    const outboundButton = document.getElementById('buyNowSeeAll');
+    outboundButton.style.display = outbound.length > 5 ? 'block' : 'none';
+    outboundButton.textContent = analyticsListExpanded.outbound ? 'Show top 5' : `See all ${outbound.length}`;
+  }
+
+  async function openAnalyticsProduct(encodedProductId) {
+    closeAnalyticsExpansions();
+    const productId = decodeURIComponent(encodedProductId);
+    const search = document.getElementById('productSearch');
+    if (search) search.value = '';
+    switchTab('products');
+    await Promise.all([loadProducts(), loadQrCodes()]);
+    openProductIds.clear();
+    openProductIds.add(productId);
+    renderUnified();
+    requestAnimationFrame(() => document.getElementById('plrow-' + productId)?.scrollIntoView({ behavior:'smooth', block:'center' }));
+  }
 
   function renderDashboard(data) {
     lastDashboardData = data;
@@ -3083,19 +3164,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
       stats.avg_processing_ms ? `${(stats.avg_processing_ms / 1000).toFixed(1)}s` : '—';
     document.getElementById('statBuyClicks').textContent = fmt(stats.buy_now_clicks || 0);
 
-    const leaderboard = Array.isArray(data.top_garments) ? data.top_garments : [];
-    const leaderboardEl = document.getElementById('topGarmentsLeaderboard');
-    leaderboardEl.innerHTML = leaderboard.length
-      ? leaderboard.map(item => `
-          <div class="leaderboard-row">
-            <div class="leaderboard-rank">#${item.rank}</div>
-            ${item.isolated_garment_url
-              ? `<img class="leaderboard-img" src="${escapeHtml(item.isolated_garment_url)}" alt="" loading="lazy">`
-              : '<div class="leaderboard-img-ph">👗</div>'}
-            <div class="leaderboard-name">${escapeHtml(item.product_name || item.product_id || 'Garment')}</div>
-            <div class="leaderboard-count">${fmt(item.tryon_count || 0)} try-on${item.tryon_count === 1 ? '' : 's'}</div>
-          </div>`).join('')
-      : '<div class="empty-state-mini">Your garment leaderboard will appear after the first customer try-on.</div>';
+    renderAnalyticsProductLists();
 
     // Tab counts (tab nav was removed; guard against missing nodes)
     const tcGhost = document.getElementById('tabCountGhostLayer');
@@ -3550,6 +3619,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   // ── Tab switching ──
   function switchTab(tabName, options = {}) {
     closeAccountMenu();
+    closeAnalyticsExpansions();
     // Product drawers are local to the Products tab; changing tabs should
     // always leave them collapsed when the user returns.
     if (typeof openProductIds !== 'undefined') {
@@ -5780,6 +5850,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     if (panel) panel.style.display = 'none';
   }
   document.addEventListener('click', (e) => {
+    if (!e.target.closest('[data-analytics-panel]')) closeAnalyticsExpansions();
     const panel = document.getElementById('accountMenuPanel');
     const btn = document.getElementById('accountMenuBtn');
     if (panel?.style.display === 'block' && !panel.contains(e.target) && !btn?.contains(e.target)) {
