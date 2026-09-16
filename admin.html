@@ -1041,7 +1041,7 @@ function renderBrands() {
                   <button class="btn btn-secondary" onclick="toggleBrandSettings('${b.id}')">Brand settings ▾</button>
                   ${b.contact_phone ? `<a class="btn btn-secondary" href="https://wa.me/${String(b.contact_phone).replace(/\D/g,'')}?text=${encodeURIComponent(`Hi ${b.name}, Try Instant Fit support here.`)}" target="_blank" rel="noopener" style="color:#20B21A;border-color:#20B21A;display:inline-flex;align-items:center;gap:.35rem;"><img src="/assets/whatsapp.svg" alt="" style="width:1.35em;height:1.35em;border-radius:4px;"> Chat Support</a>` : ''}
                   ${!b.unlimited ? `<button class="btn btn-primary" onclick="openAddCredits('${b.id}', ${nameAttr}, ${standardRate})">+ Credits</button>` : ''}
-                  <a class="btn btn-secondary" href="/dashboard?id=${b.id}" target="_blank">Dashboard ↗</a>
+                  <button class="btn btn-secondary" onclick="openBrandDashboard('${b.id}')">Dashboard ↗</button>
                   <button class="btn btn-secondary" style="color:#991b1b; border-color:#fca5a5;" onclick="deleteBrand('${b.id}', ${nameAttr})">Delete</button>
                 </div>
               </td>
@@ -1057,6 +1057,30 @@ function renderBrands() {
         }).join('')}
       </tbody>
     </table>`;
+}
+
+// Open any vendor's dashboard as admin. The dashboard API now requires a
+// signed session token, so mint a short-lived one for this brand and hand it
+// over in the URL fragment — fragments are not sent to the server and do not
+// appear in referrer headers.
+async function openBrandDashboard(brandId) {
+  // Open synchronously: a window.open() after an await is treated as a popup
+  // and blocked.
+  const tab = window.open('', '_blank');
+  try {
+    const res = await fetchAdmin(`/api/admin/brands/${brandId}/session`, { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.token) {
+      if (tab) tab.close();
+      alert('Could not open that dashboard. Please try again.');
+      return;
+    }
+    const url = `/dashboard?id=${encodeURIComponent(brandId)}#t=${encodeURIComponent(data.token)}`;
+    if (tab) tab.location = url; else window.open(url, '_blank');
+  } catch (e) {
+    if (tab) tab.close();
+    alert('Could not open that dashboard. Please try again.');
+  }
 }
 
 // ── Announcements ──

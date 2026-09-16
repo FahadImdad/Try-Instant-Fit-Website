@@ -2673,6 +2673,45 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   const API = '';
   let activeBrandId = null;
 
+  // ── Brand session token ──
+  // A brand_id alone is not a credential — it travels in URLs and is easy to
+  // guess or share. The API now requires a signed token, issued only after a
+  // verified Google sign-in (or minted by admin to open a vendor dashboard).
+  let brandToken = null;
+  function setBrandToken(t) {
+    brandToken = t || null;
+    try { t ? sessionStorage.setItem('tif_brand_token', t) : sessionStorage.removeItem('tif_brand_token'); } catch (_) {}
+  }
+  function getBrandToken() {
+    if (brandToken) return brandToken;
+    try { brandToken = sessionStorage.getItem('tif_brand_token'); } catch (_) {}
+    return brandToken;
+  }
+
+  // Wrapper around fetch that attaches the session token to brand API calls.
+  // Use this for anything under /api/brands/<id>/…; public endpoints (scan,
+  // catalog, lookup, Google sign-in) can keep using plain fetch.
+  async function brandFetch(url, opts = {}) {
+    const token = getBrandToken();
+    const res = await fetch(url, {
+      ...opts,
+      headers: {
+        ...(opts.headers || {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    // The session expired or was never valid — return to sign-in rather than
+    // leaving a half-loaded dashboard on screen.
+    if (res.status === 401) {
+      setBrandToken(null);
+      clearSavedSession();
+      show('loginView');
+      hide('loadingView');
+      hide('dashView');
+    }
+    return res;
+  }
+
   // Defensive setters — silently no-op if the element was removed/renamed
   // (e.g. when a tab is hidden behind a Coming Soon CTA). Prevents the entire
   // render from crashing on a single missing DOM node.
@@ -2736,6 +2775,10 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
       }
       if (!res.ok) throw new Error(data.error || 'Sign-in failed');
 
+      // The session token proves this brand signed in. Every brand API call
+      // carries it; without it the dashboard endpoints return 401.
+      setBrandToken(data.token);
+
       // Persist
       const rememberMe = document.getElementById('rememberMe')?.checked;
       if (rememberMe) {
@@ -2759,6 +2802,18 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     const email = params.get('email');
+
+    // Admin opens a vendor dashboard with a short-lived token in the URL
+    // fragment (#t=…), which browsers never send to the server or leak in
+    // referrer headers. Consume it, then strip it from the address bar.
+    if (window.location.hash.startsWith('#t=')) {
+      setBrandToken(decodeURIComponent(window.location.hash.slice(3)));
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+
+    // An id in the URL only says which brand to load — the token decides
+    // whether it opens. Without one the API returns 401 and this drops to
+    // the sign-in view.
     if (id) {
       document.getElementById('loginBrandId').value = id;
       loadDashboard({ silent: true });
@@ -2850,7 +2905,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     try {
       // Renamed from /analytics → /overview because adblockers (Adblock Plus etc.)
       // block URLs containing the word "analytics", causing fetch to throw.
-      const res = await fetch(`${API}/api/brands/${brandId}/overview`);
+      const res = await brandFetch(`${API}/api/brands/${brandId}/overview`);
       data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -3209,7 +3264,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   async function refreshDashboardLive() {
     if (!activeBrandId || document.hidden) return;
     try {
-      const res = await fetch(`${API}/api/brands/${activeBrandId}/overview`);
+      const res = await brandFetch(`${API}/api/brands/${activeBrandId}/overview`);
       if (!res.ok) return;
       const data = await res.json();
       const changed = !lastDashboardData || JSON.stringify(data) !== JSON.stringify(lastDashboardData);
@@ -3470,7 +3525,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     if (!activeBrandId || !list) return;
     list.innerHTML = '<div class="empty-state-mini">Loading customer leads…</div>';
     try {
-      const res = await fetch(`${API}/api/brands/${activeBrandId}/leads?limit=500`);
+      const res = await brandFetch(`${API}/api/brands/${activeBrandId}/leads?limit=500`);
       const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Could not load customer leads.');
       const leads = Array.isArray(data.leads) ? data.leads : []; allCustomerLeads = leads; renderCustomerLeads(); return;
@@ -3501,7 +3556,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     if (!activeBrandId) return;
     const list = document.getElementById('brandPasscodesList');
     try {
-      const res = await fetch(`${API}/api/brands/${activeBrandId}/passcodes?t=${Date.now()}`, {
+      const res = await brandFetch(`${API}/api/brands/${activeBrandId}/passcodes?t=${Date.now()}`, {
         cache: 'no-store',
       });
       const data = await safeJson(res);
@@ -3567,7 +3622,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     if(choice==='custom'){const m=Number(document.getElementById('bpcMinutes').value||0),h=Number(document.getElementById('bpcHours').value||0),d=Number(document.getElementById('bpcDays').value||0);if(m<1||m>60||h<0||h>24||d<0){errEl.textContent='Enter valid custom expiry values.';errEl.className='alert error';return false;}expiryMs=((d*24+h)*60+m)*60000;}
     btn.disabled = true; btn.textContent = 'Creating…';
     try {
-      const res = await fetch(`${API}/api/brands/${activeBrandId}/passcodes`, {
+      const res = await brandFetch(`${API}/api/brands/${activeBrandId}/passcodes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -3848,7 +3903,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   async function loadProducts() {
     if (!activeBrandId) return;
     try {
-      const res = await fetch(`${API}/api/brands/${activeBrandId}/products`);
+      const res = await brandFetch(`${API}/api/brands/${activeBrandId}/products`);
       const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed to load');
       allProducts = data.products || [];
@@ -4406,7 +4461,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
 
     try {
       // Step 1: create the product (charges 1 credit for AI processing)
-      const res = await fetch(`${API}/api/brands/${activeBrandId}/products`, { method: 'POST', body: fd });
+      const res = await brandFetch(`${API}/api/brands/${activeBrandId}/products`, { method: 'POST', body: fd });
       const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Couldn’t save the product. Please try again.');
 
@@ -4841,7 +4896,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   async function loadQrCodes() {
     if (!activeBrandId) return;
     try {
-      const res = await fetch(`${API}/api/brands/${activeBrandId}/qr-codes`);
+      const res = await brandFetch(`${API}/api/brands/${activeBrandId}/qr-codes`);
       const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed to load');
       allQrs = data.qr_codes || [];
@@ -5388,9 +5443,9 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
         for (const [k, v] of Object.entries(fields)) fd.append(k, v);
         fd.append('catalog_enabled', catalogEnabled ? 'true' : 'false');
         fd.append('logo', epPickedLogoFile);
-        res = await fetch(`${API}/api/brands/${activeBrandId}`, { method: 'PATCH', body: fd });
+        res = await brandFetch(`${API}/api/brands/${activeBrandId}`, { method: 'PATCH', body: fd });
       } else {
-        res = await fetch(`${API}/api/brands/${activeBrandId}`, {
+        res = await brandFetch(`${API}/api/brands/${activeBrandId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...fields, catalog_enabled: catalogEnabled }),
@@ -5500,7 +5555,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     if (!activeBrandId) return;
     notifications = [];
     try {
-      const res = await fetch(`${API}/api/brands/${activeBrandId}/topup-requests`);
+      const res = await brandFetch(`${API}/api/brands/${activeBrandId}/topup-requests`);
       if (res.ok) {
         const data = await safeJson(res);
         const topups = (data.topups || []).slice(0, 20);
@@ -5710,7 +5765,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   })();
   const TIF_WHATSAPP = '923223146800';
   let topupPromotions = { offers: [], promoCodes: [] }, selectedTopupDiscount = 0, promoCelebrationShown = false;
-  async function loadTopupPromotions(){ if(!activeBrandId)return; try{const r=await fetch(`${API}/api/brands/${activeBrandId}/promotions`,{cache:'no-store'});if(r.ok)topupPromotions=await r.json();const offer=topupPromotions.offers?.[0];document.getElementById('tuOfferChoice').style.display=offer?'block':'none';document.getElementById('tuPromoEntry').style.display=offer?'none':'flex';document.getElementById('tuPromoHint').textContent=offer?`${offer.name}: ${offer.discount_percent}% automatic discount applied.`:'';recalcTopup();if(offer)launchPromoCelebration();}catch(_){} }
+  async function loadTopupPromotions(){ if(!activeBrandId)return; try{const r=await brandFetch(`${API}/api/brands/${activeBrandId}/promotions`,{cache:'no-store'});if(r.ok)topupPromotions=await r.json();const offer=topupPromotions.offers?.[0];document.getElementById('tuOfferChoice').style.display=offer?'block':'none';document.getElementById('tuPromoEntry').style.display=offer?'none':'flex';document.getElementById('tuPromoHint').textContent=offer?`${offer.name}: ${offer.discount_percent}% automatic discount applied.`:'';recalcTopup();if(offer)launchPromoCelebration();}catch(_){} }
   function toggleTopupPromoMode(){const use=document.getElementById('tuUsePromoCode').checked;selectedTopupDiscount=0;document.getElementById('tuPromoEntry').style.display=use?'flex':'none';document.getElementById('tuPromoHint').textContent=use?'Enter a promo code to replace the automatic offer.':(topupPromotions.offers?.[0]?`${topupPromotions.offers[0].name}: ${topupPromotions.offers[0].discount_percent}% automatic discount applied.`:'');recalcTopup();}
   function applyTopupPromo(){const code=(document.getElementById('tuPromoCode').value||'').trim().toUpperCase();const p=topupPromotions.promoCodes?.find(x=>x.code===code);if(!p){selectedTopupDiscount=0;document.getElementById('tuPromoHint').textContent=code?'Invalid or inactive promo code.':'';}else{selectedTopupDiscount=Number(p.discount_percent);document.getElementById('tuPromoHint').textContent=`${p.name||p.code}: ${selectedTopupDiscount}% discount applied.`;}recalcTopup();}
 
@@ -5821,7 +5876,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
 
     // Create the pending top-up request first so admin sees it.
     try {
-      const res = await fetch(`${API}/api/brands/${activeBrandId}/topup-requests`, {
+      const res = await brandFetch(`${API}/api/brands/${activeBrandId}/topup-requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -6100,8 +6155,8 @@ function launchPromoCelebration(){const layer=document.createElement('div');Obje
 <style>@keyframes partyConfettiFall{0%{transform:translate(0,0) rotate(0);opacity:0}8%{opacity:1}100%{transform:translate(var(--drift),115vh) rotate(var(--spin));opacity:0}}</style>
 <script>
 (function(){const nav=document.querySelector('.dash-tab-nav');if(nav&&!document.querySelector('[data-tab="support"]')){const b=document.createElement('button');b.className='tab-btn';b.dataset.tab='support';b.innerHTML='💬 <span class="tab-label">Support</span>';b.onclick=()=>{switchTab('support');loadVendorSupport();};nav.appendChild(b);}const main=document.querySelector('.dash-main')||document.body;if(!document.getElementById('tab-support')){const p=document.createElement('div');p.id='tab-support';p.className='tab-content';p.style.display='none';p.innerHTML='<section class="sw-section"><h2>Customer support</h2><p>Ask us about credits, refunds, discounts, or any problem.</p><div id="vendorSupportMessages" style="max-height:360px;overflow:auto;margin:1rem 0;"></div><div style="display:flex;gap:.5rem;"><input id="vendorSupportInput" placeholder="Write your message…" style="flex:1;padding:.75rem;border:1px solid var(--border);border-radius:10px;"><button class="btn btn-primary" onclick="sendVendorSupport()">Send</button></div></section>';main.appendChild(p);}})();
-async function loadVendorSupport(){if(!activeBrandId)return;const r=await fetch(`${API}/api/brands/${activeBrandId}/support`,{cache:'no-store'}),d=await r.json(),el=document.getElementById('vendorSupportMessages');if(el)el.innerHTML=(d.conversation?.support_messages||[]).map(m=>`<div style="padding:.6rem;margin:.4rem 0;border-radius:10px;background:${m.sender_type==='admin'?'#eef2ff':'#f1f5f9'}"><b>${m.sender_type==='admin'?'Support':'You'}:</b> ${escapeHtml(m.message)}</div>`).join('')||'<p>No messages yet. How can we help?</p>';}
-async function sendVendorSupport(){const i=document.getElementById('vendorSupportInput');if(!i?.value.trim()||!activeBrandId)return;const r=await fetch(`${API}/api/brands/${activeBrandId}/support`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:i.value.trim()})});if(r.ok){i.value='';loadVendorSupport();}}
+async function loadVendorSupport(){if(!activeBrandId)return;const r=await brandFetch(`${API}/api/brands/${activeBrandId}/support`,{cache:'no-store'}),d=await r.json(),el=document.getElementById('vendorSupportMessages');if(el)el.innerHTML=(d.conversation?.support_messages||[]).map(m=>`<div style="padding:.6rem;margin:.4rem 0;border-radius:10px;background:${m.sender_type==='admin'?'#eef2ff':'#f1f5f9'}"><b>${m.sender_type==='admin'?'Support':'You'}:</b> ${escapeHtml(m.message)}</div>`).join('')||'<p>No messages yet. How can we help?</p>';}
+async function sendVendorSupport(){const i=document.getElementById('vendorSupportInput');if(!i?.value.trim()||!activeBrandId)return;const r=await brandFetch(`${API}/api/brands/${activeBrandId}/support`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:i.value.trim()})});if(r.ok){i.value='';loadVendorSupport();}}
 </script>
 <script>
 // WhatsApp is the single support channel; remove the legacy in-app chat tab.
