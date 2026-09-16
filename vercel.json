@@ -17,5 +17,6 @@
     ,{ "source": "/terms",       "destination": "/terms.html" }
     ,{ "source": "/privacy",     "destination": "/privacy.html" }
     ,{ "source": "/refund-policy","destination": "/refund-policy.html" }
+    ,{ "source": "/your-privacy", "destination": "/shopper-privacy.html" }
   ]
 }
