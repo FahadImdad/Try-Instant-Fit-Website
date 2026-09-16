@@ -24,6 +24,12 @@
       .legal h2 {
         color: var(--text);
       }
+      .legal ul {
+        padding-left: 20px;
+      }
+      .legal li {
+        margin-bottom: 8px;
+      }
       .notice {
         padding: 14px;
         background: #fff7ed;
@@ -38,100 +44,313 @@
         ><img src="/assets/logo.png" alt="Try Instant Fit" style="height: 38px"
       /></a>
       <h1>Terms of Service</h1>
-      <p>Effective: 13 August 2026</p>
+      <p>Effective: 16 September 2026</p>
+      <p>
+        <strong>Platform Provider:</strong> Try Instant Fit (“Company,” “We,”
+        “Us,” or “Our”)<br />
+        <strong>Service Covered:</strong> tryinstantfit.com Dashboard, APIs,
+        Virtual Try-On Engine, and Embeddable Client Modules (collectively, the
+        “Services”)<br />
+        <strong>Audience:</strong> Business-to-business users (“Merchant,”
+        “Client,” “Vendor”) and end-user shoppers (“End User,” “Customer”)
+      </p>
       <p class="notice">
-        <strong>Important:</strong> These terms are a business-operational draft
-        and should be reviewed by qualified Pakistan counsel before being
-        treated as final legal advice.
+        These terms are a business-operational draft and should be reviewed by
+        qualified counsel before being treated as final legal advice.
       </p>
-      <h2>1. Agreement and eligibility</h2>
+
+      <h2>1. Acceptance of terms &amp; legal binding</h2>
       <p>
-        By creating an account or using Try Instant Fit, you agree to these
-        Terms and our Privacy and Refund Policies. You confirm that you can
-        enter a binding agreement and, for a business account, have authority to
-        bind that business.
+        By accessing the dashboard, uploading assets, generating passcodes, or
+        initiating a virtual try-on scan via Try Instant Fit, you (“User,”
+        “Merchant,” or “End User”) agree to be bound by these Terms of Service
+        and our <a href="/privacy">Privacy Policy</a>. If you accept these Terms
+        on behalf of a corporate entity, you represent that you have authority
+        to bind that entity. If you do not agree to these Terms in their
+        entirety, you must not access or use the platform.
       </p>
-      <h2>2. Service</h2>
+
+      <h2>2. Architecture &amp; service overview</h2>
+      <p>Try Instant Fit provides a SaaS-based AI virtual fitting solution.</p>
+      <ul>
+        <li>
+          <strong>Merchant operations:</strong> Merchants upload garment
+          photography, configure catalogue settings, assign access passcodes,
+          set free/open try-on limits, and analyse usage metrics.
+        </li>
+        <li>
+          <strong>End-User operations:</strong> End Users access the service via
+          QR code or web link, optionally or mandatorily submit contact details
+          based on session access type, and upload personal photography to
+          receive an AI-generated virtual fitting preview.
+        </li>
+        <li>
+          <strong>Scan-gated isolated catalogues:</strong> Access to a
+          Merchant’s catalogue is scan-gated. Scanning a Merchant’s QR code or
+          access link grants access exclusively to that Merchant’s catalogue
+          view. We do not aggregate, combine, or cross-display Merchant
+          catalogues into a public marketplace, and we do not grant
+          cross-store browsing.
+        </li>
+        <li>
+          <strong>Data infrastructure:</strong> The platform uses
+          enterprise-grade cloud database providers and encrypted hosting
+          environments whose operators maintain recognised industry security
+          certifications. We may migrate backend data layers to equivalent
+          high-security infrastructure without altering the privacy protections
+          described in our Privacy Policy.
+        </li>
+      </ul>
+
+      <h2>3. Account registration &amp; passcode governance</h2>
+      <ul>
+        <li>
+          <strong>Merchant accounts:</strong> Merchants are responsible for the
+          confidentiality of their dashboard credentials and for all activity
+          under their account.
+        </li>
+        <li>
+          <strong>Access passcodes:</strong> Merchants may issue custom,
+          count-restricted passcodes to End Users and are solely responsible for
+          distributing them to authorised shoppers. We may terminate passcodes
+          that are publicly leaked, abused, or used for automated or bot
+          testing. Passcode and QR limits are access controls, not security
+          guarantees.
+        </li>
+      </ul>
+
+      <h2>4. Account inactivity &amp; data lifecycle</h2>
+      <ul>
+        <li>
+          <strong>Six-month inactivity clause:</strong> If a Merchant account
+          shows no log-ins, catalogue updates, passcode generations, or
+          end-user try-on activity for six consecutive months, we may mark the
+          account dormant and proceed with termination.
+        </li>
+        <li>
+          <strong>Purging of inactive data:</strong> On termination for
+          inactivity, we may permanently purge the Merchant’s stored catalogue
+          items, QR code links, lead histories, and passcode configurations.
+        </li>
+        <li>
+          <strong>Forfeiture of remaining credits:</strong> Unused Garment
+          Processing or Customer Fitting Credits on an account terminated for
+          six months of inactivity are non-refundable and are forfeited on
+          account closure.
+        </li>
+      </ul>
+
+      <h2>5. Credit model, payments &amp; international transactions</h2>
+      <ul>
+        <li>
+          <strong>Garment Processing Credit:</strong> Consumes one credit per
+          product image upload, deducted on submission to trigger AI garment
+          extraction. Text, price, or metadata updates to existing products do
+          not consume credits.
+        </li>
+        <li>
+          <strong>Customer Fitting Credit:</strong> Consumes one credit per
+          try-on generation triggered by an End User, via open try-on or
+          passcode validation.
+        </li>
+        <li>
+          <strong>Payment infrastructure:</strong> Payments and credit package
+          settlements may be made via SWIFT/IBAN bank wire transfer, corporate
+          electronic invoicing, or PCI-DSS compliant third-party payment
+          gateways. Transactions are secured using industry-standard encryption.
+          We may introduce or transition payment gateways, regional clearing
+          partners, or banking channels to optimise cross-border transaction
+          speed and regulatory compliance.
+        </li>
+        <li>
+          <strong>Taxes, fees &amp; surcharges:</strong> All listed prices are
+          exclusive of taxes, bank transfer fees, currency conversion charges,
+          cross-border transaction fees, and gateway surcharges. The
+          Merchant/Customer is solely responsible for all applicable national,
+          regional, local, or international taxes (including VAT, sales tax,
+          GST, withholding taxes, or import levies) and for all bank handling
+          fees, SWIFT wire charges, intermediary bank fees, card processing
+          surcharges, and currency conversion fees. We must receive the full net
+          invoiced amount without deduction for foreign exchange losses or
+          processor fees.
+        </li>
+        <li>
+          <strong>Minimum order thresholds:</strong> To avoid disproportionate
+          cross-border banking fees relative to service volume, we enforce a
+          minimum order value for international purchases and credit packages.
+          International orders that do not meet our minimum bulk credit package
+          criteria will not be processed.
+        </li>
+        <li>
+          <strong>Vendor image quality requirement:</strong> The visual accuracy
+          of the AI-extracted garment depends on the source image supplied by
+          the Merchant. Merchants are responsible for ensuring uploaded product
+          photography is high resolution and sharply focused, clearly and evenly
+          lit, and shot at a proper front-facing, unobstructed angle that
+          exposes the entire garment design.
+        </li>
+      </ul>
+
+      <h2>6. No refunds and no credit replacement</h2>
       <p>
-        Try Instant Fit provides AI-assisted virtual garment visualisation, QR
-        access, product catalog tools, analytics and related services. AI
-        results are simulations, may be inaccurate, and do not guarantee fit,
-        colour, measurements, stock, tailoring outcomes or purchasing results.
+        All credit purchases, credit deductions, garment processing actions, and
+        try-on generations are final, non-refundable, and non-restorable. We do
+        not operate a try-on issue-reporting, dispute, or refund-review process,
+        and we do not evaluate, inspect, or adjudicate the visual output of
+        processed garments.
       </p>
-      <h2>3. Vendor responsibilities</h2>
       <p>
-        Vendors are responsible for product rights, truthful descriptions,
-        prices, available sizes, custom-size claims, inventory, customer
-        service, sales, delivery, returns, taxes and compliance with applicable
-        consumer laws. Vendors must not upload content they lack permission to
-        use or expose private designs in the public catalogue unintentionally.
+        If an AI extraction or try-on yields sub-optimal, distorted, or
+        undesired visual results — including because of poor image lighting,
+        incorrect camera angles, dark environments, obscured garment details, or
+        natural AI processing variation — the consumed credit remains deducted
+        and will not be refunded, replaced, or credited back. We disclaim any
+        obligation to investigate extraction results, review image quality
+        claims, or issue manual credit adjustments. Nothing in this section
+        excludes rights that cannot lawfully be excluded under mandatory
+        consumer law.
       </p>
-      <h2>4. Customer photos and consent</h2>
+
+      <h2>7. AI model performance disclaimer</h2>
+      <ul>
+        <li>
+          <strong>Processing:</strong> Try Instant Fit uses industry-leading
+          multimodal AI vision models engineered to deliver high-quality visual
+          outputs.
+        </li>
+        <li>
+          <strong>No guarantee of visual perfection:</strong> As with all
+          machine learning systems, outputs are generated probabilistically. We
+          do not guarantee visual perfection, exact fabric drape accuracy,
+          precise colour matching, or flaw-free renderings. AI anomalies,
+          edge-case artefacts, complex fabric textures, and minor fitting
+          distortions may occur. Virtual try-on outputs are visual
+          approximations for consumer guidance and estimation only, and do not
+          guarantee fit, measurements, stock, or tailoring outcomes.
+        </li>
+      </ul>
+
+      <h2>8. Intellectual property &amp; brand protection</h2>
+      <ul>
+        <li>
+          <strong>Merchant ownership:</strong> Merchants retain ownership of all
+          product images, brand assets, logos, trade secrets, and descriptions
+          uploaded to the platform, and grant Try Instant Fit a worldwide,
+          non-exclusive, royalty-free licence to host, process, extract, and
+          display these assets solely to provide the virtual fitting service and
+          catalogue display.
+        </li>
+        <li>
+          <strong>Customer photographs:</strong> End Users retain all rights in
+          photographs they submit. The licence granted to us is limited to
+          processing the image in memory to generate the requested try-on, and
+          ends when the session ends. We do not store, reuse, or train on
+          customer photographs.
+        </li>
+        <li>
+          <strong>Platform IP:</strong> The underlying software, machine
+          learning architectures, UI designs, algorithms, codebases, and
+          trademarks remain the exclusive property of Try Instant Fit. Merchants,
+          competitors, and third parties must not reverse-engineer, decompile,
+          or attempt to extract the weights or source code of the AI try-on
+          engine.
+        </li>
+        <li>
+          <strong>Anti-scraping:</strong> Competitors, rival platforms, or
+          agents acting for competing services must not create merchant
+          accounts, initiate test scans, or scrape UI workflows to analyse,
+          replicate, or benchmark our proprietary technology. Breach may result
+          in immediate account termination and a claim for damages.
+        </li>
+      </ul>
+
+      <h2>9. Prohibited content &amp; system usage</h2>
       <p>
-        You may upload only photos you own or are authorised to use. Do not
-        upload images of another person without consent, images of children
-        without lawful guardian permission, illegal content, intimate content,
-        or content that infringes rights. You must not use results for
-        deception, impersonation, harassment, discrimination or unlawful
-        biometric profiling.
+        Users and Merchants must not upload imagery containing explicit
+        material, nudity, weapons, hate speech, or illegal content. You may
+        upload only photographs you own or are authorised to use, must not
+        upload images of another person without their consent or of a child
+        without lawful guardian permission, and must not use results for
+        deception, impersonation, harassment, discrimination, or unlawful
+        biometric profiling. Automated scripting, bot testing, and exploitation
+        of API endpoints to bypass credit usage or passcode gates are
+        prohibited.
       </p>
-      <h2>5. Credits, limits and passcodes</h2>
+
+      <h2>10. Outbound e-commerce links</h2>
       <p>
-        Try-ons and processing may consume credits. QR and passcode limits are
-        access controls, not security guarantees. Vendors are responsible for
-        distributing passcodes appropriately. Pricing and included usage are
-        shown before purchase or top-up.
+        The platform may present an optional “Buy Now” link directing End Users
+        to external Merchant storefronts. Try Instant Fit acts strictly as a
+        visual try-on intermediary and is not party to, responsible for, or
+        liable for any transaction, payment processing, fulfilment, dispute, or
+        return occurring on a third-party Merchant website.
       </p>
-      <h2>6. Acceptable use</h2>
+
+      <h2>11. Availability and changes</h2>
       <p>
-        You must not attack, scrape, reverse engineer, overload, bypass limits,
-        probe credentials, introduce malware, resell unauthorised access, or use
-        the service unlawfully. We may suspend access to protect users, systems
-        or legal compliance.
-      </p>
-      <h2>7. Intellectual property</h2>
-      <p>
-        Vendors retain rights in their uploaded brands and products. Customers
-        retain rights they hold in their photos. You grant Try Instant Fit a
-        limited licence to process, host and transmit submitted content solely
-        to operate, secure, support and improve the service as described in our
-        Privacy Policy.
-      </p>
-      <h2>8. Availability and changes</h2>
-      <p>
-        The service may change or be interrupted. We do not promise
+        The Services may change or be interrupted. We do not promise
         uninterrupted availability or that every AI result will be suitable.
-        Material policy changes will be posted with an updated effective date.
+        Material changes to these Terms will be posted with an updated effective
+        date.
       </p>
-      <h2>9. Disclaimers and liability</h2>
+
+      <h2>12. Disclaimers &amp; limitation of liability</h2>
+      <ul>
+        <li>
+          <strong>“As is” provision:</strong> The Services are provided “as is”
+          and “as available” without warranties of any kind, express or implied,
+          including visual accuracy or fit sizing guarantees.
+        </li>
+        <li>
+          <strong>Liability cap:</strong> To the maximum extent permitted by
+          applicable law, Try Instant Fit is not liable for indirect,
+          incidental, special, or consequential damages, loss of sales, or
+          network vulnerabilities. Our aggregate liability will not exceed the
+          total credit purchase amount paid by the Merchant in the three months
+          preceding the claim. Nothing excludes liability that cannot lawfully
+          be excluded.
+        </li>
+      </ul>
+
+      <h2>13. Termination</h2>
       <p>
-        To the maximum extent permitted by applicable law, the service is
-        provided on an “as available” basis. Try Instant Fit is not the seller
-        of vendor garments and is not responsible for vendor fulfilment. Nothing
-        excludes liability that cannot lawfully be excluded. Subject to that
-        restriction, indirect or consequential losses are excluded and aggregate
-        liability is limited to fees paid for the affected service during the
-        preceding three months.
-      </p>
-      <h2>10. Termination</h2>
-      <p>
-        You may stop using the service. We may restrict or terminate accounts
-        for breach, fraud, abuse, non-payment, security risk or legal
-        obligation. Provisions that logically survive termination remain
+        You may stop using the Services at any time. We may restrict or
+        terminate accounts for breach, fraud, abuse, non-payment, security risk,
+        or legal obligation. Provisions that logically survive termination remain
         effective.
       </p>
-      <h2>11. Electronic records</h2>
+
+      <h2>14. Electronic records</h2>
       <p>
-        You consent to electronic contracting, notices and records. Acceptance
+        You consent to electronic contracting, notices, and records. Acceptance
         time and policy version may be retained as evidence of consent.
       </p>
-      <h2>12. Governing law and contact</h2>
+
+      <h2>15. Governing law &amp; dispute resolution</h2>
       <p>
-        These Terms are governed by applicable laws of Pakistan, subject to
-        mandatory consumer rights and final confirmation of the appropriate
-        venue by counsel. Questions:
+        These Terms and any dispute arising out of or in connection with them
+        are governed by the laws of the Islamic Republic of Pakistan, without
+        regard to conflict-of-law rules. The courts of Karachi, Pakistan have
+        exclusive jurisdiction, except that either party may seek injunctive
+        relief in any competent court to protect its intellectual property or
+        confidential information.
+      </p>
+      <p>
+        This clause does not deprive a consumer of the protection of mandatory
+        consumer-law provisions, or of the right to bring proceedings in the
+        courts of their country of residence, where applicable law so requires.
+        Before commencing proceedings, the parties will attempt in good faith to
+        resolve any dispute by negotiation for 30 days following written notice
+        to
         <a href="mailto:info@tryinstantfit.com">info@tryinstantfit.com</a>.
       </p>
+
+      <h2>16. Contact</h2>
+      <p>
+        Questions about these Terms:
+        <a href="mailto:info@tryinstantfit.com">info@tryinstantfit.com</a>.
+      </p>
+
       <p>
         <a href="/privacy">Privacy Policy</a> ·
         <a href="/refund-policy">Refund Policy</a> · <a href="/">Home</a>
