@@ -136,8 +136,10 @@ if (footerText) {
     footerText.textContent = footerText.textContent.replace('2026', currentYear);
     const legal = document.createElement('p');
     legal.style.cssText = 'margin:.45rem 0 0;font-size:.8rem;';
+    legal.querySelectorAll('a').forEach(a => { a.style.color = 'rgba(255,255,255,.65)'; a.style.textDecoration = 'none'; });
     legal.innerHTML = '<a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refund-policy">Refund Policy</a>';
     footerText.insertAdjacentElement('afterend', legal);
+    legal.querySelectorAll('a').forEach(a => { a.style.color = 'rgba(255,255,255,.65)'; a.style.textDecoration = 'none'; });
 }
 
 // Add hover effect to stat numbers
