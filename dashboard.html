@@ -4032,7 +4032,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
       <h4 class="ptc-section-title">Articles tried with this passcode</h4>
       <div class="ptc-article-list">${[...articles.values()]
         .sort((a, b) => b.count - a.count || String(a.name).localeCompare(String(b.name)))
-        .map(article => `<button type="button" class="ptc-article-item" onclick="openPasscodeProduct('${encodeURIComponent(String(article.id))}','${encodeURIComponent(String(article.name))}')"><span class="ptc-article-copy">${article.product?.image_url ? `<img class="ptc-article-thumb" src="${escapeHtml(article.product.image_url)}" alt="${escapeHtml(article.name)}">` : '<span class="ptc-article-thumb"></span>'}<strong>${escapeHtml(article.name)}</strong></span><span class="ptc-article-count">${fmt(article.count)} try-on${article.count === 1 ? '' : 's'} · View product →</span></button>`)
+        .map(article => { const image = article.product?.image_url || article.product?.isolated_garment_url; return `<button type="button" class="ptc-article-item" onclick="openPasscodeProduct('${encodeURIComponent(String(article.id))}','${encodeURIComponent(String(article.name))}')"><span class="ptc-article-copy">${image ? `<img class="ptc-article-thumb" src="${escapeHtml(image)}" alt="${escapeHtml(article.name)}">` : '<span class="ptc-article-thumb">👕</span>'}<strong>${escapeHtml(article.name)}</strong></span><span class="ptc-article-count">${fmt(article.count)} try-on${article.count === 1 ? '' : 's'} · View product →</span></button>`; })
         .join('')}</div>
       <h4 class="ptc-section-title" style="margin-top:1rem;">Complete try-on history</h4>`;
 
@@ -4042,8 +4042,8 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
       const productName = product?.name || t.product_name || t.product_id || '—';
       return `
       <div class="ptc-row ${t.sold ? 'sold' : ''}" id="ptc-row-${t.id}">
-        ${product?.image_url
-          ? `<img class="ptc-row-thumb" src="${escapeHtml(product.image_url)}" alt="${escapeHtml(productName)}" loading="lazy">`
+        ${(product?.image_url || product?.isolated_garment_url)
+          ? `<img class="ptc-row-thumb" src="${escapeHtml(product.image_url || product.isolated_garment_url)}" alt="${escapeHtml(productName)}" loading="lazy">`
           : '<div class="ptc-row-thumb" style="display:flex; align-items:center; justify-content:center;">🧥</div>'}
         <div class="ptc-row-info">
           <div class="ptc-row-name"><button type="button" class="link-button" onclick="openPasscodeProduct('${encodeURIComponent(String(t.product_uuid || t.product_id || ''))}','${encodeURIComponent(String(t.product_name || ''))}')">${escapeHtml(t.product_name || t.product_id || '—')}</button></div>
