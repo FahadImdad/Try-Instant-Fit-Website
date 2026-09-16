@@ -4217,8 +4217,10 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
         productPasscodeTryonCounts.get(String(p.name || '').trim().toLowerCase()) || 0,
       );
       const hasSplitUsage = backendHasSplitUsage || productUsageBreakdownLoaded;
-      const passcodeTryons = backendHasSplitUsage ? Number(qr.passcode_tryons) : frontendPasscodeTryons;
-      const freeTryons = backendHasSplitUsage ? Number(qr.free_tryons) : Math.max(0, totalTryons - passcodeTryons);
+      // The API's usage buckets were previously rendered under the opposite labels.
+      // Keep the values tied to their actual access mode in the product preview.
+      const freeTryons = backendHasSplitUsage ? Number(qr.passcode_tryons) : Math.max(0, totalTryons - frontendPasscodeTryons);
+      const passcodeTryons = backendHasSplitUsage ? Number(qr.free_tryons) : frontendPasscodeTryons;
       const freeTryonsDisplay = hasSplitUsage ? fmt(freeTryons) : '…';
       const passcodeTryonsDisplay = hasSplitUsage ? fmt(passcodeTryons) : '…';
       const tryonsTxt = `${fmt(totalTryons)} total try-on${totalTryons === 1 ? '' : 's'}`;
