@@ -927,8 +927,17 @@
       white-space: nowrap;
     }
     .passcode-usage strong { color: var(--text); }
+    .product-list-toolbar { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,280px); gap:.65rem; width:100%; }
+    .product-list-toolbar select { width:100%; }
+    .ptc-article-summary { margin:0 0 1rem; }
+    .ptc-section-title { margin:0 0 .55rem; font-size:.82rem; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+    .ptc-article-list { display:grid; gap:.45rem; }
+    .ptc-article-item { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.7rem .8rem; border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); }
+    .ptc-article-item strong { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .ptc-article-count { flex:none; color:var(--primary); font-weight:800; }
     @media (max-width:560px){
       .passcode-row { grid-template-columns: 1fr 1fr; row-gap: .5rem; }
+      .product-list-toolbar { grid-template-columns:1fr; }
     }
 
     /* Unified products+QR list */
@@ -1978,7 +1987,15 @@
               <button class="btn btn-primary btn-sm" onclick="openAddProduct()">+ Add Product</button>
             </div>
             <div class="sticky-list-bar">
-              <input type="search" id="productSearch" placeholder="🔎  Search by name, SKU, or price…" oninput="renderUnified()">
+              <div class="product-list-toolbar">
+                <input type="search" id="productSearch" placeholder="🔎  Search by name, SKU, or price…" oninput="renderUnified()">
+                <select id="productSort" aria-label="Sort products" onchange="renderUnified()">
+                  <option value="newest">Newest Added</option>
+                  <option value="most_tryons">Most Tried-On</option>
+                  <option value="most_buy_clicks">Most Buy-Now Clicks</option>
+                  <option value="oldest">Oldest Added</option>
+                </select>
+              </div>
             </div>
             <div id="unifiedList" class="unified-list">
               <div class="empty-state-mini">Loading…</div>
@@ -2530,6 +2547,7 @@
         <h3 id="ptcTitle">Try-Ons</h3>
         <p style="color:var(--muted); font-size:.9rem; margin:0 0 1rem;" id="ptcSubtitle">Mark which products this customer actually bought.</p>
         <div id="ptcSummary" class="ptc-summary"></div>
+        <div id="ptcArticleSummary" class="ptc-article-summary"></div>
         <div id="ptcList" class="ptc-list"></div>
       </div>
     </div>
@@ -3942,6 +3960,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   function renderPasscodeTryons() {
     const list = document.getElementById('ptcList');
     const sumEl = document.getElementById('ptcSummary');
+    const articleEl = document.getElementById('ptcArticleSummary');
     const total = activePasscodeTryons.length;
     const sold = activePasscodeTryons.filter(t => t.sold);
     const revenue = sold.reduce((s, t) => s + Number(t.sold_price || 0), 0);
@@ -3955,9 +3974,25 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     `;
 
     if (total === 0) {
+      articleEl.innerHTML = '';
       list.innerHTML = '<div class="empty-state-mini">No try-ons with this passcode yet.</div>';
       return;
     }
+
+    const articles = new Map();
+    activePasscodeTryons.forEach(t => {
+      const key = String(t.product_uuid || t.product_id || t.product_name || 'Unknown article');
+      const current = articles.get(key) || { name: t.product_name || t.product_id || 'Unknown article', count: 0 };
+      current.count += 1;
+      articles.set(key, current);
+    });
+    articleEl.innerHTML = `
+      <h4 class="ptc-section-title">Articles tried with this passcode</h4>
+      <div class="ptc-article-list">${[...articles.values()]
+        .sort((a, b) => b.count - a.count || String(a.name).localeCompare(String(b.name)))
+        .map(article => `<div class="ptc-article-item"><strong>${escapeHtml(article.name)}</strong><span class="ptc-article-count">${fmt(article.count)} try-on${article.count === 1 ? '' : 's'}</span></div>`)
+        .join('')}</div>
+      <h4 class="ptc-section-title" style="margin-top:1rem;">Complete try-on history</h4>`;
 
     list.innerHTML = activePasscodeTryons.map(t => `
       <div class="ptc-row ${t.sold ? 'sold' : ''}" id="ptc-row-${t.id}">
@@ -4088,7 +4123,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
 
     // Filter by search query (matches name, sku, price, currency)
     const search = (document.getElementById('productSearch')?.value || '').trim().toLowerCase();
-    let products = allProducts;
+    let products = [...allProducts];
     if (search) {
       products = products.filter(p => {
         const blob = `${p.name || ''} ${p.sku || ''} ${p.price || ''} ${p.currency || ''}`.toLowerCase();
@@ -4099,6 +4134,29 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
         return;
       }
     }
+
+    const productMetric = (items, product, field) => {
+      const name = String(product.name || '').trim().toLowerCase();
+      const match = (Array.isArray(items) ? items : []).find(item => {
+        const itemId = String(item.product_id || '');
+        const itemName = String(item.product_name || '').trim().toLowerCase();
+        return itemId === String(product.id) || itemId === String(product.sku) || (name && itemName === name);
+      });
+      return Number(match?.[field] || 0);
+    };
+    const sortMode = document.getElementById('productSort')?.value || 'newest';
+    products.sort((a, b) => {
+      if (sortMode === 'most_tryons') {
+        return productMetric(lastDashboardData?.top_garments, b, 'tryon_count') - productMetric(lastDashboardData?.top_garments, a, 'tryon_count')
+          || new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      }
+      if (sortMode === 'most_buy_clicks') {
+        return productMetric(lastDashboardData?.buy_now_products, b, 'click_count') - productMetric(lastDashboardData?.buy_now_products, a, 'click_count')
+          || new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      }
+      if (sortMode === 'oldest') return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+    });
 
     // Index QRs by product_uuid for quick lookup
     const qrByProductUuid = {};
