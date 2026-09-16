@@ -3029,8 +3029,9 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     const productId = String(item.product_id || '');
     const canOpen = productId && productId !== 'unknown';
     const encodedId = encodeURIComponent(productId);
+    const encodedName = encodeURIComponent(String(item.product_name || ''));
     return `
-      <button type="button" class="leaderboard-row" ${canOpen ? `onclick="openAnalyticsProduct('${encodedId}')"` : 'disabled'}>
+      <button type="button" class="leaderboard-row" ${canOpen ? `onclick="openAnalyticsProduct('${encodedId}','${encodedName}')"` : 'disabled'}>
         <div class="leaderboard-rank">#${item.rank}</div>
         ${item.isolated_garment_url
           ? `<img class="leaderboard-img" src="${escapeHtml(item.isolated_garment_url)}" alt="" loading="lazy">`
@@ -3062,17 +3063,21 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     outboundButton.textContent = analyticsListExpanded.outbound ? 'Show top 5' : `See all ${outbound.length}`;
   }
 
-  async function openAnalyticsProduct(encodedProductId) {
+  async function openAnalyticsProduct(encodedProductId, encodedProductName) {
     closeAnalyticsExpansions();
     const productId = decodeURIComponent(encodedProductId);
+    const productName = decodeURIComponent(encodedProductName || '');
     const search = document.getElementById('productSearch');
     if (search) search.value = '';
     switchTab('products');
     await Promise.all([loadProducts(), loadQrCodes()]);
+    const match = allProducts.find(p => p.id === productId || p.sku === productId)
+      || allProducts.find(p => String(p.name || '').trim().toLowerCase() === productName.trim().toLowerCase());
+    const targetId = match?.id || productId;
     openProductIds.clear();
-    openProductIds.add(productId);
+    openProductIds.add(targetId);
     renderUnified();
-    requestAnimationFrame(() => document.getElementById('plrow-' + productId)?.scrollIntoView({ behavior:'smooth', block:'center' }));
+    requestAnimationFrame(() => document.getElementById('plrow-' + targetId)?.scrollIntoView({ behavior:'smooth', block:'center' }));
   }
 
   function renderDashboard(data) {
