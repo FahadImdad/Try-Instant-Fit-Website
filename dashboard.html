@@ -3636,14 +3636,16 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
       errEl.className = 'alert error';
       return false;
     }
-    const additionalRaw = document.getElementById('epcLimit').value.trim();
+    // The legacy Add Try-Ons control is hidden in the unified Credits
+    // remaining editor; never validate its stale value (often 0) on edit.
+    const additionalRaw = document.getElementById('epcAllowance') ? '' : document.getElementById('epcLimit').value.trim();
     const additionalUses = additionalRaw === '' ? undefined : parseInt(additionalRaw, 10);
     if (additionalUses !== undefined && (!Number.isInteger(additionalUses) || additionalUses < 1)) {
       errEl.textContent = 'Additional try-ons must be a positive whole number.';
       errEl.className = 'alert error';
       return false;
     }
-    const removeUnused = parseInt(document.getElementById('epcRemoveUnused').value || '0', 10);
+    const removeUnused = document.getElementById('epcAllowance') ? 0 : parseInt(document.getElementById('epcRemoveUnused').value || '0', 10);
     const removeMax = parseInt(document.getElementById('epcRemoveUnused').max || '0', 10);
     if (!Number.isInteger(removeUnused) || removeUnused < 0 || removeUnused > removeMax) {
       errEl.textContent = `Remove between 0 and ${removeMax} unused tries.`;
