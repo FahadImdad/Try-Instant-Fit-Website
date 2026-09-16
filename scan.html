@@ -1098,10 +1098,17 @@
   // return CORS headers for our origin — direct fetch would taint the
   // canvas and toBlob() would throw.
   async function makeWatermarkedBlob() {
-    const proxied = `${API}/api/proxy-image?url=${encodeURIComponent(resultUrl)}`;
+    // Try-on results come back as a data: URI (the image is never uploaded to
+    // cloud storage), which the browser can read directly — it is same-origin
+    // data, so no CORS proxy is involved. Only a hosted http(s) result needs
+    // the proxy, which is locked to our own bucket and rejects anything else.
+    const isInlineResult = resultUrl.startsWith('data:');
+    const imageRequest = isInlineResult
+      ? fetch(resultUrl)
+      : fetch(`${API}/api/proxy-image?url=${encodeURIComponent(resultUrl)}`);
     const brandId = qrInfo?.brand?.id || qrInfo?.brand_id;
     const [res, logo, branding] = await Promise.all([
-      fetch(proxied),
+      imageRequest,
       loadBrandLogo(),
       brandId ? fetch(`${API}/api/widget/config/${brandId}`).then(r => r.ok ? r.json() : {}).catch(() => ({})) : Promise.resolve({}),
     ]);
@@ -1293,24 +1300,43 @@
       }
     }
 
-    // Step 2: desktop / file-share-unsupported — share just the URL via the
-    // OS share sheet (Windows Share, macOS Share Sheet, etc.).
-    if (navigator.share) {
+    // The result is a data: URI held only in this session — there is no
+    // shareable link to it, and a multi-megabyte data: URI is not valid as a
+    // share `url` or as clipboard text. So when the file share is unavailable,
+    // the only honest fallback is to hand the user the image itself.
+    const isInlineResult = resultUrl.startsWith('data:');
+
+    // Step 2: share the URL via the OS share sheet. Only meaningful for a
+    // hosted result; skipped entirely for an inline one.
+    if (!isInlineResult && navigator.share) {
       try {
         await navigator.share({ title: 'My virtual try-on', text: shareText, url: resultUrl });
         return;
       } catch (err) {
-        if (err?.name === 'AbortError') return; // user cancelled — don't fall through to clipboard
+        if (err?.name === 'AbortError') return; // user cancelled — don't fall through
         /* API failed (e.g. Chrome-on-Windows where the sheet never opens) — fall through */
       }
     }
 
-    // Step 3: desktop fallback — neither share path worked. Silently copy the
-    // result URL to clipboard so the user has something to paste. No alert:
-    // the share flow ends silently (file → URL share → silent) by design.
-    try {
-      await navigator.clipboard.writeText(resultUrl);
-    } catch { /* clipboard blocked — nothing more we can do, stay silent */ }
+    // Step 3: fallback — save the image so the user has something real to send.
+    if (blob) {
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = buildResultFilename();
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+      return;
+    }
+
+    if (!isInlineResult) {
+      try {
+        await navigator.clipboard.writeText(resultUrl);
+      } catch { /* clipboard blocked — nothing more we can do, stay silent */ }
+    }
   }
 
   // ── Helpers ──
