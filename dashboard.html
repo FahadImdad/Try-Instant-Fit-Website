@@ -943,9 +943,18 @@
     .ptc-article-summary { margin:0 0 1rem; }
     .ptc-section-title { margin:0 0 .55rem; font-size:.82rem; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
     .ptc-article-list { display:grid; gap:.45rem; }
-    .ptc-article-item { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.7rem .8rem; border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); }
-    .ptc-article-item strong { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    /* Article rows are buttons that open the product, mirroring the analytics
+       leaderboard. Reset the button chrome so they still read as list rows. */
+    .ptc-article-item { display:flex; align-items:center; justify-content:space-between; gap:.7rem; padding:.7rem .8rem; border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); width:100%; text-align:left; font:inherit; color:inherit; cursor:pointer; }
+    .ptc-article-item:hover:not(:disabled) { border-color:var(--primary); }
+    .ptc-article-item:disabled { cursor:default; }
+    .ptc-article-item strong { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .ptc-article-count { flex:none; color:var(--primary); font-weight:800; }
+    .ptc-article-thumb { flex:none; width:40px; height:40px; border-radius:8px; object-fit:cover; background:var(--bg); border:1px solid var(--border); }
+    .ptc-article-thumb-ph { display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
+    /* Product name in the history list, clickable through to the product. */
+    .ptc-row-link { background:none; border:none; padding:0; font:inherit; color:var(--primary); font-weight:700; cursor:pointer; text-align:left; }
+    .ptc-row-link:hover { text-decoration:underline; }
     @media (max-width:560px){
       .passcode-row { grid-template-columns: 1fr 1fr; row-gap: .5rem; }
       .product-list-toolbar { grid-template-columns:1fr; }
@@ -3992,26 +4001,56 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
 
     const articles = new Map();
     activePasscodeTryons.forEach(t => {
-      const key = String(t.product_uuid || t.product_id || t.product_name || 'Unknown article');
-      const current = articles.get(key) || { name: t.product_name || t.product_id || 'Unknown article', count: 0 };
+      const key = String(t.resolved_product_uuid || t.product_uuid || t.product_id || t.product_name || 'Unknown article');
+      const current = articles.get(key) || {
+        name: t.product_name || t.product_id || 'Unknown article',
+        count: 0,
+        // Carry the product's own image and id so each article reads like the
+        // product card and can open it, exactly as the analytics leaderboard does.
+        image: t.product_image_url || null,
+        openId: t.resolved_product_uuid || t.product_uuid || t.product_id || '',
+      };
       current.count += 1;
+      if (!current.image && t.product_image_url) current.image = t.product_image_url;
       articles.set(key, current);
     });
     articleEl.innerHTML = `
       <h4 class="ptc-section-title">Articles tried with this passcode</h4>
       <div class="ptc-article-list">${[...articles.values()]
         .sort((a, b) => b.count - a.count || String(a.name).localeCompare(String(b.name)))
-        .map(article => `<div class="ptc-article-item"><strong>${escapeHtml(article.name)}</strong><span class="ptc-article-count">${fmt(article.count)} try-on${article.count === 1 ? '' : 's'}</span></div>`)
+        .map(article => {
+          const openable = !!article.openId;
+          const enc = encodeURIComponent(String(article.openId));
+          const encName = encodeURIComponent(String(article.name || ''));
+          return `<button type="button" class="ptc-article-item"${openable
+              ? ` onclick="openProductFromPasscode('${enc}','${encName}',event)"`
+              : ' disabled'}>
+            ${article.image
+              ? `<img class="ptc-article-thumb" src="${escapeHtml(article.image)}" alt="" loading="lazy">`
+              : '<span class="ptc-article-thumb ptc-article-thumb-ph">👗</span>'}
+            <strong>${escapeHtml(article.name)}</strong>
+            <span class="ptc-article-count">${fmt(article.count)} try-on${article.count === 1 ? '' : 's'}${openable ? ' · View product →' : ''}</span>
+          </button>`;
+        })
         .join('')}</div>
       <h4 class="ptc-section-title" style="margin-top:1rem;">Complete try-on history</h4>`;
 
-    list.innerHTML = activePasscodeTryons.map(t => `
+    list.innerHTML = activePasscodeTryons.map(t => {
+      // The generated try-on image is never retained, so fall back to the
+      // product's own picture — the same one shown on the product card.
+      const thumb = t.result_image_url || t.product_image_url || '';
+      const openId = t.resolved_product_uuid || t.product_uuid || t.product_id || '';
+      const enc = encodeURIComponent(String(openId));
+      const encName = encodeURIComponent(String(t.product_name || ''));
+      return `
       <div class="ptc-row ${t.sold ? 'sold' : ''}" id="ptc-row-${t.id}">
-        ${t.result_image_url
-          ? `<img class="ptc-row-thumb" src="${escapeHtml(t.result_image_url)}" alt="" onclick="openLightbox('${escapeHtml(t.result_image_url)}')" loading="lazy">`
-          : '<div class="ptc-row-thumb" style="display:flex; align-items:center; justify-content:center;">🧥</div>'}
+        ${thumb
+          ? `<img class="ptc-row-thumb" src="${escapeHtml(thumb)}" alt="" onclick="openLightbox('${escapeHtml(thumb)}')" loading="lazy">`
+          : '<div class="ptc-row-thumb" style="display:flex; align-items:center; justify-content:center;">👗</div>'}
         <div class="ptc-row-info">
-          <div class="ptc-row-name">${escapeHtml(t.product_name || t.product_id || '—')}</div>
+          <div class="ptc-row-name">${openId
+            ? `<button type="button" class="ptc-row-link" onclick="openProductFromPasscode('${enc}','${encName}',event)">${escapeHtml(t.product_name || t.product_id || '—')} →</button>`
+            : escapeHtml(t.product_name || t.product_id || '—')}</div>
           <div class="ptc-row-meta">${fmtDate(t.created_at)}</div>
           ${t.sold && t.sold_price ? `<div class="ptc-row-price">✓ Sold · ${formatPrice(t.sold_price, t.sold_currency || activePasscodeCurrency)}${t.sold_notes ? ' · ' + escapeHtml(t.sold_notes) : ''}</div>` : ''}
         </div>
@@ -4022,7 +4061,17 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
             : `<button class="ptc-sold-btn" onclick="toggleSold('${t.id}', true)">Mark Sold</button>`}
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
+  }
+
+  // Open a product from the passcode try-on modal. Closes the modal, then
+  // reuses the analytics leaderboard's behaviour: switch to Products, find
+  // the product, expand its card and scroll it into view.
+  async function openProductFromPasscode(encodedProductId, encodedProductName, event) {
+    event?.stopPropagation();
+    document.getElementById('passcodeTryonsModal')?.classList.remove('open');
+    await openAnalyticsProduct(encodedProductId, encodedProductName, event);
   }
 
   async function toggleSold(tryonId, sold) {
