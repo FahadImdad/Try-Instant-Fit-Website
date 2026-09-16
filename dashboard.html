@@ -1728,6 +1728,7 @@
       #viewImagesModal .modal > div[style*="grid-template-columns"] { gap: .5rem; }
     }
   </style>
+<style>.leads-toolbar{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin:1rem 0}.leads-filter-group{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}.leads-filter-group input{min-width:180px;padding:.55rem .7rem;border:1px solid var(--border);border-radius:8px}.leads-table-wrap{overflow:auto}.leads-table{width:100%;border-collapse:collapse;background:#fff}.leads-table th,.leads-table td{padding:.75rem;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}.leads-table th{background:#f8fafc;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}.leads-table td{font-size:.85rem;color:var(--text)}</style>
 </head>
 <body>
 
@@ -1967,6 +1968,7 @@
         <div id="tab-leads" class="tab-content" role="tabpanel">
           <div class="sw-section">
             <div class="sw-section-head"><div><h3>✉ Customer Leads</h3><p>Emails collected from completed free try-ons and optionally from passcode try-ons.</p></div></div>
+            <div class="leads-toolbar"><div class="leads-filter-group"><button class="filter-pill active" data-lead-field="all" onclick="setLeadField('all',this)">All</button><button class="filter-pill" data-lead-field="name" onclick="setLeadField('name',this)">Name</button><button class="filter-pill" data-lead-field="email" onclick="setLeadField('email',this)">Email</button><button class="filter-pill" data-lead-field="phone" onclick="setLeadField('phone',this)">Phone</button><input id="leadSearch" type="search" placeholder="Search leads…" oninput="renderCustomerLeads()"></div><div class="leads-filter-group"><button class="filter-pill active" data-lead-range="all" onclick="setLeadRange('all',this)">All</button><button class="filter-pill" data-lead-range="today" onclick="setLeadRange('today',this)">Today</button><button class="filter-pill" data-lead-range="3d" onclick="setLeadRange('3d',this)">3 days</button><button class="filter-pill" data-lead-range="7d" onclick="setLeadRange('7d',this)">7 days</button><button class="filter-pill" data-lead-range="month" onclick="setLeadRange('month',this)">Month</button><button class="btn btn-secondary btn-sm" onclick="downloadLeadsExcel()">⇩ Download Excel sheet</button></div></div>
             <div id="customerLeadsList" class="passcodes-list"><div class="empty-state-mini">Loading customer leads…</div></div>
           </div>
         </div>
@@ -3440,6 +3442,20 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     if (document.getElementById('tab-' + tab)) switchTab(tab, { fromHistory: true });
   });
 
+  let allCustomerLeads = [], leadField = 'all', leadRange = 'all';
+  function setLeadField(v, b){ leadField=v; document.querySelectorAll('[data-lead-field]').forEach(x=>x.classList.toggle('active',x===b)); renderCustomerLeads(); }
+  function setLeadRange(v, b){ leadRange=v; document.querySelectorAll('[data-lead-range]').forEach(x=>x.classList.toggle('active',x===b)); renderCustomerLeads(); }
+  function renderCustomerLeads(){
+    const list=document.getElementById('customerLeadsList'); if(!list)return;
+    const q=(document.getElementById('leadSearch')?.value||'').toLowerCase(); const now=Date.now();
+    const days={today:1,'3d':3,'7d':7,month:31}; const cutoff=days[leadRange]?now-days[leadRange]*86400000:0;
+    const rows=allCustomerLeads.filter(l=>{const v=leadField==='name'?l.customer_name:leadField==='email'?l.customer_email:leadField==='phone'?l.customer_phone:[l.customer_name,l.customer_email,l.customer_phone].join(' '); return (!q||String(v||'').toLowerCase().includes(q))&&(!cutoff||new Date(l.created_at).getTime()>=cutoff);});
+    if(!rows.length){list.innerHTML='<div class="empty-state-mini">No matching leads.</div>';return;}
+    list.innerHTML='<div class="leads-table-wrap"><table class="leads-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Product</th><th>Date</th></tr></thead><tbody>'+rows.map(l=>`<tr><td>${escapeHtml(l.customer_name||'Customer')}</td><td>${escapeHtml(l.customer_email||'')}</td><td>${escapeHtml(l.customer_phone||'—')}</td><td>${l.access_mode==='free'?'Free try-on':'Passcode try-on'}</td><td>${escapeHtml(l.product_id||'—')}</td><td>${new Date(l.created_at).toLocaleString()}</td></tr>`).join('')+'</tbody></table></div>';
+  }
+  function downloadLeadsExcel(){
+    const rows=allCustomerLeads; const head=['Name','Email','Phone','Type','Product','Date']; const esc=v=>`"${String(v??'').replace(/"/g,'""')}"`; const csv=[head,...rows.map(l=>[l.customer_name||'Customer',l.customer_email,l.customer_phone||'',l.access_mode==='free'?'Free try-on':'Passcode try-on',l.product_id||'',new Date(l.created_at).toLocaleString()])].map(r=>r.map(esc).join(',')).join('\r\n'); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download='customer-leads.xlsx'; a.click(); URL.revokeObjectURL(a.href);
+  }
   async function loadCustomerLeads() {
     const list = document.getElementById('customerLeadsList');
     if (!activeBrandId || !list) return;
@@ -3448,7 +3464,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
       const res = await fetch(`${API}/api/brands/${activeBrandId}/leads?limit=500`);
       const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error || 'Could not load customer leads.');
-      const leads = Array.isArray(data.leads) ? data.leads : [];
+      const leads = Array.isArray(data.leads) ? data.leads : []; allCustomerLeads = leads; renderCustomerLeads(); return;
       if (!leads.length) {
         list.innerHTML = '<div class="empty-state-mini">No customer emails collected yet. Emails appear here after completed try-ons.</div>';
         return;
