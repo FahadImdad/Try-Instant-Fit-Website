@@ -2061,6 +2061,8 @@
             <input type="number" id="bpcLimit" min="1" required placeholder="e.g. 5">
             <div class="field-hint">How many try-ons this customer can do (across all your products).</div>
           </div>
+          <div class="field"><label for="bpcExpiry">Passcode expiry *</label><select id="bpcExpiry" required onchange="toggleAddCustomExpiry()" style="width:100%;"><option value="" disabled selected>Select expiry</option><option value="none">No automatic expiry</option><option value="15m">15 minutes</option><option value="30m">30 minutes</option><option value="1h">1 hour</option><option value="2h">2 hours</option><option value="6h">6 hours</option><option value="1d">1 day</option><option value="custom">Custom</option></select><div id="bpcCustomExpiry" style="display:none;grid-template-columns:repeat(3,1fr);gap:.45rem;margin-top:.5rem;"><label>Minutes (1–60)<input id="bpcMinutes" type="number" min="1" max="60" value="1"></label><label>Hours (0–24)<input id="bpcHours" type="number" min="0" max="24" value="0"></label><label>Days (0 = unlimited)<input id="bpcDays" type="number" min="0" value="0"></label></div><div class="field-hint">Required: choose an expiry or explicitly select no automatic expiry.</div>
+          </div>
           <button type="submit" class="btn btn-primary" id="bpcSubmit" style="width:100%; padding:.9rem;">Generate Passcode →</button>
         </form>
       </div>
@@ -3543,6 +3545,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   function openAddPasscode() {
     document.getElementById('bpcError').className = 'alert';
     ['bpcCode','bpcLabel','bpcLimit'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('bpcExpiry').value = ''; document.getElementById('bpcMinutes').value = 1; document.getElementById('bpcHours').value = 0; document.getElementById('bpcDays').value = 0; toggleAddCustomExpiry();
     document.getElementById('addPasscodeModal').classList.add('open');
   }
   function closeAddPasscode() { document.getElementById('addPasscodeModal').classList.remove('open'); }
@@ -3552,6 +3555,8 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     const errEl = document.getElementById('bpcError');
     const btn = document.getElementById('bpcSubmit');
     errEl.className = 'alert';
+    const choice=document.getElementById('bpcExpiry').value; let expiryMs={'15m':900000,'30m':1800000,'1h':3600000,'2h':7200000,'6h':21600000,'1d':86400000}[choice];
+    if(choice==='custom'){const m=Number(document.getElementById('bpcMinutes').value||0),h=Number(document.getElementById('bpcHours').value||0),d=Number(document.getElementById('bpcDays').value||0);if(m<1||m>60||h<0||h>24||d<0){errEl.textContent='Enter valid custom expiry values.';errEl.className='alert error';return false;}expiryMs=((d*24+h)*60+m)*60000;}
     btn.disabled = true; btn.textContent = 'Creating…';
     try {
       const res = await fetch(`${API}/api/brands/${activeBrandId}/passcodes`, {
@@ -3561,6 +3566,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
           code: document.getElementById('bpcCode').value.trim() || undefined,
           customer_label: document.getElementById('bpcLabel').value.trim() || undefined,
           use_limit: parseInt(document.getElementById('bpcLimit').value, 10),
+          ...(expiryMs ? { expires_at: new Date(Date.now() + expiryMs).toISOString() } : {}),
         }),
       });
       const data = await safeJson(res);
@@ -3594,6 +3600,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     input.dispatchEvent(new Event('input', { bubbles: true }));
   }
   function toggleCustomExpiry(){const custom=document.getElementById('epcCustomExpiry');if(custom)custom.style.display=document.getElementById('epcExpiry')?.value==='custom'?'grid':'none';}
+  function toggleAddCustomExpiry(){const custom=document.getElementById('bpcCustomExpiry');if(custom)custom.style.display=document.getElementById('bpcExpiry')?.value==='custom'?'grid':'none';}
 
   function editPasscode(id) {
     const p = allBrandPasscodes.find(x => x.id === id);
