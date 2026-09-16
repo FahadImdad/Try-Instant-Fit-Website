@@ -4078,6 +4078,8 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   // ════════════════════════════════════════════════════════════════
   let allProducts = [];
   let allQrs = [];
+  let productPasscodeTryonCounts = new Map();
+  let productUsageBreakdownLoaded = false;
   let apImageFile = null;
   // Tracks which product rows the user has expanded — preserved across the
   // 30s background refresh so opened drawers don't auto-collapse.
@@ -4113,8 +4115,34 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
         sel.value = current;
       }
       renderUnified();
+      loadProductUsageBreakdown();
     } catch (err) {
       document.getElementById('unifiedList').innerHTML = `<div class="empty-state-mini">⚠ ${escapeHtml(humanError(err))}</div>`;
+    }
+  }
+
+  async function loadProductUsageBreakdown() {
+    if (!activeBrandId) return;
+    try {
+      const passcodeRes = await brandFetch(`${API}/api/brands/${activeBrandId}/passcodes?t=${Date.now()}`);
+      const passcodeData = await safeJson(passcodeRes);
+      if (!passcodeRes.ok) throw new Error(passcodeData.error || 'Failed to load passcodes');
+      const passcodes = passcodeData.passcodes || [];
+      const detailRows = await Promise.all(passcodes.map(async passcode => {
+        const res = await brandFetch(`${API}/api/passcodes/${passcode.id}`);
+        const data = await safeJson(res);
+        return res.ok ? (data.tryons || []) : [];
+      }));
+      const counts = new Map();
+      detailRows.flat().forEach(tryon => {
+        const keys = new Set([tryon.product_uuid, tryon.product_id, String(tryon.product_name || '').trim().toLowerCase()].filter(Boolean).map(String));
+        keys.forEach(key => counts.set(key, (counts.get(key) || 0) + 1));
+      });
+      productPasscodeTryonCounts = counts;
+      productUsageBreakdownLoaded = true;
+      renderUnified();
+    } catch (error) {
+      console.warn('Could not calculate product passcode usage:', error);
     }
   }
 
@@ -4178,13 +4206,21 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
       const qNameEsc  = JSON.stringify(p.name).replace(/"/g, '&quot;');
       const qScanEsc  = qr ? JSON.stringify(qr.scan_url).replace(/"/g, '&quot;') : '""';
       const priceTxt  = p.price ? formatPrice(p.price, p.currency) : '—';
-      const hasSplitUsage = qr && Number.isFinite(Number(qr.free_tryons)) && Number.isFinite(Number(qr.passcode_tryons));
+      const backendHasSplitUsage = qr && Number.isFinite(Number(qr.free_tryons)) && Number.isFinite(Number(qr.passcode_tryons));
       const analyticsTryons = productMetric(lastDashboardData?.top_garments, p, 'tryon_count');
       const totalTryons = qr
-        ? (hasSplitUsage ? Number(qr.free_tryons) + Number(qr.passcode_tryons) : Math.max(Number(qr.total_used || 0), analyticsTryons))
+        ? (backendHasSplitUsage ? Number(qr.free_tryons) + Number(qr.passcode_tryons) : Math.max(Number(qr.total_used || 0), analyticsTryons))
         : analyticsTryons;
-      const freeTryonsDisplay = hasSplitUsage ? fmt(qr.free_tryons) : '—';
-      const passcodeTryonsDisplay = hasSplitUsage ? fmt(qr.passcode_tryons) : '—';
+      const frontendPasscodeTryons = Math.max(
+        productPasscodeTryonCounts.get(String(p.id)) || 0,
+        productPasscodeTryonCounts.get(String(p.sku)) || 0,
+        productPasscodeTryonCounts.get(String(p.name || '').trim().toLowerCase()) || 0,
+      );
+      const hasSplitUsage = backendHasSplitUsage || productUsageBreakdownLoaded;
+      const passcodeTryons = backendHasSplitUsage ? Number(qr.passcode_tryons) : frontendPasscodeTryons;
+      const freeTryons = backendHasSplitUsage ? Number(qr.free_tryons) : Math.max(0, totalTryons - passcodeTryons);
+      const freeTryonsDisplay = hasSplitUsage ? fmt(freeTryons) : '…';
+      const passcodeTryonsDisplay = hasSplitUsage ? fmt(passcodeTryons) : '…';
       const tryonsTxt = `${fmt(totalTryons)} total try-on${totalTryons === 1 ? '' : 's'}`;
       const sizeTxt = (p.available_sizes || []).length ? p.available_sizes.join(', ') : 'Sizes not listed';
       const completenessWarning = !(p.available_sizes || []).length && !p.custom_size_available
@@ -4238,8 +4274,8 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
                     <div class="pl-usage-metric"><span>Free Try-Ons</span><strong>${freeTryonsDisplay}</strong></div>
                     <div class="pl-usage-metric"><span>Passcode Try-Ons</span><strong>${passcodeTryonsDisplay}</strong></div>
                   </div>
-                  ${!qr.requires_passcode && qr.total_limit !== null ? `<div><span>Free Try-On Limit</span><strong>${hasSplitUsage ? `${fmt(qr.free_tryons)} used · ${fmt(Math.max(0, (qr.total_limit || 0) - Number(qr.free_tryons || 0)))} remaining` : fmt(qr.total_limit)}</strong></div>` : ''}
-                  <div><span>Passcode protection</span><span style="display:inline-flex; align-items:center;"><label class="switch-toggle"><input type="checkbox" ${qr.requires_passcode ? 'checked' : ''} onchange="toggleQrPasscode('${qr.id}', ${qr.requires_passcode}, ${hasSplitUsage ? Number(qr.free_tryons) : 0}, this)"><span class="switch-toggle-track" aria-hidden="true">${qr.requires_passcode ? 'On' : 'Off'}</span></label>${!qr.requires_passcode && qr.total_limit !== null && hasSplitUsage ? `<span class="pl-free-count">${Math.max(0, (qr.total_limit || 0) - Number(qr.free_tryons || 0))} free left</span>` : ''}</span></div>
+                  ${!qr.requires_passcode && qr.total_limit !== null ? `<div><span>Free Try-On Limit</span><strong>${hasSplitUsage ? `${fmt(freeTryons)} used · ${fmt(Math.max(0, (qr.total_limit || 0) - freeTryons))} remaining` : fmt(qr.total_limit)}</strong></div>` : ''}
+                  <div><span>Passcode protection</span><span style="display:inline-flex; align-items:center;"><label class="switch-toggle"><input type="checkbox" ${qr.requires_passcode ? 'checked' : ''} onchange="toggleQrPasscode('${qr.id}', ${qr.requires_passcode}, ${hasSplitUsage ? freeTryons : 0}, this)"><span class="switch-toggle-track" aria-hidden="true">${qr.requires_passcode ? 'On' : 'Off'}</span></label>${!qr.requires_passcode && qr.total_limit !== null && hasSplitUsage ? `<span class="pl-free-count">${Math.max(0, (qr.total_limit || 0) - freeTryons)} free left</span>` : ''}</span></div>
                   <div><span>QR scanning</span>${qr.active && p.active !== false ? '<span class="status-badge pill-active">Allowed</span>' : '<span class="status-badge pill-inactive">Blocked</span>'}</div>
                 </div>
               </div>
