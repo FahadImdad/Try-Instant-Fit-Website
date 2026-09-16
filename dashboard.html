@@ -2193,8 +2193,8 @@
             <div class="field-hint">Adds a “Buy Now” button on the try-on page that opens this link.</div>
           </div>
           <div class="field setting-toggle-row" style="margin-bottom: .75rem;">
-            <label for="apShowInCatalog" class="setting-toggle-copy">🛍️ Include in public catalogue (new products are private by default)</label>
-            <label class="switch-toggle" for="apShowInCatalog"><input type="checkbox" id="apShowInCatalog" onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">Off</span></label>
+            <label for="apShowInCatalog" class="setting-toggle-copy">🛍️ Include in public catalogue (turn off to keep this product private)</label>
+            <label class="switch-toggle" for="apShowInCatalog"><input type="checkbox" id="apShowInCatalog" checked onchange="syncSettingToggle(this)"><span class="switch-toggle-track" aria-hidden="true">On</span></label>
           </div>
           <div class="field setting-toggle-row" style="margin-bottom: .75rem;">
             <label for="apQrPasscode" class="setting-toggle-copy">🔑 Require a passcode for this product's QR</label>
@@ -4308,7 +4308,10 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     document.getElementById('apShowPriceQr').checked = true;
     document.getElementById('apCurrency').value = 'PKR';
     populateTaxonomy('ap', '', '', '');
-    document.getElementById('apShowInCatalog').checked = false;
+    document.getElementById('apShowInCatalog').checked = true;
+    // Setting .checked in script does not fire onchange, so repaint the
+    // On/Off track text by hand or it keeps whatever the last product left.
+    syncSettingToggle(document.getElementById('apShowInCatalog'));
     document.getElementById('apQrPasscode').checked = true;
     syncQrCapRequirement('apQrPasscode', 'apQrLimit');
     document.getElementById('apCustomSize').checked = false;
