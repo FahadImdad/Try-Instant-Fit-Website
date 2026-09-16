@@ -486,7 +486,8 @@
       <div class="details-field"><label for="freeCustomerName">Full name <span>*</span></label><div class="input-shell"><span class="input-icon">👤</span><input class="details-input" id="freeCustomerName" type="text" autocomplete="name" maxlength="100" placeholder="Enter your full name" oninput="updateDetailsForm()" required></div></div>
       <div class="details-field"><label for="freeCustomerEmail">Email address <span>*</span></label><div class="input-shell"><span class="input-icon">✉️</span><input class="details-input" id="freeCustomerEmail" type="email" autocomplete="email" inputmode="email" placeholder="name@example.com" oninput="updateDetailsForm()" required></div></div>
       <div class="details-field"><label for="freeCustomerPhone">WhatsApp / phone <span>*</span></label><div class="input-shell"><span class="input-icon">📱</span><input class="details-input" id="freeCustomerPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="+92 300 1234567" oninput="updateDetailsForm()" required></div><p class="details-help">Required so the shop can contact you about this design. Your details are shared with the shop for this purpose.</p></div>
-      <label class="consent-card"><input id="freeFollowupConsent" type="checkbox" onchange="updateDetailsForm()"> <span>I understand that this shop will receive these details and may contact me about this design, sizing, availability, or a custom order.</span></label>
+      <label class="consent-card"><input id="freeFollowupConsent" type="checkbox" onchange="updateDetailsForm()"> <span>I understand that this shop will receive these details and may contact me about this design, sizing, availability, or a custom order. I agree to the <a href="/terms" target="_blank" rel="noopener">Terms</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
+      <p class="details-help" style="text-align:center; margin:.15rem 0 0;">🔒 Your photo is never saved on our servers — it is used only to create your preview.</p>
       <button class="btn-block primary details-submit" id="detailsContinueBtn" type="button" onclick="continueFreeDetails()" disabled>Continue to Try On →</button>
     </div>
   </div>
@@ -514,7 +515,7 @@
       <input type="text" id="customerName" autocomplete="name" placeholder="Name" style="width:100%; box-sizing:border-box; margin-bottom:.5rem;">
       <input type="email" id="customerEmail" autocomplete="email" inputmode="email" placeholder="Email" style="width:100%; box-sizing:border-box; margin-bottom:.5rem;">
       <input type="tel" id="customerPhone" autocomplete="tel" inputmode="tel" placeholder="WhatsApp / phone" style="width:100%; box-sizing:border-box;">
-      <div style="font-size:.7rem; color:var(--muted); margin-top:.4rem;">Optional with a passcode. These details are shared with the shop only if entered.</div>
+      <div style="font-size:.7rem; color:var(--muted); margin-top:.4rem;">Optional with a passcode. These details are shared with the shop only if entered. See our <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</div>
     </div>
     <h3 class="step-title"><span class="step-num" id="uploadStepNum">1</span> Add Your Photo</h3>
     <p style="color:var(--muted); font-size:.88rem; margin: 0 0 .6rem;">Stand against a plain background, full body, facing forward — best results.</p>
