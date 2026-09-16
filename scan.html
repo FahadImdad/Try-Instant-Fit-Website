@@ -76,7 +76,7 @@
     .product-head {
       display: flex;
       gap: 1rem;
-      align-items: center;
+      align-items: flex-start;
       margin-bottom: 1.25rem;
       padding-bottom: 1.25rem;
       border-bottom: 1px solid var(--border);
@@ -762,8 +762,10 @@
       if (sizes.length) parts.push(`Sizes: ${sizes.join(', ')}`);
       if (qrInfo.custom_size_available) parts.push(`Custom size available${qrInfo.custom_size_note ? ' — ' + qrInfo.custom_size_note : ''}`);
       setBoth('productSizes', parts.join(' · '));
+      setBoth('productSizes', sizes.length ? `Sizes: ${sizes.join(', ')}` : '');
       showBoth('productSizes');
     }
+    if (qrInfo.custom_size_available) { setBoth('productDescription', `${qrInfo.product_description || ''}${qrInfo.product_description ? '\n\n' : ''}Custom sizing available${qrInfo.custom_size_note ? ' — ' + qrInfo.custom_size_note : ''}.`); showBoth('productDetailsBlock'); }
     // Show description on BOTH views, inside a collapsible <details> dropdown
     // so it doesn't dominate the layout when long. Brand-provided copy means
     // we treat it as text (.textContent) not HTML.
@@ -785,6 +787,7 @@
       setBoth('remainingPill', label);
       showBoth('remainingPill', 'inline-block');
     }
+    if (qrInfo.custom_size_available) { setBoth('productDescription', `${qrInfo.product_description || ''}${qrInfo.product_description ? '\n\n' : ''}Custom sizing available${qrInfo.custom_size_note ? ' — ' + qrInfo.custom_size_note : ''}.`); showBoth('productDetailsBlock'); }
     renderBuyNow();
   }
 
