@@ -3126,12 +3126,18 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     // The dashboard preloads products and QRs. Reuse that cache so opening a
     // product feels immediate instead of waiting for duplicate API requests.
     switchTab('products', { skipLoad: true });
+    // Expand only once any loading has settled. switchTab() collapses every
+    // drawer and loadProducts() re-renders when it resolves, so a card opened
+    // before those finish is closed again by the later render.
     if (!allProducts.length) await Promise.all([loadProducts(), loadQrCodes()]);
     const match = allProducts.find(p => p.id === productId || p.sku === productId)
       || allProducts.find(p => String(p.name || '').trim().toLowerCase() === productName.trim().toLowerCase());
     const targetId = match?.id || productId;
     openProductIds.clear();
     openProductIds.add(targetId);
+    // Persist it too: switchTab() cleared the saved state on the way in, so
+    // without this the drawer collapses again on the next render or revisit.
+    saveProductViewState();
     renderUnified();
     requestAnimationFrame(() => document.getElementById('plrow-' + targetId)?.scrollIntoView({ behavior:'auto', block:'center' }));
   }
@@ -4062,7 +4068,10 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   }
 
   async function openPasscodeProduct(encodedProductId, encodedProductName) {
-    closePasscodeTryons();
+    // Close the modal directly rather than via closePasscodeTryons(), which
+    // also kicks off an un-awaited passcode reload. That reload resolves after
+    // the product card has been expanded and re-renders over it.
+    document.getElementById('passcodeTryonsModal')?.classList.remove('open');
     await openAnalyticsProduct(encodedProductId, encodedProductName);
   }
 
