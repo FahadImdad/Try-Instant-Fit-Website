@@ -4221,10 +4221,12 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
         productPasscodeTryonCounts.get(String(p.name || '').trim().toLowerCase()) || 0,
       );
       const hasSplitUsage = backendHasSplitUsage || productUsageBreakdownLoaded;
-      // The API's usage buckets were previously rendered under the opposite labels.
-      // Keep the values tied to their actual access mode in the product preview.
-      const freeTryons = backendHasSplitUsage ? Number(qr.passcode_tryons) : Math.max(0, totalTryons - frontendPasscodeTryons);
-      const passcodeTryons = backendHasSplitUsage ? Number(qr.free_tryons) : frontendPasscodeTryons;
+      // Each bucket is rendered under its own label. The API derives these
+      // from tryons.brand_passcode_id, which is stamped as the try-on runs:
+      // free_tryons are the ones with no passcode, passcode_tryons the ones
+      // with. qr_scans agrees independently, so these are not reversed.
+      const freeTryons = backendHasSplitUsage ? Number(qr.free_tryons) : Math.max(0, totalTryons - frontendPasscodeTryons);
+      const passcodeTryons = backendHasSplitUsage ? Number(qr.passcode_tryons) : frontendPasscodeTryons;
       const freeTryonsDisplay = hasSplitUsage ? fmt(freeTryons) : '…';
       const passcodeTryonsDisplay = hasSplitUsage ? fmt(passcodeTryons) : '…';
       const tryonsTxt = `${fmt(totalTryons)} total try-on${totalTryons === 1 ? '' : 's'}`;
