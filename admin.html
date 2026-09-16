@@ -361,17 +361,30 @@
       }
       .data-table td[data-label="Used"] > div { gap: .05rem !important; }
 
-      /* ── Actions: full-width row of equal-flex buttons ── */
+      /* ── Actions ──
+         A grid, not flex: `flex: 1 1 0` forced all five buttons onto one line
+         and shrank them below their label width, so the text spilled out of
+         the card. Equal columns that wrap keep every label readable. */
       .data-table td[data-label="Actions"] { margin-top: .65rem; }
-      .data-table .row-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+      .data-table .row-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .4rem;
+      }
       .data-table .row-actions .btn,
       .data-table .row-actions a.btn {
-        flex: 1 1 0;
         min-width: 0;
         font-size: .82rem;
         padding: .55rem .5rem;
         text-align: center;
+        justify-content: center;
+        /* Long labels shorten rather than overflow the button. */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
+      /* An odd button out spans the full width instead of leaving a gap. */
+      .data-table .row-actions > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 
       /* ── Top-Ups table: same compact treatment + thumbnail inline ── */
       .data-table td[data-label="Amount"]      { display: inline-block; margin-right: 1rem; margin-bottom: .35rem; }
