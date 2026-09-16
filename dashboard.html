@@ -86,6 +86,19 @@
     .stat-value { font-size: 2.2rem; font-weight: 900; color: var(--primary); line-height: 1; margin-bottom: .25rem; }
     .stat-sub { font-size: .78rem; color: var(--muted); }
 
+    .leaderboard-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r-xl); padding:1.4rem; margin-bottom:2rem; }
+    .leaderboard-head { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
+    .leaderboard-head h3 { margin:0; font-size:1.05rem; }
+    .leaderboard-head p { margin:.2rem 0 0; color:var(--muted); font-size:.8rem; }
+    .leaderboard-list { display:flex; flex-direction:column; gap:.55rem; }
+    .leaderboard-row { display:grid; grid-template-columns:2rem 42px minmax(0,1fr) auto; align-items:center; gap:.75rem; padding:.65rem .75rem; border:1px solid var(--border); border-radius:12px; background:var(--surface); }
+    .leaderboard-rank { font-weight:900; color:var(--indigo); text-align:center; }
+    .leaderboard-img,.leaderboard-img-ph { width:42px; height:42px; border-radius:9px; background:var(--surface2); }
+    .leaderboard-img { object-fit:cover; }
+    .leaderboard-img-ph { display:grid; place-items:center; }
+    .leaderboard-name { min-width:0; font-size:.9rem; font-weight:750; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .leaderboard-count { font-size:.82rem; font-weight:800; color:var(--text); white-space:nowrap; }
+
     /* ── Recent try-ons table ── */
     .table-wrap {
       background: var(--white);
@@ -1923,6 +1936,15 @@
             <div class="stat-card"><div class="stat-label">This Week</div><div class="stat-value" id="statWeek">—</div><div class="stat-sub">Last 7 days</div></div>
             <div class="stat-card"><div class="stat-label">This Month</div><div class="stat-value" id="statMonth">—</div><div class="stat-sub">Current month</div></div>
             <div class="stat-card"><div class="stat-label">Avg AI Time</div><div class="stat-value" id="statAvg">—</div><div class="stat-sub">Per try-on</div></div>
+            <div class="stat-card"><div class="stat-label">Outbound Buy Now Clicks</div><div class="stat-value" id="statBuyClicks">—</div><div class="stat-sub">Storefront redirects · all time</div></div>
+          </div>
+
+          <div class="leaderboard-card">
+            <div class="leaderboard-head">
+              <div><h3>🏆 Top Performing Garments</h3><p>Your most-tried designs across catalogue and QR experiences.</p></div>
+              <span class="stat-sub">Top 5 · all time</span>
+            </div>
+            <div class="leaderboard-list" id="topGarmentsLeaderboard"></div>
           </div>
 
           <!-- Per-source stat strip -->
@@ -3059,6 +3081,21 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     document.getElementById('statMonth').textContent = fmt(stats.this_month);
     document.getElementById('statAvg').textContent =
       stats.avg_processing_ms ? `${(stats.avg_processing_ms / 1000).toFixed(1)}s` : '—';
+    document.getElementById('statBuyClicks').textContent = fmt(stats.buy_now_clicks || 0);
+
+    const leaderboard = Array.isArray(data.top_garments) ? data.top_garments : [];
+    const leaderboardEl = document.getElementById('topGarmentsLeaderboard');
+    leaderboardEl.innerHTML = leaderboard.length
+      ? leaderboard.map(item => `
+          <div class="leaderboard-row">
+            <div class="leaderboard-rank">#${item.rank}</div>
+            ${item.isolated_garment_url
+              ? `<img class="leaderboard-img" src="${escapeHtml(item.isolated_garment_url)}" alt="" loading="lazy">`
+              : '<div class="leaderboard-img-ph">👗</div>'}
+            <div class="leaderboard-name">${escapeHtml(item.product_name || item.product_id || 'Garment')}</div>
+            <div class="leaderboard-count">${fmt(item.tryon_count || 0)} try-on${item.tryon_count === 1 ? '' : 's'}</div>
+          </div>`).join('')
+      : '<div class="empty-state-mini">Your garment leaderboard will appear after the first customer try-on.</div>';
 
     // Tab counts (tab nav was removed; guard against missing nodes)
     const tcGhost = document.getElementById('tabCountGhostLayer');

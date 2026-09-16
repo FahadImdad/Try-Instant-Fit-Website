@@ -443,6 +443,30 @@
   function wireControls() {
     $('searchInput').addEventListener('input', (e) => { state.search = e.target.value.trim().toLowerCase(); render(); });
     $('sortSelect').addEventListener('change', (e) => { state.sort = e.target.value; render(); });
+    $('grid').addEventListener('click', (e) => {
+      const link = e.target.closest('[data-track-buy]');
+      if (!link) return;
+      trackCatalogBuy(link.dataset.productId, link.dataset.productName);
+    });
+  }
+
+  function trackCatalogBuy(productId, productName) {
+    fetch(`${API}/api/widget/track`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        brand_id: brand?.id || getBrandId(),
+        event_name: 'buy_now_clicked',
+        event_data: {
+          product_id: productId || null,
+          product_name: productName || null,
+          source: 'catalog',
+        },
+        page_url: window.location.href,
+        timestamp: new Date().toISOString(),
+      }),
+    }).catch(() => {});
   }
 
   function fmtPrice(price, currency) {
@@ -491,7 +515,7 @@
       const sizes = Array.isArray(p.available_sizes) && p.available_sizes.length ? p.available_sizes.join(', ') : '';
       const cat = (p.category || '').trim();
       const buy = p.buy_url
-        ? `<a class="card-btn buy" href="${escAttr(p.buy_url)}" target="_blank" rel="noopener" aria-label="Buy Now"><span aria-hidden="true">🛒</span><span class="btn-label">Buy Now</span></a>`
+        ? `<a class="card-btn buy" href="${escAttr(p.buy_url)}" target="_blank" rel="noopener" aria-label="Buy Now" data-track-buy data-product-id="${escAttr(p.product_uuid || p.id || '')}" data-product-name="${escAttr(p.name || '')}"><span aria-hidden="true">🛒</span><span class="btn-label">Buy Now</span></a>`
         : '';
       return `<div class="card">
         <a class="card-media${p.image_url ? ' has-image' : ''}" ${p.image_url ? `style="--card-image:url('${escAttr(p.image_url)}')"` : ''} href="${href}" aria-label="Try on ${escAttr(p.name)}">${img}</a>
