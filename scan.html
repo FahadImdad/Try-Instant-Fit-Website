@@ -972,6 +972,25 @@
     errEl.className = 'alert error';
   }
 
+  // ── TEMPORARY: engine test badge ──
+  // Shows which engine produced the result, for brands opted into engine
+  // testing. The backend only sends debug_engine for those brands, so this is
+  // never reachable for a real customer. Delete this whole block, its call
+  // site, and the backend's debug_engine field when testing is done.
+  function showEngineBadge(engine) {
+    let badge = document.getElementById('engineBadge');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = 'engineBadge';
+      badge.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:9999;' +
+        'background:rgba(17,17,17,.88);color:#fff;font:600 11px/1.4 ui-monospace,monospace;' +
+        'padding:6px 10px;border-radius:6px;max-width:calc(100vw - 16px);' +
+        'word-break:break-all;pointer-events:none;';
+      document.body.appendChild(badge);
+    }
+    badge.textContent = `engine: ${engine}`;
+  }
+
   // ── Run try-on ──
   async function runTryOn() {
     if (!userPhoto || !qrInfo) return;
@@ -1019,6 +1038,13 @@
       // Preload + fully decode the result before swapping it into the DOM so it
       // pops in as a single frame instead of painting top-to-bottom.
       resultUrl = data.result_url;
+
+      // TEMPORARY (engine testing): the backend returns debug_engine only for
+      // brands explicitly opted into engine testing. Real brands never receive
+      // it, so this badge never renders for a customer. Remove with the
+      // backend's debug_engine field once testing is finished.
+      if (data.debug_engine) showEngineBadge(data.debug_engine);
+
       const preload = new Image();
       preload.decoding = 'async';
       preload.src = resultUrl;
