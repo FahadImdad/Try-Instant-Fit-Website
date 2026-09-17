@@ -1468,6 +1468,28 @@
     }
 
     /* Top-up history list — one row per recorded top-up, FIFO-allocated. */
+    /* ── Activity feed ── */
+    .activity-filters { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:1rem; }
+    .activity-filters .filter-pill { appearance:none; border:1px solid var(--border); background:var(--surface); color:var(--muted); border-radius:999px; padding:.42rem .8rem; font:inherit; font-size:.78rem; font-weight:700; cursor:pointer; white-space:nowrap; }
+    .activity-filters .filter-pill:hover { border-color:var(--indigo); color:var(--indigo); }
+    .activity-filters .filter-pill.active { background:var(--indigo); border-color:var(--indigo); color:#fff; }
+    .activity-filters .pill-count { opacity:.65; font-weight:800; margin-left:.15rem; }
+    .act-day { font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:1.1rem 0 .45rem; }
+    .act-day:first-child { margin-top:0; }
+    .act-row { display:grid; grid-template-columns:auto 1fr auto; gap:.7rem; align-items:start; padding:.7rem .8rem; border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); margin-bottom:.45rem; }
+    .act-icon { font-size:1rem; line-height:1.3; }
+    .act-body { min-width:0; }
+    .act-title { font-size:.87rem; font-weight:600; word-break:break-word; }
+    .act-detail { font-size:.78rem; color:var(--muted); margin-top:.15rem; word-break:break-word; }
+    .act-time { font-size:.72rem; color:var(--muted); white-space:nowrap; }
+    .act-tag { display:inline-block; font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; padding:.12rem .38rem; border-radius:999px; vertical-align:.08rem; margin-left:.2rem; }
+    .act-admin { background:#eef2ff; color:#4338ca; }
+    .act-customer { background:#ecfdf5; color:#047857; }
+    .act-system { background:#f1f5f9; color:#64748b; }
+    @media (max-width:560px) {
+      .act-row { grid-template-columns:auto 1fr; }
+      .act-time { grid-column:2; margin-top:.2rem; }
+    }
     .topup-filter-bar { display:flex; gap:.35rem; flex-wrap:wrap; margin-bottom:.7rem; }
     .topup-filter-bar .filter-pill { appearance:none; border:1px solid var(--border); background:var(--surface); color:var(--muted); border-radius:999px; padding:.35rem .7rem; font:inherit; font-size:.74rem; font-weight:700; cursor:pointer; }
     .topup-filter-bar .filter-pill:hover { border-color:var(--indigo); color:var(--indigo); }
@@ -1946,6 +1968,7 @@
           <button class="tab-btn" role="tab" data-tab="products" onclick="switchTab('products')">👕 <span class="tab-label">Products</span></button>
           <button class="tab-btn" role="tab" data-tab="code"     onclick="switchTab('code')">🔑 <span class="tab-label">Codes</span></button>
           <button class="tab-btn" role="tab" data-tab="leads"    onclick="switchTab('leads')">✉ <span class="tab-label">Leads</span></button>
+          <button class="tab-btn" role="tab" data-tab="activity" onclick="switchTab('activity')">📋 <span class="tab-label">Activity</span></button>
           <button class="tab-btn" role="tab" data-tab="profile"  onclick="switchTab('profile')">👤 <span class="tab-label">Profile</span></button>
         </nav>
 
@@ -2090,6 +2113,15 @@
         </div>
 
         <!-- Tab: Profile -->
+        <div id="tab-activity" class="tab-content" role="tabpanel">
+          <div class="sw-section">
+            <h2 style="margin:0 0 .25rem;">📋 Activity</h2>
+            <p style="color:var(--muted); font-size:.87rem; margin:0 0 1rem;">Every action on your account, newest first — yours, your customers', and ours.</p>
+            <div class="activity-filters" id="activityFilters"></div>
+            <div id="activityFeed"><div class="empty-state-mini">Loading…</div></div>
+          </div>
+        </div>
+
         <div id="tab-profile" class="tab-content" role="tabpanel">
           <div class="sw-section profile-section">
             <div class="profile-hero">
@@ -2785,6 +2817,112 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
   // so adblockers/extensions can't intercept what looks like a third-party host.
   const API = '';
   let activeBrandId = null;
+
+  // ── Activity feed ──
+  // Merges what the vendor did, what customers did, and what we did on the
+  // account. The server builds most entries from the domain tables, so the
+  // feed covers the account's whole history rather than starting from the day
+  // logging was added.
+  let allActivity = [];
+  let activityFilter = 'all';
+
+  const ACTIVITY_FILTERS = [
+    { key: 'all',           label: 'All' },
+    { key: 'tryon',         label: 'Try-ons' },
+    { key: 'tryon-free',    label: 'Free try-ons' },
+    { key: 'tryon-passcode',label: 'Passcode try-ons' },
+    { key: 'product',       label: 'Products' },
+    { key: 'qr',            label: 'QR codes' },
+    { key: 'passcode',      label: 'Passcodes' },
+    { key: 'credits',       label: 'Credits & top-ups' },
+    { key: 'report',        label: 'Reports' },
+  ];
+
+  function activityMatches(item, key) {
+    if (key === 'all') return true;
+    if (key === 'tryon') return item.entity === 'tryon';
+    // The grouped try-on entry carries both counts, so filter on what it holds.
+    if (key === 'tryon-free') return item.entity === 'tryon' && /\d+ free/.test(item.detail || '');
+    if (key === 'tryon-passcode') return item.entity === 'tryon' && /\d+ passcode/.test(item.detail || '');
+    return item.entity === key;
+  }
+
+  function setActivityFilter(key) {
+    activityFilter = key;
+    renderActivity();
+  }
+
+  async function loadActivity() {
+    if (!activeBrandId) return;
+    const feed = document.getElementById('activityFeed');
+    if (!feed) return;
+    try {
+      const res = await brandFetch(`${API}/api/brands/${activeBrandId}/activity`);
+      const data = await safeJson(res);
+      if (!res.ok) throw new Error(data.error || 'Failed to load activity');
+      allActivity = data.activity || [];
+      renderActivity();
+    } catch (err) {
+      feed.innerHTML = `<div class="empty-state-mini">${escapeHtml(humanError(err))}</div>`;
+    }
+  }
+
+  function renderActivity() {
+    const feed = document.getElementById('activityFeed');
+    const filters = document.getElementById('activityFilters');
+    if (!feed) return;
+
+    if (filters) {
+      // Only offer a filter that would actually return something, so a vendor
+      // never taps a bubble and gets an empty list.
+      filters.innerHTML = ACTIVITY_FILTERS
+        .filter(f => f.key === 'all' || allActivity.some(i => activityMatches(i, f.key)))
+        .map(f => {
+          const n = f.key === 'all' ? allActivity.length : allActivity.filter(i => activityMatches(i, f.key)).length;
+          return `<button type="button" class="filter-pill${f.key === activityFilter ? ' active' : ''}" onclick="setActivityFilter('${f.key}')">${f.label} <span class="pill-count">${fmt(n)}</span></button>`;
+        }).join('');
+    }
+
+    const items = allActivity.filter(i => activityMatches(i, activityFilter));
+    if (!items.length) {
+      feed.innerHTML = '<div class="empty-state-mini">Nothing here yet.</div>';
+      return;
+    }
+
+    // Group by calendar day, with friendly headings for the recent ones.
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+    const dayLabel = (iso) => {
+      const d = new Date(iso); d.setHours(0, 0, 0, 0);
+      if (d.getTime() === today.getTime()) return 'Today';
+      if (d.getTime() === yesterday.getTime()) return 'Yesterday';
+      return new Date(iso).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    };
+
+    const groups = [];
+    for (const item of items) {
+      const label = dayLabel(item.at);
+      if (!groups.length || groups[groups.length - 1].label !== label) groups.push({ label, items: [] });
+      groups[groups.length - 1].items.push(item);
+    }
+
+    const actorTag = (a) => a === 'admin' ? '<span class="act-tag act-admin">Try Instant Fit</span>'
+      : a === 'customer' ? '<span class="act-tag act-customer">Customer</span>'
+      : a === 'system' ? '<span class="act-tag act-system">Automatic</span>' : '';
+
+    feed.innerHTML = groups.map(g => `
+      <div class="act-day">${escapeHtml(g.label)}</div>
+      ${g.items.map(i => `
+        <div class="act-row">
+          <span class="act-icon">${i.icon || '•'}</span>
+          <div class="act-body">
+            <div class="act-title">${escapeHtml(i.title)} ${actorTag(i.actor)}</div>
+            ${i.detail ? `<div class="act-detail">${escapeHtml(i.detail)}</div>` : ''}
+          </div>
+          <time class="act-time">${new Date(i.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time>
+        </div>`).join('')}
+    `).join('');
+  }
 
   // ── Brand session token ──
   // A brand_id alone is not a credential — it travels in URLs and is easy to
@@ -3761,6 +3899,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     if (tabName === 'products' && !options.skipLoad) { loadProducts(); loadQrCodes(); }
     else if (tabName === 'code') { loadBrandPasscodes(); }
     else if (tabName === 'leads') { loadCustomerLeads(); }
+    else if (tabName === 'activity') { loadActivity(); }
     if (!options.fromHistory) {
       const next = new URL(window.location.href);
       next.searchParams.set('tab', tabName);
