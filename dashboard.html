@@ -2462,7 +2462,7 @@
             <div class="field" style="margin-bottom: .75rem;">
               <label for="epcdQrLimit" style="font-size:.85rem;">Free try-ons remaining</label>
               <input type="number" id="epcdQrLimit" min="1" step="1" placeholder="Required when passcode is off">
-              <div class="field-hint">Enter the number of additional open try-ons. Already used try-ons are kept separate and are not counted again.</div>
+              <div class="field-hint">How many free try-ons are still available on this product. Matches the number on the product card; try-ons already used are not affected.</div>
             </div>
 
             <div class="field setting-toggle-row" style="padding:.65rem; background:white; margin:0;">
@@ -5111,8 +5111,17 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     if (qr) {
       qrSection.style.display = 'block';
       document.getElementById('epcdQrPasscode').checked = !!qr.requires_passcode;
-      // The API stores the overall cap; the vendor edits only the additional allowance.
-      document.getElementById('epcdQrLimit').value = qr.total_limit === null ? '' : Number(qr.total_limit || 0);
+      // The field is labelled "remaining", so show what is actually left, not
+      // the lifetime cap. The card shows the same figure; previously this box
+      // showed the raw total, so a product reading "5 remaining" on the card
+      // opened its editor showing 8.
+      const usedFree = Number(qr.free_tryons ?? qr.free_used_count ?? 0);
+      const remainingFree = qr.total_limit === null
+        ? '' : Math.max(0, Number(qr.total_limit || 0) - usedFree);
+      const limitEl = document.getElementById('epcdQrLimit');
+      limitEl.value = remainingFree;
+      // Remember the usage so the save can convert back to a lifetime cap.
+      limitEl.dataset.usedFree = String(usedFree);
       syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
       document.getElementById('epcdQrActive').checked = qr.active !== false;
       syncProductQrAvailability('open');
@@ -5172,8 +5181,15 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
         document.getElementById('epcdQrLimit').focus();
         return false;
       }
-      // Save exactly the allowance the vendor entered; usage is tracked separately.
-      editQrSettings = { requiresPasscode, totalLimit: additionalLimit };
+      // The box holds try-ons REMAINING, matching its label and the product
+      // card. The API stores a lifetime cap, so add back what has already been
+      // used — otherwise entering "5 remaining" would set the cap to 5 and
+      // leave a product that had used 3 with only 2 left.
+      const usedFree = Number(document.getElementById('epcdQrLimit').dataset.usedFree || 0);
+      editQrSettings = {
+        requiresPasscode,
+        totalLimit: additionalLimit === null ? null : additionalLimit + usedFree,
+      };
     }
 
     btn.disabled = true; btn.textContent = 'Saving…';
@@ -5561,7 +5577,11 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
         error.className = 'alert error';
         return;
       }
-      document.getElementById('epcdQrLimit').value = state.totalUsed + additional;
+      // This box holds try-ons remaining, and `additional` is exactly that —
+      // the used count is added back at save time, so don't add it here too.
+      const limitEl = document.getElementById('epcdQrLimit');
+      limitEl.value = additional;
+      limitEl.dataset.usedFree = String(state.totalUsed || 0);
       document.getElementById('epcdQrPasscode').checked = false;
       syncQrCapRequirement('epcdQrPasscode', 'epcdQrLimit');
       qrAccessModalState = null;
