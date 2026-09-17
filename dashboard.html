@@ -322,7 +322,11 @@
     }
 
     @media (max-width: 700px) {
-      th:nth-child(3), td:nth-child(3) { display: none; }
+      /* Blanket rule: hides the third column of any table on a phone. The
+         leads table is exempt — that column is Phone, the field vendors most
+         need, and it scrolls sideways instead. */
+      table:not(.leads-table) th:nth-child(3),
+      table:not(.leads-table) td:nth-child(3) { display: none; }
       .stat-value { font-size: 1.75rem; }
     }
 
@@ -1793,18 +1797,21 @@
       #viewImagesModal .modal > div[style*="grid-template-columns"] { gap: .5rem; }
     }
   </style>
-<style>.leads-toolbar{display:grid;grid-template-columns:minmax(240px,1.4fr) minmax(130px,.7fr) minmax(180px,1fr) auto;align-items:end;gap:1rem;margin:1.15rem 0}.leads-filter-group{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}.leads-filter-group .filter-pill{appearance:none;border:1px solid #d7e1ef;background:#fff;color:#64748b;border-radius:999px;padding:.48rem .8rem;font:inherit;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s}.leads-filter-group .filter-pill:hover{border-color:#5a67f2;color:#4f46e5}.leads-filter-group .filter-pill.active{background:#5a67f2;border-color:#5a67f2;color:#fff}.leads-filter-group input{min-width:0;width:100%;box-sizing:border-box;padding:.65rem .85rem;border:1px solid #d7e1ef;border-radius:10px;font:inherit;color:var(--text);outline:none}.leads-filter-group input:focus{border-color:#5a67f2;box-shadow:0 0 0 3px rgba(90,103,242,.12)}.leads-table-wrap{overflow:auto;border:1px solid #e3eaf3;border-radius:12px}.leads-table{width:100%;border-collapse:collapse;background:#fff}.leads-table th,.leads-table td{padding:.8rem .9rem;text-align:left;border-bottom:1px solid #e8eef5;white-space:nowrap}.leads-table th{background:#f7f9fc;color:#64748b;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em}.leads-table td{font-size:.85rem;color:var(--text)}.leads-table tbody tr:hover{background:#fafbff}@media(max-width:900px){.leads-toolbar{grid-template-columns:1fr 1fr}.leads-toolbar .leads-filter-group:first-child{grid-column:1/-1}}@media(max-width:560px){.leads-toolbar{grid-template-columns:1fr}.leads-toolbar .leads-filter-group:first-child{grid-column:auto}
-/* Stay a table on a phone, but only with the columns that fit. Six columns at
-   nowrap measured 583px against a 368px viewport, which pushed Phone — the
-   column a vendor most needs — off-screen with no sign the row scrolled.
-   Type and Product are dropped here and remain in the Excel export. */
-.leads-table-wrap{-webkit-overflow-scrolling:touch}
-.leads-table th,.leads-table td{padding:.5rem .45rem;font-size:.74rem;white-space:normal;word-break:break-word}
-.leads-table th{font-size:.6rem;padding:.45rem}
-.leads-table th:nth-child(4),.leads-table td:nth-child(4),
-.leads-table th:nth-child(5),.leads-table td:nth-child(5){display:none}
-.leads-table td:nth-child(3){white-space:nowrap}
-.leads-table td:nth-child(6){font-size:.68rem;color:#64748b}
+<style>.leads-toolbar{display:grid;grid-template-columns:minmax(240px,1.4fr) minmax(130px,.7fr) minmax(180px,1fr) auto;align-items:end;gap:1rem;margin:1.15rem 0}.leads-filter-group{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}.leads-filter-group .filter-pill{appearance:none;border:1px solid #d7e1ef;background:#fff;color:#64748b;border-radius:999px;padding:.48rem .8rem;font:inherit;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s}.leads-filter-group .filter-pill:hover{border-color:#5a67f2;color:#4f46e5}.leads-filter-group .filter-pill.active{background:#5a67f2;border-color:#5a67f2;color:#fff}.leads-filter-group input{min-width:0;width:100%;box-sizing:border-box;padding:.65rem .85rem;border:1px solid #d7e1ef;border-radius:10px;font:inherit;color:var(--text);outline:none}.leads-filter-group input:focus{border-color:#5a67f2;box-shadow:0 0 0 3px rgba(90,103,242,.12)}.leads-table-wrap{overflow:auto;border:1px solid #e3eaf3;border-radius:12px}.leads-scroll-hint{display:none;font-size:.72rem;color:#64748b;font-weight:600;margin:0 0 .4rem}.leads-table{width:100%;border-collapse:collapse;background:#fff}.leads-table th,.leads-table td{padding:.8rem .9rem;text-align:left;border-bottom:1px solid #e8eef5;white-space:nowrap}.leads-table th{background:#f7f9fc;color:#64748b;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em}.leads-table td{font-size:.85rem;color:var(--text)}.leads-table tbody tr:hover{background:#fafbff}@media(max-width:900px){.leads-toolbar{grid-template-columns:1fr 1fr}.leads-toolbar .leads-filter-group:first-child{grid-column:1/-1}}@media(max-width:560px){.leads-toolbar{grid-template-columns:1fr}.leads-toolbar .leads-filter-group:first-child{grid-column:auto}
+/* Every column stays on a phone; the table scrolls sideways instead. Keep
+   nowrap so columns do not collapse into unreadable slivers, and make the
+   scroll obvious — a plain overflow gave no sign that Phone and the columns
+   after it existed at all. */
+.leads-table-wrap{-webkit-overflow-scrolling:touch;scrollbar-width:thin;position:relative}
+/* Only tell the vendor to swipe on a screen where the table actually scrolls. */
+.leads-scroll-hint{display:block}
+.leads-table th,.leads-table td{padding:.55rem .6rem;font-size:.78rem;white-space:nowrap}
+.leads-table th{font-size:.63rem}
+/* Name stays put while the rest scrolls under it, so a vendor never loses
+   track of whose row they are reading. */
+.leads-table th:first-child,.leads-table td:first-child{position:sticky;left:0;z-index:1;background:#fff;box-shadow:1px 0 0 #e8eef5}
+.leads-table th:first-child{background:#f7f9fc}
+.leads-table tbody tr:hover td:first-child{background:#fafbff}
 }</style>
 </head>
 <body>
@@ -3776,7 +3783,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     const days={today:1,'3d':3,'7d':7,month:31}; const cutoff=days[leadRange]?now-days[leadRange]*86400000:0;
     const rows=allCustomerLeads.filter(l=>{const v=leadField==='name'?l.customer_name:leadField==='email'?l.customer_email:leadField==='phone'?l.customer_phone:[l.customer_name,l.customer_email,l.customer_phone].join(' '); const typeOk=leadType==='all'||(leadType==='free'&&l.access_mode==='free')||(leadType==='passcode'&&l.access_mode!=='free'); return typeOk&&(!q||String(v||'').toLowerCase().includes(q))&&(!cutoff||new Date(l.created_at).getTime()>=cutoff);});
     if(!rows.length){list.innerHTML='<div class="empty-state-mini">No matching leads.</div>';return;}
-    list.innerHTML='<div class="leads-table-wrap"><table class="leads-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Product</th><th>Date</th></tr></thead><tbody>'+rows.map(l=>`<tr><td data-label="Name">${escapeHtml(l.customer_name||'Customer')}</td><td data-label="Email">${escapeHtml(l.customer_email||'')}</td><td data-label="Phone">${l.customer_phone?`<a href="tel:${escapeHtml(String(l.customer_phone).replace(/[^\d+]/g,''))}">${escapeHtml(l.customer_phone)}</a>`:'—'}</td><td data-label="Type">${l.access_mode==='free'?'Free try-on':'Passcode try-on'}</td><td data-label="Product">${escapeHtml(l.product_id||'—')}</td><td data-label="Date">${new Date(l.created_at).toLocaleString()}</td></tr>`).join('')+'</tbody></table></div>';
+    list.innerHTML='<div class="leads-scroll-hint">Swipe sideways for every column →</div><div class="leads-table-wrap"><table class="leads-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Product</th><th>Date</th></tr></thead><tbody>'+rows.map(l=>`<tr><td data-label="Name">${escapeHtml(l.customer_name||'Customer')}</td><td data-label="Email">${escapeHtml(l.customer_email||'')}</td><td data-label="Phone">${l.customer_phone?`<a href="tel:${escapeHtml(String(l.customer_phone).replace(/[^\d+]/g,''))}">${escapeHtml(l.customer_phone)}</a>`:'—'}</td><td data-label="Type">${l.access_mode==='free'?'Free try-on':'Passcode try-on'}</td><td data-label="Product">${escapeHtml(l.product_id||'—')}</td><td data-label="Date">${new Date(l.created_at).toLocaleString()}</td></tr>`).join('')+'</tbody></table></div>';
   }
   function downloadLeadsExcel(){
     const rows=allCustomerLeads; const head=['Name','Email','Phone','Type','Product','Date']; const esc=v=>`"${String(v??'').replace(/"/g,'""')}"`; const csv=[head,...rows.map(l=>[l.customer_name||'Customer',l.customer_email,l.customer_phone||'',l.access_mode==='free'?'Free try-on':'Passcode try-on',l.product_id||'',new Date(l.created_at).toLocaleString()])].map(r=>r.map(esc).join(',')).join('\r\n'); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download='customer-leads.xlsx'; a.click(); URL.revokeObjectURL(a.href);
