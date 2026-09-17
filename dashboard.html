@@ -1794,15 +1794,17 @@
     }
   </style>
 <style>.leads-toolbar{display:grid;grid-template-columns:minmax(240px,1.4fr) minmax(130px,.7fr) minmax(180px,1fr) auto;align-items:end;gap:1rem;margin:1.15rem 0}.leads-filter-group{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}.leads-filter-group .filter-pill{appearance:none;border:1px solid #d7e1ef;background:#fff;color:#64748b;border-radius:999px;padding:.48rem .8rem;font:inherit;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s}.leads-filter-group .filter-pill:hover{border-color:#5a67f2;color:#4f46e5}.leads-filter-group .filter-pill.active{background:#5a67f2;border-color:#5a67f2;color:#fff}.leads-filter-group input{min-width:0;width:100%;box-sizing:border-box;padding:.65rem .85rem;border:1px solid #d7e1ef;border-radius:10px;font:inherit;color:var(--text);outline:none}.leads-filter-group input:focus{border-color:#5a67f2;box-shadow:0 0 0 3px rgba(90,103,242,.12)}.leads-table-wrap{overflow:auto;border:1px solid #e3eaf3;border-radius:12px}.leads-table{width:100%;border-collapse:collapse;background:#fff}.leads-table th,.leads-table td{padding:.8rem .9rem;text-align:left;border-bottom:1px solid #e8eef5;white-space:nowrap}.leads-table th{background:#f7f9fc;color:#64748b;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em}.leads-table td{font-size:.85rem;color:var(--text)}.leads-table tbody tr:hover{background:#fafbff}@media(max-width:900px){.leads-toolbar{grid-template-columns:1fr 1fr}.leads-toolbar .leads-filter-group:first-child{grid-column:1/-1}}@media(max-width:560px){.leads-toolbar{grid-template-columns:1fr}.leads-toolbar .leads-filter-group:first-child{grid-column:auto}
-/* The table scrolls sideways on a phone, so Phone and everything after it sat
-   off-screen — the one column a vendor most needs. Stack each lead into a
-   labelled card instead, so every field is visible without scrolling. */
-.leads-table-wrap{overflow:visible;border:0}
-.leads-table,.leads-table tbody,.leads-table tr,.leads-table td{display:block;width:100%}
-.leads-table thead{display:none}
-.leads-table tr{border:1px solid #e3eaf3;border-radius:12px;background:#fff;padding:.35rem .25rem;margin-bottom:.6rem}
-.leads-table td{border:0;white-space:normal;word-break:break-word;display:grid;grid-template-columns:5.5rem 1fr;gap:.6rem;padding:.4rem .75rem;align-items:baseline}
-.leads-table td::before{content:attr(data-label);color:#64748b;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+/* Stay a table on a phone, but only with the columns that fit. Six columns at
+   nowrap measured 583px against a 368px viewport, which pushed Phone — the
+   column a vendor most needs — off-screen with no sign the row scrolled.
+   Type and Product are dropped here and remain in the Excel export. */
+.leads-table-wrap{-webkit-overflow-scrolling:touch}
+.leads-table th,.leads-table td{padding:.5rem .45rem;font-size:.74rem;white-space:normal;word-break:break-word}
+.leads-table th{font-size:.6rem;padding:.45rem}
+.leads-table th:nth-child(4),.leads-table td:nth-child(4),
+.leads-table th:nth-child(5),.leads-table td:nth-child(5){display:none}
+.leads-table td:nth-child(3){white-space:nowrap}
+.leads-table td:nth-child(6){font-size:.68rem;color:#64748b}
 }</style>
 </head>
 <body>

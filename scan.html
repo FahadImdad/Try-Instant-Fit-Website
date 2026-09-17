@@ -146,7 +146,11 @@
     /* Dial code + national number sit on one row. The select is sized to its
        content so the number field keeps the space on a narrow phone. */
     .phone-shell { display: flex; gap: .4rem; align-items: stretch; }
-    .phone-dial { flex: 0 0 auto; max-width: 8.5rem; padding: .7rem .5rem; border: 1px solid var(--border, #d7e1ef); border-radius: 10px; background: #fff; font: inherit; font-size: .9rem; color: inherit; }
+    /* The flag is an image overlaid on the select — emoji flags do not render
+       on Windows, which left the country reading as "PK PK +92". */
+    .phone-dial-wrap { position: relative; flex: 0 0 auto; display: flex; align-items: center; }
+    .phone-flag { position: absolute; left: .6rem; width: 20px; height: 14px; object-fit: cover; border-radius: 2px; pointer-events: none; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
+    .phone-dial { width: 100%; max-width: 9.5rem; padding: .7rem .5rem .7rem 2.1rem; border: 1px solid var(--border, #d7e1ef); border-radius: 10px; background: #fff; font: inherit; font-size: .9rem; color: inherit; }
     .phone-national { flex: 1; min-width: 0; padding-left: .85rem !important; }
     .input-icon { position: absolute; left: .9rem; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none; }
     .details-input { width: 100%; box-sizing: border-box; min-height: 50px; padding: .8rem .9rem .8rem 2.65rem; border: 1.5px solid #d7deea; border-radius: 12px; background: #f8fafc; color: var(--text); font: inherit; font-size: .9rem; outline: none; transition: border-color .18s, box-shadow .18s, background .18s; }
@@ -490,7 +494,7 @@
     <div class="details-form">
       <div class="details-field"><label for="freeCustomerName">Full name <span>*</span></label><div class="input-shell"><span class="input-icon">👤</span><input class="details-input" id="freeCustomerName" type="text" autocomplete="name" maxlength="100" placeholder="Enter your full name" oninput="updateDetailsForm()" required></div></div>
       <div class="details-field"><label for="freeCustomerEmail">Email address <span>*</span></label><div class="input-shell"><span class="input-icon">✉️</span><input class="details-input" id="freeCustomerEmail" type="email" autocomplete="email" inputmode="email" placeholder="name@example.com" oninput="updateDetailsForm()" required></div></div>
-      <div class="details-field"><label for="freeCustomerPhone">WhatsApp / phone <span>*</span></label><div class="phone-shell"><select class="phone-dial" id="freeCustomerDial" onchange="updateDetailsForm()" aria-label="Country dialling code"></select><input class="details-input phone-national" id="freeCustomerPhone" type="tel" autocomplete="tel-national" inputmode="numeric" maxlength="15" placeholder="300 1234567" oninput="updateDetailsForm()" required></div><p class="details-help">Required so the shop can contact you about this design. Your details are shared with the shop for this purpose.</p></div>
+      <div class="details-field"><label for="freeCustomerPhone">WhatsApp / phone <span>*</span></label><div class="phone-shell"><span class="phone-dial-wrap"><img class="phone-flag" id="freeCustomerFlag" src="https://flagcdn.com/w40/pk.png" alt="PK" width="20" height="14" loading="lazy"><select class="phone-dial" id="freeCustomerDial" onchange="syncDialFlag('freeCustomerDial','freeCustomerFlag'); updateDetailsForm()" aria-label="Country dialling code"></select></span><input class="details-input phone-national" id="freeCustomerPhone" type="tel" autocomplete="tel-national" inputmode="numeric" maxlength="15" placeholder="300 1234567" oninput="updateDetailsForm()" required></div><p class="details-help">Required so the shop can contact you about this design. Your details are shared with the shop for this purpose.</p></div>
       <label class="consent-card"><input id="freeFollowupConsent" type="checkbox" onchange="updateDetailsForm()"> <span>I understand that this shop will receive these details and may contact me about this design, sizing, availability, or a custom order. I agree to <a href="/your-privacy" target="_blank" rel="noopener">how my photo and details are used</a>.</span></label>
       <p class="details-help" style="text-align:center; margin:.15rem 0 0;">🔒 Your photo is never saved on our servers — it is used only to create your preview.</p>
       <button class="btn-block primary details-submit" id="detailsContinueBtn" type="button" onclick="continueFreeDetails()" disabled>Continue to Try On →</button>
@@ -519,7 +523,7 @@
       <div style="font-size:.78rem; font-weight:800; margin-bottom:.5rem;">Contact details (optional)</div>
       <input type="text" id="customerName" autocomplete="name" placeholder="Name" style="width:100%; box-sizing:border-box; margin-bottom:.5rem;">
       <input type="email" id="customerEmail" autocomplete="email" inputmode="email" placeholder="Email" style="width:100%; box-sizing:border-box; margin-bottom:.5rem;">
-      <div class="phone-shell"><select class="phone-dial" id="customerDial" aria-label="Country dialling code"></select><input type="tel" id="customerPhone" autocomplete="tel-national" inputmode="numeric" maxlength="15" placeholder="300 1234567" style="flex:1; min-width:0; box-sizing:border-box;"></div>
+      <div class="phone-shell"><span class="phone-dial-wrap"><img class="phone-flag" id="customerFlag" src="https://flagcdn.com/w40/pk.png" alt="PK" width="20" height="14" loading="lazy"><select class="phone-dial" id="customerDial" onchange="syncDialFlag('customerDial','customerFlag')" aria-label="Country dialling code"></select></span><input type="tel" id="customerPhone" autocomplete="tel-national" inputmode="numeric" maxlength="15" placeholder="300 1234567" style="flex:1; min-width:0; box-sizing:border-box;"></div>
       <div style="font-size:.7rem; color:var(--muted); margin-top:.4rem;">Optional with a passcode. These details are shared with the shop only if entered. See <a href="/your-privacy" target="_blank" rel="noopener">how your details are used</a>.</div>
     </div>
     <h3 class="step-title"><span class="step-num" id="uploadStepNum">1</span> Add Your Photo</h3>
@@ -913,9 +917,23 @@
   ];
 
   function dialCodeOptions(selected) {
+    // No emoji in the option text: Windows has no regional-indicator glyphs, so
+    // a flag emoji degrades to the plain letters and reads as "PK PK +92". The
+    // flag is shown as an image beside the select instead, which renders
+    // everywhere.
     return DIAL_CODES
-      .map(([iso, flag, dial]) => `<option value="${dial}|${iso}"${dial + '|' + iso === selected ? ' selected' : ''}>${flag} ${iso} ${dial}</option>`)
+      .map(([iso, , dial]) => `<option value="${dial}|${iso}"${dial + '|' + iso === selected ? ' selected' : ''}>${iso} ${dial}</option>`)
       .join('');
+  }
+
+  // Swap the flag image to match the chosen country.
+  function syncDialFlag(selectId, imgId) {
+    const sel = document.getElementById(selectId);
+    const img = document.getElementById(imgId);
+    if (!sel || !img) return;
+    const iso = String(sel.value || '').split('|')[1] || 'PK';
+    img.src = `https://flagcdn.com/w40/${iso.toLowerCase()}.png`;
+    img.alt = iso;
   }
 
   function dialMeta(select) {
