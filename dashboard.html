@@ -1468,6 +1468,32 @@
     }
 
     /* Top-up history list — one row per recorded top-up, FIFO-allocated. */
+    /* ── Sales box ──
+       One bordered group rather than four loose cards: these numbers are only
+       meaningful read together against the same denominator. */
+    .sales-box { border:1px solid var(--border); border-radius:var(--r-md); background:linear-gradient(180deg,#fbfdff,var(--surface)); padding:1rem 1.1rem; margin-bottom:1.25rem; border-left:3px solid #10b981; }
+    .sales-box-head { display:flex; align-items:baseline; gap:.6rem; flex-wrap:wrap; margin-bottom:.85rem; }
+    .sales-box-head h3 { margin:0; font-size:.98rem; }
+    .sales-box-hint { font-size:.74rem; color:var(--muted); }
+    .sales-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.9rem; }
+    .sales-cell { min-width:0; }
+    .sales-val { font-size:1.35rem; font-weight:800; line-height:1.15; word-break:break-word; }
+    .sales-cell:nth-child(1) .sales-val,
+    .sales-cell:nth-child(2) .sales-val { color:#059669; }
+    .sales-lbl { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin-top:.2rem; }
+    @media (max-width:640px) { .sales-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:.8rem; } }
+
+    /* ── Stat card emphasis ──
+       A restrained accent bar so the numbers that need action stand out from
+       the ones that are merely informational. Deliberately only the left edge
+       and the value colour — the grid's rhythm stays intact. */
+    .stat-card.stat-key { border-left:3px solid var(--indigo); background:linear-gradient(180deg,#fbfcff,var(--surface)); }
+    .stat-card.stat-key .stat-value { color:var(--indigo); }
+    .stat-card.stat-warn { border-left:3px solid #f59e0b; background:linear-gradient(180deg,#fffdf7,var(--surface)); }
+    .stat-card.stat-warn .stat-value { color:#b45309; }
+    .stat-card.stat-danger { border-left:3px solid #ef4444; background:linear-gradient(180deg,#fffbfb,var(--surface)); }
+    .stat-card.stat-danger .stat-value { color:#b91c1c; }
+
     /* ── Activity feed ── */
     .activity-filters { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:1rem; }
     .activity-filters .filter-pill { appearance:none; border:1px solid var(--border); background:var(--surface); color:var(--muted); border-radius:999px; padding:.42rem .8rem; font:inherit; font-size:.78rem; font-weight:700; cursor:pointer; white-space:nowrap; }
@@ -2030,6 +2056,23 @@
             <div class="stat-card"><div class="stat-label">This Week</div><div class="stat-value" id="statWeek">—</div><div class="stat-sub">Last 7 days</div></div>
             <div class="stat-card"><div class="stat-label">This Month</div><div class="stat-value" id="statMonth">—</div><div class="stat-sub">Current month</div></div>
             <div class="stat-card"><div class="stat-label">Avg AI Time</div><div class="stat-value" id="statAvg">—</div><div class="stat-sub">Per try-on</div></div>
+          </div>
+
+          <!-- Sales — grouped in one box because these four numbers only make
+               sense together: passcode try-ons are the ones that can convert,
+               so the count, the conversion rate and the revenue all read off
+               the same denominator. -->
+          <div class="sales-box" id="salesBox" style="display:none;">
+            <div class="sales-box-head">
+              <h3>💰 Sales from try-ons</h3>
+              <span class="sales-box-hint">Recorded when you mark a passcode try-on as sold</span>
+            </div>
+            <div class="sales-grid">
+              <div class="sales-cell"><div class="sales-val" id="salesSold">—</div><div class="sales-lbl">Products sold</div></div>
+              <div class="sales-cell"><div class="sales-val" id="salesRevenue">—</div><div class="sales-lbl">Revenue</div></div>
+              <div class="sales-cell"><div class="sales-val" id="salesConv">—</div><div class="sales-lbl">Conversion</div></div>
+              <div class="sales-cell"><div class="sales-val" id="salesPasscode">—</div><div class="sales-lbl">Passcode try-ons</div></div>
+            </div>
           </div>
 
           <!-- QR and passcode analytics belong with the primary stat cards. -->
@@ -3383,6 +3426,12 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
 
     // Top overall stats (across all sources)
     document.getElementById('statTotal').textContent = fmt(stats.total_tryons);
+    // Total try-ons is the headline number a vendor checks first — accent it
+    // so the eye lands there before the supporting figures.
+    document.getElementById('statTotal').closest('.stat-card')?.classList.add('stat-key');
+    // Today earns an accent only when something actually happened today.
+    const todayCard = document.getElementById('statToday').closest('.stat-card');
+    if (todayCard) todayCard.classList.toggle('stat-key', (stats.today || 0) > 0);
     // setup_credits_used = product image uploads processed (separate from try-ons)
     document.getElementById('statUploads').textContent = fmt(stats.setup_credits_used || 0);
     document.getElementById('statToday').textContent = fmt(stats.today);
@@ -3391,6 +3440,29 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('lab
     document.getElementById('statAvg').textContent =
       stats.avg_processing_ms ? `${(stats.avg_processing_ms / 1000).toFixed(1)}s` : '—';
     document.getElementById('statBuyClicks').textContent = fmt(stats.buy_now_clicks || 0);
+
+    // ── Sales ──
+    // Only shown once there is something to show: an empty sales box on a
+    // brand that has never marked a sale is noise, not information.
+    const sales = data.sales || {};
+    const salesBox = document.getElementById('salesBox');
+    if (salesBox) {
+      const hasSales = (sales.products_sold || 0) > 0 || (sales.passcode_tryons || 0) > 0;
+      salesBox.style.display = hasSales ? 'block' : 'none';
+      if (hasSales) {
+        const put = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        put('salesSold', fmt(sales.products_sold || 0));
+        put('salesPasscode', fmt(sales.passcode_tryons || 0));
+        put('salesConv', `${sales.conversion_pct || 0}%`);
+        // Revenue is kept per currency by the API — never summed across them,
+        // since adding PKR to EUR would be meaningless.
+        const byCur = sales.revenue_by_currency || {};
+        const entries = Object.entries(byCur).filter(([, v]) => Number(v) > 0);
+        put('salesRevenue', entries.length
+          ? entries.map(([cur, v]) => formatPrice(v, cur)).join(' · ')
+          : '—');
+      }
+    }
 
     renderAnalyticsProductLists();
 
@@ -6696,7 +6768,7 @@ function launchPromoCelebration(){const layer=document.createElement('div');Obje
 </script>
 <style>@keyframes partyConfettiFall{0%{transform:translate(0,0) rotate(0);opacity:0}8%{opacity:1}100%{transform:translate(var(--drift),115vh) rotate(var(--spin));opacity:0}}</style>
 <script>
-(function(){const nav=document.querySelector('.dash-tab-nav');if(nav&&!document.querySelector('[data-tab="support"]')){const b=document.createElement('button');b.className='tab-btn';b.dataset.tab='support';b.innerHTML='💬 <span class="tab-label">Support</span>';b.onclick=()=>{switchTab('support');loadVendorSupport();};nav.appendChild(b);}const main=document.querySelector('.dash-main')||document.body;if(!document.getElementById('tab-support')){const p=document.createElement('div');p.id='tab-support';p.className='tab-content';p.style.display='none';p.innerHTML='<section class="sw-section"><h2>Customer support</h2><p>Ask us about credits, refunds, discounts, or any problem.</p><div id="vendorSupportMessages" style="max-height:360px;overflow:auto;margin:1rem 0;"></div><div style="display:flex;gap:.5rem;"><input id="vendorSupportInput" placeholder="Write your message…" style="flex:1;padding:.75rem;border:1px solid var(--border);border-radius:10px;"><button class="btn btn-primary" onclick="sendVendorSupport()">Send</button></div></section>';main.appendChild(p);}})();
+(function(){const nav=document.querySelector('.dash-tab-nav');if(nav&&!document.querySelector('[data-tab="support"]')){const b=document.createElement('button');b.className='tab-btn';b.dataset.tab='support';b.innerHTML='💬 <span class="tab-label">Support</span>';b.onclick=()=>{switchTab('support');loadVendorSupport();};nav.appendChild(b);}const main=document.querySelector('.dash-main')||document.body;if(!document.getElementById('tab-support')){const p=document.createElement('div');p.id='tab-support';p.className='tab-content';p.style.display='none';p.innerHTML='<section class="sw-section"><h2>Customer support</h2><p>Ask us about credits, discounts, or any problem.</p><div id="vendorSupportMessages" style="max-height:360px;overflow:auto;margin:1rem 0;"></div><div style="display:flex;gap:.5rem;"><input id="vendorSupportInput" placeholder="Write your message…" style="flex:1;padding:.75rem;border:1px solid var(--border);border-radius:10px;"><button class="btn btn-primary" onclick="sendVendorSupport()">Send</button></div></section>';main.appendChild(p);}})();
 async function loadVendorSupport(){if(!activeBrandId)return;const r=await brandFetch(`${API}/api/brands/${activeBrandId}/support`,{cache:'no-store'}),d=await r.json(),el=document.getElementById('vendorSupportMessages');if(el)el.innerHTML=(d.conversation?.support_messages||[]).map(m=>`<div style="padding:.6rem;margin:.4rem 0;border-radius:10px;background:${m.sender_type==='admin'?'#eef2ff':'#f1f5f9'}"><b>${m.sender_type==='admin'?'Support':'You'}:</b> ${escapeHtml(m.message)}</div>`).join('')||'<p>No messages yet. How can we help?</p>';}
 async function sendVendorSupport(){const i=document.getElementById('vendorSupportInput');if(!i?.value.trim()||!activeBrandId)return;const r=await brandFetch(`${API}/api/brands/${activeBrandId}/support`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:i.value.trim()})});if(r.ok){i.value='';loadVendorSupport();}}
 </script>
